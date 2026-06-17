@@ -1,0 +1,66 @@
+name: "🐛 Bug Report"
+description: "Report a bug or unexpected behavior in OpenDX-Lab"
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting this bug! Please fill in the details below to help us reproduce and fix it as quickly as possible.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: "Bug Description"
+      description: "A clear and concise description of what the bug is."
+      placeholder: "e.g., Next.js Dashboard returns a 500 error when trying to connect to Keycloak SSO..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: "Steps to Reproduce"
+      description: "List the specific steps to reproduce the bug."
+      placeholder: |
+        1. Run 'docker compose up -d'
+        2. Open browser and navigate to 'http://localhost:3000'
+        3. Click the 'Login' button
+        4. See the error displayed on screen...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: "Expected Behavior"
+      description: "Describe what you expected to happen."
+      placeholder: "e.g., Login succeeds and redirects to the Dashboard home page."
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: "Screenshots / Logs"
+      description: "Drag and drop screenshots or paste relevant error logs here."
+      placeholder: "Paste error logs from 'docker compose logs' or attach screenshots..."
+
+  - type: input
+    id: environment
+    attributes:
+      label: "Environment"
+      description: "OS, Docker version, RAM, etc."
+      placeholder: "e.g., Windows 11, Docker Desktop v4.28, 16GB RAM"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checklists
+    attributes:
+      label: "Pre-submission Checklist"
+      options:
+        - label: "I have searched existing issues and found no duplicates."
+          required: true
+        - label: "I have run `docker compose logs` to check service error logs."
+          required: false
