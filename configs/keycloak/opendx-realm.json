@@ -1,0 +1,169 @@
+{
+  "realm": "opendx",
+  "enabled": true,
+  "displayName": "OpenDX-Lab",
+  "displayNameHtml": "<strong>OpenDX-Lab</strong>",
+  "registrationAllowed": false,
+  "registrationEmailAsUsername": true,
+  "rememberMe": true,
+  "verifyEmail": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "bruteForceProtected": true,
+  "sslRequired": "none",
+  "defaultSignatureAlgorithm": "RS256",
+  "accessTokenLifespan": 300,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000,
+  "roles": {
+    "realm": [
+      {
+        "name": "admin",
+        "description": "Full system access — all features including Service Control Center",
+        "composite": false
+      },
+      {
+        "name": "manager",
+        "description": "Department management — Employee CRUD and Analytics",
+        "composite": false
+      },
+      {
+        "name": "employee",
+        "description": "Basic access — AI Chat and view-only dashboards",
+        "composite": false
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "opendx-dashboard",
+      "name": "OpenDX Dashboard",
+      "description": "Next.js Dashboard Portal — main user-facing application",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "dashboard-client-secret-change-me",
+      "redirectUris": ["http://localhost:3000/*"],
+      "webOrigins": ["http://localhost:3000"],
+      "publicClient": false,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "fullScopeAllowed": true,
+      "defaultClientScopes": ["openid", "profile", "email", "roles"],
+      "protocolMappers": [
+        {
+          "name": "realm-roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "config": {
+            "claim.name": "realm_access.roles",
+            "multivalued": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "mattermost-sso",
+      "name": "Mattermost SSO",
+      "description": "OIDC client for Mattermost team chat integration",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "mattermost-client-secret-change-me",
+      "redirectUris": ["http://localhost:3100/*"],
+      "webOrigins": ["http://localhost:3100"],
+      "publicClient": false,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "fullScopeAllowed": true,
+      "defaultClientScopes": ["openid", "profile", "email"]
+    },
+    {
+      "clientId": "wikijs-sso",
+      "name": "Wiki.js SSO",
+      "description": "OIDC client for Wiki.js knowledge management",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "wikijs-client-secret-change-me",
+      "redirectUris": ["http://localhost:3200/*"],
+      "webOrigins": ["http://localhost:3200"],
+      "publicClient": false,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "fullScopeAllowed": true,
+      "defaultClientScopes": ["openid", "profile", "email"]
+    },
+    {
+      "clientId": "n8n-sso",
+      "name": "n8n SSO",
+      "description": "OIDC client for n8n workflow automation",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "n8n-client-secret-change-me",
+      "redirectUris": ["http://localhost:5678/*"],
+      "webOrigins": ["http://localhost:5678"],
+      "publicClient": false,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "fullScopeAllowed": true,
+      "defaultClientScopes": ["openid", "profile", "email"]
+    }
+  ],
+  "users": [
+    {
+      "username": "admin",
+      "email": "admin@opendx-lab.local",
+      "firstName": "Admin",
+      "lastName": "OpenDX",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["admin", "default-roles-opendx"]
+    },
+    {
+      "username": "hr.mai",
+      "email": "hr.mai@opendx-lab.local",
+      "firstName": "Mai",
+      "lastName": "Nguyen Thi",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "demo123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["manager", "default-roles-opendx"]
+    },
+    {
+      "username": "nv.duc",
+      "email": "nv.duc@opendx-lab.local",
+      "firstName": "Duc",
+      "lastName": "Tran Minh",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "demo123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["employee", "default-roles-opendx"]
+    }
+  ]
+}
