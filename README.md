@@ -1,68 +1,74 @@
+<!--
+OpenDX-Lab - Digital Transformation Ecosystem
+Copyright (C) 2026 OpenDX-Lab Contributors
+SPDX-License-Identifier: GPL-3.0-or-later
+-->
+
 <div align="center">
 
 # 🏢 OpenDX-Lab
 
-### Hệ sinh thái Chuyển đổi số Doanh nghiệp từ 100% Phần mềm Nguồn mở
+### Enterprise Digital Transformation Ecosystem — 100% Open Source
 
-*An open-source Digital Transformation ecosystem for enterprises — one command, full DX-Lab*
+*One command to spin up a fully integrated DX-Lab: SSO, Chat, Wiki, Workflow Automation, BI, and AI Assistant — all pre-connected.*
 
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](LICENSE)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)](docker-compose.yml)
-[![OLP 2026](https://img.shields.io/badge/OLP-PMNM%202026-orange)](https://vfossa.vn)
+[![OLP 2026](https://img.shields.io/badge/OLP-Open%20Source%202026-orange)](https://vfossa.vn)
 [![Open Source](https://img.shields.io/badge/Open%20Source-100%25-brightgreen)]()
 
-[Hướng dẫn cài đặt](#-quick-start) | [Kiến trúc](#-architecture) | [Demo](#-demo) | [Tài liệu](docs/) | [Đóng góp](CONTRIBUTING.md)
+[Quick Start](#-quick-start) | [Architecture](#-architecture) | [Demo](#-demo-credentials) | [Docs](docs/) | [Contributing](CONTRIBUTING.md)
 
 </div>
 
 ---
 
-## 📖 OpenDX-Lab là gì?
+## 📖 What is OpenDX-Lab?
 
-**OpenDX-Lab** là một bản phân phối (distribution) tích hợp các phần mềm nguồn mở thành hệ sinh thái chuyển đổi số hoàn chỉnh cho doanh nghiệp, theo mô hình **DX-OS** và kiến trúc phân bổ quyền điều khiển **H-P-D-I**.
+**OpenDX-Lab** is an open-source distribution that integrates best-of-breed open-source tools into a complete Digital Transformation ecosystem for enterprises, following the **DX-OS** model and the **H-P-D-I** (Human–Process–Data–Intelligence) architecture.
 
-### Vấn đề
+### The Problem
 
-> Doanh nghiệp mua 4-5 phần mềm khác nhau nhưng chúng **không kết nối** được với nhau. Nhân viên phải dùng **Zalo + trí nhớ** làm "dây nối" giữa các hệ thống. Quên = lỗi. Bận = chậm.
+> Enterprises use 4–5 disconnected software systems (HR, IT, Accounting…). Employees rely on **messaging apps + memory** as the "glue" between systems. Forget one message = system error. Too busy = delays.
 
-### Giải pháp
+### The Solution
 
-> **1 lệnh `docker compose up`** → Khởi động ngay hệ sinh thái CĐS hoàn chỉnh: SSO, Chat, Wiki, Workflow Automation, BI Dashboard, AI Assistant — tất cả **đã kết nối sẵn**, **đăng nhập chung**, **dữ liệu chảy tự động**.
+> **One command: `docker compose up`** → Instantly launch a complete DX ecosystem: SSO, Chat, Wiki, Workflow Automation, BI Dashboard, AI Assistant — all **pre-connected**, **single sign-on**, **data flows automatically**.
 
 ---
 
 ## ✨ Highlights
 
-- 🔐 **Đăng nhập 1 lần (SSO)** — Keycloak quản lý xác thực tập trung cho tất cả công cụ
-- 💬 **Chat nội bộ** — Rocket.Chat thay thế Zalo trong công việc  
-- 📚 **Wiki tri thức** — Wiki.js quản lý tài liệu, quy trình nội bộ
-- 🔄 **Tự động hóa** — n8n workflow: tạo NV → tự cấp tài khoản, gửi thông báo
-- 📊 **BI Dashboard** — Metabase trực quan hóa dữ liệu từ tất cả hệ thống
-- 🤖 **AI trợ lý** — Ollama LLM trả lời câu hỏi bằng dữ liệu thật của công ty
-- 🐳 **1 lệnh cài đặt** — Docker Compose khởi động toàn bộ hệ sinh thái
-- 🆓 **100% miễn phí** — Tất cả phần mềm đều mã nguồn mở
+- 🔐 **Single Sign-On (SSO)** — Keycloak provides centralized authentication for all tools
+- 💬 **Internal Chat** — Rocket.Chat replaces consumer messaging apps for work
+- 📚 **Knowledge Wiki** — Wiki.js manages internal documentation and SOPs
+- 🔄 **Workflow Automation** — n8n automates cross-system processes (e.g., onboarding)
+- 📊 **BI Dashboard** — Metabase visualizes data from all systems in real-time
+- 🤖 **AI Assistant** — Ollama LLM answers questions using your company's actual data
+- 🐳 **One-command Setup** — Docker Compose launches the entire ecosystem
+- 🆓 **100% Free & Open Source** — Every component is open source
 
 ---
 
-## 📋 Mục lục
+## 📋 Table of Contents
 
-- [OpenDX-Lab là gì?](#-opendx-lab-là-gì)
-- [Kiến trúc H-P-D-I](#-architecture)
+- [What is OpenDX-Lab?](#-what-is-opendx-lab)
+- [Architecture (H-P-D-I)](#-architecture)
 - [Quick Start](#-quick-start)
 - [Demo Credentials](#-demo-credentials)
 - [Technology Stack](#%EF%B8%8F-technology-stack)
-- [Cấu trúc dự án](#-project-structure)
-- [Tài liệu](#-documentation)
-- [Tiến độ dự án](#-project-status)
-- [Đóng góp](#-contributing)
-- [Giấy phép](#-license)
-- [Đội ngũ](#-team)
+- [Project Structure](#-project-structure)
+- [Documentation](#-documentation)
+- [Project Status](#-project-status)
+- [Contributing](#-contributing)
+- [License](#-license)
+- [Team](#-team)
 
 ---
 
 ## 🏗 Architecture
 
-### Mô hình DX-OS — Kiến trúc H-P-D-I
+### DX-OS Model — H-P-D-I Architecture
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
@@ -87,59 +93,59 @@
 └──────────────────────────────────────────────────────────────────┘
 ```
 
-### Demo Scenario: Onboarding nhân viên mới
+### Demo Scenario: Employee Onboarding
 
 ```
-Admin tạo NV "Trần Minh Đức"
+Admin creates employee "Tran Minh Duc"
     │
-    ├──→ [H] Keycloak tự tạo tài khoản SSO
-    ├──→ [H] Rocket.Chat tự gửi tin nhắn chào mừng
-    ├──→ [H] Wiki.js tự gửi link tài liệu onboarding
-    ├──→ [P] n8n workflow chạy tự động 3 bước trên
-    ├──→ [D] Metabase dashboard tự cập nhật số liệu
-    └──→ [I] AI Chat trả lời được "NV mới nhất là ai?"
+    ├──→ [H] Keycloak auto-creates SSO account
+    ├──→ [H] Rocket.Chat auto-sends welcome message
+    ├──→ [H] Wiki.js auto-shares onboarding docs
+    ├──→ [P] n8n workflow orchestrates all 3 steps above
+    ├──→ [D] Metabase dashboard auto-updates metrics
+    └──→ [I] AI Chat can answer "Who is the newest employee?"
 
-1 hành động → 6 hệ thống phản ứng → 0 tin nhắn Zalo
+1 action → 6 systems react → 0 manual messages
 ```
 
 ---
 
 ## 🚀 Quick Start
 
-### Yêu cầu hệ thống
+### System Requirements
 
 ```
 ✅ Docker Desktop          # https://www.docker.com/
-✅ Docker Compose v2+      # Đi kèm Docker Desktop
-✅ 16GB RAM tối thiểu      # Cần cho Ollama LLM
-✅ 20GB ổ cứng trống       # Cho Docker images
+✅ Docker Compose v2+      # Bundled with Docker Desktop
+✅ 16GB RAM minimum        # Required for Ollama LLM
+✅ 20GB free disk space    # For Docker images
 ```
 
-### Cài đặt
+### Installation
 
 ```bash
-# 1. Clone repository
-git clone https://github.com/YOUR_USERNAME/opendx-lab.git
+# 1. Clone the repository
+git clone https://github.com/thanhheo7749-ui/opendx-lab.git
 cd opendx-lab
 
-# 2. Copy file cấu hình
+# 2. Copy the environment configuration
 cp .env.example .env
 
-# 3. Khởi động toàn bộ hệ sinh thái (1 lệnh!)
+# 3. Launch the entire ecosystem (one command!)
 docker compose up -d
 
-# 4. Chờ tất cả services healthy (~2-3 phút lần đầu)
+# 4. Wait for all services to become healthy (~2-3 min on first run)
 docker compose ps
 ```
 
 Done! 🎉
 
-| Service | URL | Mô tả |
-|---------|-----|--------|
-| **Dashboard** | http://localhost:3000 | Cổng chính |
-| **Keycloak** | http://localhost:8080 | SSO Admin |
-| **Rocket.Chat** | http://localhost:3100 | Chat nội bộ |
-| **Wiki.js** | http://localhost:3200 | Wiki tri thức |
+| Service | URL | Description |
+|---------|-----|-------------|
+| **Dashboard** | http://localhost:3000 | Main portal |
+| **Keycloak** | http://localhost:8080 | SSO Admin console |
+| **Rocket.Chat** | http://localhost:3100 | Internal chat |
+| **Wiki.js** | http://localhost:3200 | Knowledge wiki |
 | **n8n** | http://localhost:5678 | Workflow editor |
 | **Metabase** | http://localhost:3300 | BI Dashboard |
 | **Ollama** | http://localhost:11434 | LLM API |
@@ -148,27 +154,27 @@ Done! 🎉
 
 ## 🔑 Demo Credentials
 
-| Tài khoản | Username | Password | Vai trò |
-|-----------|----------|----------|---------|
-| Admin | `admin` | `admin123` | Quản trị viên |
-| HR Manager | `hr.mai` | `demo123` | Trưởng phòng HR |
-| IT Staff | `it.hung` | `demo123` | Nhân viên IT |
-| Employee | `nv.duc` | `demo123` | Nhân viên |
+| Account | Username | Password | Role |
+|---------|----------|----------|------|
+| Admin | `admin` | `admin123` | Administrator |
+| HR Manager | `hr.mai` | `demo123` | HR Manager |
+| IT Staff | `it.hung` | `demo123` | IT Staff |
+| Employee | `nv.duc` | `demo123` | Employee |
 
 ---
 
 ## 🛠️ Technology Stack
 
-| Không gian | Công cụ | Phiên bản | License | Vai trò |
-|-----------|--------|-----------|---------|---------|
-| **[H]** SSO | Keycloak | 25.x | Apache-2.0 | Xác thực tập trung |
-| **[H]** Chat | Rocket.Chat | 7.x | MIT | Nhắn tin nội bộ |
-| **[H]** Wiki | Wiki.js | 2.x | AGPL-3.0 | Quản lý tri thức |
-| **[P]** Workflow | n8n | 1.x | Sustainable Use | Tự động hóa |
-| **[P]** Dashboard | Next.js | 15.x | MIT | Web UI chính |
-| **[D]** Database | PostgreSQL | 16 | PostgreSQL License | CSDL quan hệ |
-| **[D]** BI | Metabase | 0.50 | AGPL-3.0 | Trực quan hóa |
-| **[I]** LLM | Ollama | latest | MIT | AI local |
+| Space | Tool | Version | License | Role |
+|-------|------|---------|---------|------|
+| **[H]** SSO | Keycloak | 25.x | Apache-2.0 | Centralized authentication |
+| **[H]** Chat | Rocket.Chat | 7.x | MIT | Internal messaging |
+| **[H]** Wiki | Wiki.js | 2.x | AGPL-3.0 | Knowledge management |
+| **[P]** Workflow | n8n | 1.x | Sustainable Use | Workflow automation |
+| **[P]** Dashboard | Next.js | 15.x | MIT | Main web UI |
+| **[D]** Database | PostgreSQL | 16 | PostgreSQL License | Relational database |
+| **[D]** BI | Metabase | 0.50 | AGPL-3.0 | Data visualization |
+| **[I]** LLM | Ollama | latest | MIT | Local AI |
 | **Deploy** | Docker Compose | v2 | Apache-2.0 | Container orchestration |
 
 ---
@@ -183,47 +189,48 @@ opendx-lab/
 │   │   └── feature_request.yml
 │   └── workflows/
 │       └── ci.yml
-├── configs/                    # Cấu hình cho từng service
+├── configs/                    # Per-service configuration
 │   ├── keycloak/               # Keycloak realm import
 │   ├── n8n/                    # Workflow templates
 │   ├── metabase/               # Dashboard templates
 │   └── postgres/               # Init scripts, seed data
-├── dashboard/                  # Next.js web app (code chính)
+├── dashboard/                  # Next.js web app (main codebase)
 │   ├── app/                    # App Router pages
 │   ├── components/             # React components
 │   ├── lib/                    # API clients, utilities
 │   └── public/                 # Static assets
-├── docs/                       # Tài liệu dự án
-│   ├── architecture.md         # Kiến trúc chi tiết
-│   ├── deployment.md           # Hướng dẫn triển khai
-│   ├── user-guide.md           # Hướng dẫn sử dụng
+├── docs/                       # Project documentation
+│   ├── architecture.md         # Detailed architecture
+│   ├── deployment.md           # Deployment guide
+│   ├── user-guide.md           # End-user guide
 │   └── api.md                  # API documentation
-├── scripts/                    # Scripts tiện ích
-│   ├── setup.sh                # Cài đặt tự động
-│   └── seed-data.sh            # Tạo dữ liệu mẫu
-├── .env.example                # Biến môi trường mẫu
+├── scripts/                    # Utility scripts
+│   ├── setup.sh                # Automated setup
+│   └── seed-data.sh            # Sample data generation
+├── .env.example                # Environment variables template
 ├── .gitignore
 ├── .dockerignore
-├── CHANGELOG.md                # Lịch sử thay đổi
-├── CODE_OF_CONDUCT.md          # Quy tắc ứng xử
-├── CONTRIBUTING.md             # Hướng dẫn đóng góp
-├── docker-compose.yml          # ★ File chính — 1 lệnh chạy tất cả
+├── CHANGELOG.md                # Version history
+├── CODE_OF_CONDUCT.md          # Code of conduct
+├── CONTRIBUTING.md             # Contribution guidelines
+├── docker-compose.yml          # ★ Main file — one command runs all
 ├── LICENSE                     # GPL-3.0
-├── README.md                   # File này
-└── SECURITY.md                 # Chính sách bảo mật
+├── README.md                   # This file
+├── SECURITY.md                 # Security policy
+└── THIRD_PARTY_LICENSES.md     # Third-party license disclosures
 ```
 
 ---
 
 ## 📚 Documentation
 
-| Tài liệu | Mô tả |
-|-----------|--------|
-| [Kiến trúc](docs/architecture.md) | Sơ đồ kiến trúc H-P-D-I chi tiết |
-| [Triển khai](docs/deployment.md) | Hướng dẫn deploy production |
-| [Sử dụng](docs/user-guide.md) | Hướng dẫn cho người dùng cuối |
+| Document | Description |
+|----------|-------------|
+| [Architecture](docs/architecture.md) | Detailed H-P-D-I architecture diagrams |
+| [Deployment](docs/deployment.md) | Production deployment guide |
+| [User Guide](docs/user-guide.md) | End-user guide |
 | [API](docs/api.md) | API endpoints documentation |
-| [Đóng góp](CONTRIBUTING.md) | Cách đóng góp vào dự án |
+| [Contributing](CONTRIBUTING.md) | How to contribute to the project |
 
 ---
 
@@ -231,66 +238,66 @@ opendx-lab/
 
 ### Roadmap
 
-- [x] Thiết kế kiến trúc H-P-D-I
-- [ ] Docker Compose cho 8 services
-- [ ] Keycloak SSO tích hợp tất cả tools
+- [x] Design H-P-D-I architecture
+- [x] Docker Compose for 8 services
+- [ ] Keycloak SSO integration across all tools
 - [ ] n8n workflow templates (onboarding, offboarding)
 - [ ] Dashboard web app (Next.js)
 - [ ] Metabase BI dashboard
-- [ ] AI Chat tích hợp Ollama
-- [ ] Tài liệu hoàn chỉnh
+- [ ] AI Chat with Ollama integration
+- [ ] Complete documentation
 - [ ] Demo video
 
 ---
 
 ## 🤝 Contributing
 
-Chúng tôi hoan nghênh mọi đóng góp! Xem [CONTRIBUTING.md](CONTRIBUTING.md) để biết cách tham gia.
+We welcome all contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 ```bash
 # Fork & clone
 git clone https://github.com/YOUR_USERNAME/opendx-lab.git
 
-# Tạo branch
+# Create a branch
 git checkout -b feature/your-feature
 
 # Commit & push
 git commit -m "feat: add your feature"
 git push origin feature/your-feature
 
-# Tạo Pull Request
+# Open a Pull Request
 ```
 
 ---
 
-## 🏆 Cuộc thi OLP PMNM 2026
+## 🏆 OLP Open Source Software Competition 2026
 
-Dự án này được phát triển trong khuôn khổ **Khối thi Phần mềm Nguồn mở** tại **Olympic Tin học Sinh viên Việt Nam 2026**, do [VFOSSA](https://vfossa.vn) tổ chức.
+This project is developed for the **Open Source Software track** of the **Vietnam National Informatics Olympiad (OLP) 2026**, organized by [VFOSSA](https://vfossa.vn).
 
-**Chủ đề:** Mô hình DX-OS — Digital Transformation Operating System
+**Theme:** DX-OS Model — Digital Transformation Operating System
 
 ---
 
 ## 👥 Team
 
-| Thành viên | Vai trò | GitHub |
-|-----------|---------|--------|
-| [Tên 1] | Infrastructure + SSO | [@github1] |
-| [Tên 2] | Dashboard + BI | [@github2] |
-| [Tên 3] | AI Chat + Docs | [@github3] |
+| Member | Role | GitHub |
+|--------|------|--------|
+| [Name 1] | Infrastructure + SSO | [@github1] |
+| [Name 2] | Dashboard + BI | [@github2] |
+| [Name 3] | AI Chat + Docs | [@github3] |
 
 ---
 
 ## 📄 License
 
-Dự án này được phân phối dưới giấy phép **GNU General Public License v3.0**. Xem file [LICENSE](LICENSE) để biết chi tiết.
+This project is licensed under the **GNU General Public License v3.0**. See [LICENSE](LICENSE) for details.
 
 ---
 
 <div align="center">
 
-**⭐ Star repo này nếu bạn thấy hữu ích!**
+**⭐ Star this repo if you find it useful!**
 
-Made with ❤️ for OLP PMNM 2026
+Made with ❤️ for OLP Open Source 2026
 
 </div>
