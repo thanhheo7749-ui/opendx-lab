@@ -40,7 +40,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 ## ✨ Highlights
 
 - 🔐 **Single Sign-On (SSO)** — Keycloak provides centralized authentication for all tools
-- 💬 **Internal Chat** — Rocket.Chat replaces consumer messaging apps for work
+- 💬 **Internal Chat** — Mattermost replaces consumer messaging apps for work
 - 📚 **Knowledge Wiki** — Wiki.js manages internal documentation and SOPs
 - 🔄 **Workflow Automation** — n8n automates cross-system processes (e.g., onboarding)
 - 📊 **BI Dashboard** — Metabase visualizes data from all systems in real-time
@@ -75,7 +75,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 │                      OpenDX-Lab (Docker Compose)                 │
 │                                                                  │
 │  ┌─ [H] Human ──────────────────────────────────────────────┐   │
-│  │  Keycloak (SSO)  │  Rocket.Chat (Chat)  │  Wiki.js (Wiki)│   │
+│  │  Keycloak (SSO)  │  Mattermost (Chat)   │  Wiki.js (Wiki) │   │
 │  └───────────────────────────────────────────────────────────┘   │
 │                                                                  │
 │  ┌─ [P] Process ────────────────────────────────────────────┐   │
@@ -99,7 +99,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 Admin creates employee "Tran Minh Duc"
     │
     ├──→ [H] Keycloak auto-creates SSO account
-    ├──→ [H] Rocket.Chat auto-sends welcome message
+    ├──→ [H] Mattermost auto-sends welcome message
     ├──→ [H] Wiki.js auto-shares onboarding docs
     ├──→ [P] n8n workflow orchestrates all 3 steps above
     ├──→ [D] Metabase dashboard auto-updates metrics
@@ -144,7 +144,7 @@ Done! 🎉
 |---------|-----|-------------|
 | **Dashboard** | http://localhost:3000 | Main portal |
 | **Keycloak** | http://localhost:8080 | SSO Admin console |
-| **Rocket.Chat** | http://localhost:3100 | Internal chat |
+| **Mattermost** | http://localhost:3100 | Internal chat |
 | **Wiki.js** | http://localhost:3200 | Knowledge wiki |
 | **n8n** | http://localhost:5678 | Workflow editor |
 | **Metabase** | http://localhost:3300 | BI Dashboard |
@@ -168,7 +168,7 @@ Done! 🎉
 | Space | Tool | Version | License | Role |
 |-------|------|---------|---------|------|
 | **[H]** SSO | Keycloak | 25.x | Apache-2.0 | Centralized authentication |
-| **[H]** Chat | Rocket.Chat | 7.x | MIT | Internal messaging |
+| **[H]** Chat | Mattermost | 10.x | MIT | Internal messaging |
 | **[H]** Wiki | Wiki.js | 2.x | AGPL-3.0 | Knowledge management |
 | **[P]** Workflow | n8n | 1.x | Sustainable Use | Workflow automation |
 | **[P]** Dashboard | Next.js | 15.x | MIT | Main web UI |

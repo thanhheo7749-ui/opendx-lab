@@ -19,7 +19,7 @@ This document describes the architecture of **OpenDX-Lab**, an open-source Digit
 │                      OpenDX-Lab (Docker Compose)                 │
 │                                                                  │
 │  ┌─ [H] Human ─────────────────────────────────────────────┐    │
-│  │  Keycloak (SSO)  │  Rocket.Chat (Chat)  │  Wiki.js (Wiki)│   │
+│  │  Keycloak (SSO)  │  Mattermost (Chat)   │  Wiki.js (Wiki) │   │
 │  └───────────────────────────────────────────────────────────┘   │
 │                                                                  │
 │  ┌─ [P] Process ───────────────────────────────────────────┐    │
@@ -40,17 +40,17 @@ This document describes the architecture of **OpenDX-Lab**, an open-source Digit
 ### [H] Human Space
 Where people interact, communicate, and manage knowledge:
 * **Keycloak (SSO)**: Centralized Identity & Access Management (IAM). Supports Single Sign-On via OAuth2/OpenID Connect (OIDC).
-* **Rocket.Chat**: Real-time internal messaging system, replacing consumer chat apps in the workplace. Integrated with Keycloak SSO.
+* **Mattermost**: Real-time internal messaging system, replacing consumer chat apps in the workplace. Integrated with Keycloak SSO. Uses shared PostgreSQL database.
 * **Wiki.js**: Knowledge management platform for internal documentation, SOPs, and processes. Integrated with Keycloak SSO.
 
 ### [P] Process Space
 Connects data and automates business workflows:
-* **n8n**: Low-code workflow automation engine. Listens for events and auto-updates across systems (e.g., create employee on Dashboard → auto-create Keycloak user → auto-send welcome message on Rocket.Chat).
+* **n8n**: Low-code workflow automation engine. Listens for events and auto-updates across systems (e.g., create employee on Dashboard → auto-create Keycloak user → auto-send welcome message on Mattermost).
 * **Next.js Dashboard**: Main user-facing portal that connects all ecosystem services and provides task management.
 
 ### [D] Data Space
 Centralized data storage and business intelligence:
-* **PostgreSQL**: Shared relational database for the entire ecosystem, storing data for Dashboard, Keycloak, Wiki.js, n8n, and Metabase.
+* **PostgreSQL**: Shared relational database for the entire ecosystem, storing data for Dashboard, Keycloak, Mattermost, Wiki.js, n8n, and Metabase.
 * **Metabase**: User-friendly BI dashboard tool. Enables drag-and-drop report creation for revenue, workforce, and operational metrics, embeddable into the Next.js Dashboard.
 
 ### [I] Intelligence Space
@@ -78,8 +78,8 @@ The system uses **Keycloak** as the centralized Identity Provider (IdP).
 └─────────────────┘                         │    │    │
                                             │    │    │
 ┌─────────────────┐                         │    │    │
-│  Rocket.Chat    │◄────────────────────────┘    │    │
-│  (Chat service) │   SAML/OIDC Authentication   │    │
+│  Mattermost     │◄────────────────────────┘    │    │
+│  (Chat service) │   OIDC Authentication         │    │
 └─────────────────┘                              │    │
                                                  │    │
 ┌─────────────────┐                              │    │
@@ -96,7 +96,7 @@ The system uses **Keycloak** as the centralized Identity Provider (IdP).
 * **Realm**: `opendx`
 * **Clients**:
   * `opendx-dashboard`: For the Next.js app (Access Type: Confidential + Authorization Code Flow).
-  * `rocketchat-sso`: For Rocket.Chat.
+  * `mattermost-sso`: For Mattermost.
   * `wikijs-sso`: For Wiki.js.
   * `n8n-sso`: For n8n.
 
@@ -111,7 +111,7 @@ When an admin performs an action on the Next.js Dashboard, a webhook is sent to 
                                                    │
                                                    ├──► Step 1: Call Keycloak API to auto-create user
                                                    │
-                                                   ├──► Step 2: Call Rocket.Chat API to create channel & send message
+                                                   ├──► Step 2: Call Mattermost API to send welcome message
                                                    │
                                                    └──► Step 3: Call Wiki.js API to create personal onboarding page
 ```
