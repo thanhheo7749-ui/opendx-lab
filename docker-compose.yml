@@ -1,0 +1,300 @@
+# ==============================================================================
+# OpenDX-Lab - Docker Compose Configuration (Ecosystem Stack)
+#
+# Copyright (C) 2026 OpenDX-Lab Contributors
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+# ==============================================================================
+
+networks:
+  opendx-net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  mongodb_data:
+    driver: local
+  rocketchat_data:
+    driver: local
+  wikijs_data:
+    driver: local
+  n8n_data:
+    driver: local
+  metabase_data:
+    driver: local
+  ollama_data:
+    driver: local
+
+services:
+  # ----------------------------------------------------------------------------
+  # [D] Data: PostgreSQL (Shared Database for keycloak, wikijs, n8n, metabase, dashboard)
+  # ----------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: opendx-postgres
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: postgres
+      POSTGRES_DB_KEYCLOAK: ${POSTGRES_DB_KEYCLOAK}
+      POSTGRES_DB_WIKIJS: ${POSTGRES_DB_WIKIJS}
+      POSTGRES_DB_N8N: ${POSTGRES_DB_N8N}
+      POSTGRES_DB_METABASE: ${POSTGRES_DB_METABASE}
+      POSTGRES_DB_DASHBOARD: ${POSTGRES_DB_DASHBOARD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./configs/postgres/init-multiple-databases.sh:/docker-entrypoint-initdb.d/init-multiple-databases.sh
+    networks:
+      - opendx-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ----------------------------------------------------------------------------
+  # [D] Data: MongoDB (Required backend for Rocket.Chat)
+  # ----------------------------------------------------------------------------
+  mongodb:
+    image: mongo:6.0
+    container_name: opendx-mongodb
+    command: mongod --oplogSize 128 --replSet rs0
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - opendx-net
+    healthcheck:
+      test: ["CMD", "mongosh", "-u", "${MONGO_INITDB_ROOT_USERNAME}", "-p", "${MONGO_INITDB_ROOT_PASSWORD}", "--authenticationDatabase", "admin", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Helper service to initialize the Replica Set required by Rocket.Chat
+  mongodb-init-replica:
+    image: mongo:6.0
+    container_name: opendx-mongodb-init-replica
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    command: >
+      bash -c "
+      mongosh --host mongodb:27017 -u ${MONGO_INITDB_ROOT_USERNAME} -p ${MONGO_INITDB_ROOT_PASSWORD} --eval '
+        try {
+          rs.status();
+          console.log(\"Replica set already initialized\");
+        } catch (e) {
+          rs.initiate({
+            _id: \"rs0\",
+            members: [{ _id: 0, host: \"mongodb:27017\" }]
+          });
+          console.log(\"Replica set initiated successfully\");
+        }
+      ' || true
+      "
+    networks:
+      - opendx-net
+    restart: "no"
+
+  # ----------------------------------------------------------------------------
+  # [H] Human: Keycloak (Single Sign-On / IAM)
+  # ----------------------------------------------------------------------------
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0
+    container_name: opendx-keycloak
+    command: start-dev --import-realm
+    ports:
+      - "${KEYCLOAK_PORT:-8080}:8080"
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KC_DB: ${KC_DB}
+      KC_DB_URL: ${KC_DB_URL}
+      KC_DB_USERNAME: ${KC_DB_USERNAME}
+      KC_DB_PASSWORD: ${KC_DB_PASSWORD}
+      KC_HTTP_ENABLED: 'true'
+      KC_HOSTNAME_STRICT: 'false'
+      KC_HOSTNAME_STRICT_HTTPS: 'false'
+    volumes:
+      - ./configs/keycloak:/opt/keycloak/data/import
+    networks:
+      - opendx-net
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ----------------------------------------------------------------------------
+  # [H] Human: Rocket.Chat (Internal Communication)
+  # ----------------------------------------------------------------------------
+  rocketchat:
+    image: registry.rocket.chat/rocketchat/rocket.chat:6.9.0
+    container_name: opendx-rocketchat
+    ports:
+      - "${ROCKETCHAT_PORT:-3100}:3000"
+    environment:
+      PORT: 3000
+      ROOT_URL: ${ROCKETCHAT_ROOT_URL}
+      MONGO_URL: ${MONGO_URL}
+      MONGO_OPLOG_URL: ${MONGO_OPLOG_URL}
+      Accounts_UseDNSDomainCheck: 'false'
+    volumes:
+      - rocketchat_data:/app/uploads
+    networks:
+      - opendx-net
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      mongodb-init-replica:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  # ----------------------------------------------------------------------------
+  # [H] Human: Wiki.js (Knowledge Management & Documentation)
+  # ----------------------------------------------------------------------------
+  wikijs:
+    image: requarks/wiki:2
+    container_name: opendx-wikijs
+    ports:
+      - "${WIKIJS_PORT:-3200}:3000"
+    environment:
+      DB_TYPE: ${WIKIJS_DB_TYPE}
+      DB_HOST: ${WIKIJS_DB_HOST}
+      DB_PORT: ${WIKIJS_DB_PORT}
+      DB_USER: ${WIKIJS_DB_USER}
+      DB_PASS: ${WIKIJS_DB_PASS}
+      DB_NAME: ${WIKIJS_DB_NAME}
+    volumes:
+      - wikijs_data:/wiki/data
+    networks:
+      - opendx-net
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ----------------------------------------------------------------------------
+  # [P] Process: n8n (Workflow Automation)
+  # ----------------------------------------------------------------------------
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:1.45.1
+    container_name: opendx-n8n
+    ports:
+      - "${N8N_PORT:-5678}:5678"
+    environment:
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
+      DB_TYPE: ${N8N_DB_TYPE}
+      DB_POSTGRESDB_HOST: ${N8N_DB_POSTGRESDB_HOST}
+      DB_POSTGRESDB_PORT: ${N8N_DB_POSTGRESDB_PORT}
+      DB_POSTGRESDB_DATABASE: ${N8N_DB_POSTGRESDB_DATABASE}
+      DB_POSTGRESDB_USER: ${N8N_DB_POSTGRESDB_USER}
+      DB_POSTGRESDB_PASSWORD: ${N8N_DB_POSTGRESDB_PASSWORD}
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./configs/n8n:/home/node/.n8n/configs
+    networks:
+      - opendx-net
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ----------------------------------------------------------------------------
+  # [D] Data: Metabase (Business Intelligence Dashboard)
+  # ----------------------------------------------------------------------------
+  metabase:
+    image: metabase/metabase:v0.50.3
+    container_name: opendx-metabase
+    ports:
+      - "${METABASE_PORT:-3300}:3000"
+    environment:
+      MB_DB_TYPE: ${MB_DB_TYPE}
+      MB_DB_HOST: ${MB_DB_HOST}
+      MB_DB_PORT: ${MB_DB_PORT}
+      MB_DB_DBNAME: ${MB_DB_DBNAME}
+      MB_DB_USER: ${MB_DB_USER}
+      MB_DB_PASS: ${MB_DB_PASS}
+    volumes:
+      - metabase_data:/metabase-data
+    networks:
+      - opendx-net
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ----------------------------------------------------------------------------
+  # [I] Intelligence: Ollama (Local LLM Instance)
+  # ----------------------------------------------------------------------------
+  ollama:
+    image: ollama/ollama:latest
+    container_name: opendx-ollama
+    ports:
+      - "${OLLAMA_PORT:-11434}:11434"
+    environment:
+      OLLAMA_HOST: ${OLLAMA_HOST}
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - opendx-net
+    restart: unless-stopped
+
+  # ----------------------------------------------------------------------------
+  # [P] Process: Dashboard (Next.js Core Application - Integrations & Portal)
+  # ----------------------------------------------------------------------------
+  dashboard:
+    image: node:20-alpine
+    container_name: opendx-dashboard
+    ports:
+      - "3000:3000"
+    working_dir: /app
+    volumes:
+      - ./dashboard:/app
+    environment:
+      PORT: 3000
+      DATABASE_URL: ${DATABASE_URL}
+      NEXTAUTH_URL: ${NEXTAUTH_URL}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      KEYCLOAK_CLIENT_ID: ${KEYCLOAK_CLIENT_ID}
+      KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET}
+      KEYCLOAK_ISSUER: ${KEYCLOAK_ISSUER}
+      OLLAMA_API_URL: ${OLLAMA_API_URL}
+      METABASE_SITE_URL: ${METABASE_SITE_URL}
+      METABASE_SECRET_KEY: ${METABASE_SECRET_KEY}
+      NODE_ENV: development
+    command: >
+      sh -c "
+        if [ ! -d \"node_modules\" ]; then 
+          echo 'node_modules not found. Installing dependencies...';
+          npm install; 
+        fi && 
+        npm run dev
+      "
+    networks:
+      - opendx-net
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+      ollama:
+        condition: service_started
+    restart: unless-stopped
