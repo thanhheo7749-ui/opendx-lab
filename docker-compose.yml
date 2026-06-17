@@ -24,9 +24,7 @@ networks:
 volumes:
   postgres_data:
     driver: local
-  mongodb_data:
-    driver: local
-  rocketchat_data:
+  mattermost_data:
     driver: local
   wikijs_data:
     driver: local
@@ -39,7 +37,7 @@ volumes:
 
 services:
   # ----------------------------------------------------------------------------
-  # [D] Data: PostgreSQL (Shared Database for keycloak, wikijs, n8n, metabase, dashboard)
+  # [D] Data: PostgreSQL (Shared Database for keycloak, mattermost, wikijs, n8n, metabase, dashboard)
   # ----------------------------------------------------------------------------
   postgres:
     image: postgres:16-alpine
@@ -55,6 +53,7 @@ services:
       POSTGRES_DB_N8N: ${POSTGRES_DB_N8N}
       POSTGRES_DB_METABASE: ${POSTGRES_DB_METABASE}
       POSTGRES_DB_DASHBOARD: ${POSTGRES_DB_DASHBOARD}
+      POSTGRES_DB_MATTERMOST: ${POSTGRES_DB_MATTERMOST}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./configs/postgres/init-multiple-databases.sh:/docker-entrypoint-initdb.d/init-multiple-databases.sh
@@ -68,51 +67,28 @@ services:
     restart: unless-stopped
 
   # ----------------------------------------------------------------------------
-  # [D] Data: MongoDB (Required backend for Rocket.Chat)
+  # [H] Human: Mattermost (Internal Communication & Team Chat)
   # ----------------------------------------------------------------------------
-  mongodb:
-    image: mongo:6.0
-    container_name: opendx-mongodb
-    command: mongod --oplogSize 128 --replSet rs0
+  mattermost:
+    image: mattermost/mattermost-team-edition:release-10.2
+    container_name: opendx-mattermost
+    ports:
+      - "${MATTERMOST_PORT:-3100}:8065"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      MM_SQLSETTINGS_DRIVERNAME: ${MM_SQLSETTINGS_DRIVERNAME}
+      MM_SQLSETTINGS_DATASOURCE: ${MM_SQLSETTINGS_DATASOURCE}
+      MM_SERVICESETTINGS_SITEURL: ${MM_SERVICESETTINGS_SITEURL}
+      MM_SERVICESETTINGS_LISTENADDRESS: ":8065"
+      MM_TEAMSETTINGS_ENABLEOPENSERVER: "true"
+      MM_PLUGINSETTINGS_ENABLEUPLOADS: "true"
     volumes:
-      - mongodb_data:/data/db
+      - mattermost_data:/mattermost/data
     networks:
       - opendx-net
-    healthcheck:
-      test: ["CMD", "mongosh", "-u", "${MONGO_INITDB_ROOT_USERNAME}", "-p", "${MONGO_INITDB_ROOT_PASSWORD}", "--authenticationDatabase", "admin", "--eval", "db.adminCommand('ping')"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-
-  # Helper service to initialize the Replica Set required by Rocket.Chat
-  mongodb-init-replica:
-    image: mongo:6.0
-    container_name: opendx-mongodb-init-replica
     depends_on:
-      mongodb:
+      postgres:
         condition: service_healthy
-    command: >
-      bash -c "
-      mongosh --host mongodb:27017 -u ${MONGO_INITDB_ROOT_USERNAME} -p ${MONGO_INITDB_ROOT_PASSWORD} --eval '
-        try {
-          rs.status();
-          console.log(\"Replica set already initialized\");
-        } catch (e) {
-          rs.initiate({
-            _id: \"rs0\",
-            members: [{ _id: 0, host: \"mongodb:27017\" }]
-          });
-          console.log(\"Replica set initiated successfully\");
-        }
-      ' || true
-      "
-    networks:
-      - opendx-net
-    restart: "no"
+    restart: unless-stopped
 
   # ----------------------------------------------------------------------------
   # [H] Human: Keycloak (Single Sign-On / IAM)
@@ -142,30 +118,6 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-  # ----------------------------------------------------------------------------
-  # [H] Human: Rocket.Chat (Internal Communication)
-  # ----------------------------------------------------------------------------
-  rocketchat:
-    image: registry.rocket.chat/rocketchat/rocket.chat:6.9.0
-    container_name: opendx-rocketchat
-    ports:
-      - "${ROCKETCHAT_PORT:-3100}:3000"
-    environment:
-      PORT: 3000
-      ROOT_URL: ${ROCKETCHAT_ROOT_URL}
-      MONGO_URL: ${MONGO_URL}
-      MONGO_OPLOG_URL: ${MONGO_OPLOG_URL}
-      Accounts_UseDNSDomainCheck: 'false'
-    volumes:
-      - rocketchat_data:/app/uploads
-    networks:
-      - opendx-net
-    depends_on:
-      mongodb:
-        condition: service_healthy
-      mongodb-init-replica:
-        condition: service_completed_successfully
-    restart: unless-stopped
 
   # ----------------------------------------------------------------------------
   # [H] Human: Wiki.js (Knowledge Management & Documentation)

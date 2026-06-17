@@ -53,4 +53,8 @@ if [ -n "$POSTGRES_DB_DASHBOARD" ]; then
 	create_user_and_database "$POSTGRES_DB_DASHBOARD"
 fi
 
+if [ -n "$POSTGRES_DB_MATTERMOST" ]; then
+	create_user_and_database "$POSTGRES_DB_MATTERMOST"
+fi
+
 echo "PostgreSQL multi-database initialization completed successfully!"
