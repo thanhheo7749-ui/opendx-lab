@@ -89,6 +89,10 @@ services:
       MM_GITLABSETTINGS_TOKENENDPOINT: ${MM_GITLABSETTINGS_TOKENENDPOINT}
       MM_GITLABSETTINGS_USERAPIENDPOINT: ${MM_GITLABSETTINGS_USERAPIENDPOINT}
       MM_GITLABSETTINGS_BUTTONTEXT: ${MM_GITLABSETTINGS_BUTTONTEXT}
+      MM_SERVICESETTINGS_ENABLELOCALMODE: "true"
+      MM_SERVICESETTINGS_ENABLEINCOMINGWEBHOOKS: "true"
+      MM_SERVICESETTINGS_ENABLEPOSTUSERNAMEOVERRIDE: "true"
+      MM_SERVICESETTINGS_ENABLEPOSTICONOVERRIDE: "true"
     volumes:
       - mattermost_data:/mattermost/data
     networks:
@@ -115,9 +119,10 @@ services:
       KC_DB_USERNAME: ${KC_DB_USERNAME}
       KC_DB_PASSWORD: ${KC_DB_PASSWORD}
       KC_HTTP_ENABLED: 'true'
-      KC_HOSTNAME: localhost
-      KC_HOSTNAME_STRICT: 'true'
+      KC_HOSTNAME: http://localhost:8080
+      KC_HOSTNAME_STRICT: 'false'
       KC_HOSTNAME_STRICT_HTTPS: 'false'
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: 'true'
     volumes:
       - ./configs/keycloak:/opt/keycloak/data/import
     networks:
@@ -176,6 +181,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    entrypoint: ["/bin/sh", "-c", "n8n & sleep 15 && sh /home/node/.n8n/configs/import-workflows.sh ; wait"]
     restart: unless-stopped
 
   # ----------------------------------------------------------------------------
@@ -229,6 +235,7 @@ services:
     working_dir: /app
     volumes:
       - ./dashboard:/app
+      - /app/node_modules
     environment:
       PORT: 3000
       DATABASE_URL: ${DATABASE_URL}
@@ -237,20 +244,31 @@ services:
       KEYCLOAK_CLIENT_ID: ${KEYCLOAK_CLIENT_ID}
       KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET}
       KEYCLOAK_ISSUER: ${KEYCLOAK_ISSUER}
+      KEYCLOAK_ISSUER_INTERNAL: http://keycloak:8080/realms/opendx
       OLLAMA_API_URL: ${OLLAMA_API_URL}
       METABASE_SITE_URL: ${METABASE_SITE_URL}
       METABASE_SECRET_KEY: ${METABASE_SECRET_KEY}
+      AUTH_TRUST_HOST: "true"
+      KEYCLOAK_URL: http://keycloak:8080
+      MATTERMOST_URL: http://mattermost:8065
+      WIKIJS_URL: http://wikijs:3000
+      N8N_URL: http://n8n:5678
+      METABASE_URL: http://metabase:3000
+      OLLAMA_URL: http://ollama:11434
+      N8N_ONBOARDING_WEBHOOK_URL: http://n8n:5678/webhook/onboarding-001/webhook%2520trigger/onboarding
+      N8N_OFFBOARDING_WEBHOOK_URL: http://n8n:5678/webhook/offboarding-001/webhook%2520trigger/offboarding
+      N8N_ACTIVATION_WEBHOOK_URL: http://n8n:5678/webhook/activation-001/webhook%2520trigger/activation
       NODE_ENV: development
     command: >
       sh -c "
-        if [ ! -d \"node_modules\" ]; then 
-          echo 'node_modules not found. Installing dependencies...';
-          npm install; 
-        fi && 
+        npm install &&
+        npx prisma generate &&
         npm run dev
       "
     networks:
       - opendx-net
+    extra_hosts:
+      - "localhost:host-gateway"
     depends_on:
       postgres:
         condition: service_healthy

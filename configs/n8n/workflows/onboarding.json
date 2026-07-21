@@ -1,0 +1,125 @@
+{
+  "id": "onboarding-001",
+  "name": "Employee Onboarding",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "onboarding",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://keycloak:8080/realms/master/protocol/openid-connect/token",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            { "name": "grant_type", "value": "password" },
+            { "name": "client_id", "value": "admin-cli" },
+            { "name": "username", "value": "admin" },
+            { "name": "password", "value": "admin123" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "get-kc-token",
+      "name": "Get Keycloak Token",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [470, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://keycloak:8080/admin/realms/opendx/users",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ username: $('Webhook Trigger').item.json.body.data.email.split('@')[0], email: $('Webhook Trigger').item.json.body.data.email, firstName: $('Webhook Trigger').item.json.body.data.firstName, lastName: $('Webhook Trigger').item.json.body.data.lastName, enabled: true, emailVerified: true, credentials: [{ type: 'password', value: 'Welcome@123', temporary: true }] }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "create-kc-user",
+      "name": "Create Keycloak User",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [690, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://mattermost:8065/hooks/1tweywjun7dk9kph3qyyq4odjh",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ username: 'DX-OS Bot', icon_url: 'https://raw.githubusercontent.com/mattermost/mattermost/master/webapp/channels/src/images/icon50x50.png', text: '### \ud83c\udf89 Chào mừng nhân viên mới!\\\\n| Thông tin | Chi tiết |\\\\n|---|---|\\\\n| **Họ tên** | ' + $('Webhook Trigger').item.json.body.data.firstName + ' ' + $('Webhook Trigger').item.json.body.data.lastName + ' |\\\\n| **Email** | ' + $('Webhook Trigger').item.json.body.data.email + ' |\\\\n| **Phòng ban** | ' + $('Webhook Trigger').item.json.body.data.department + ' |\\\\n\\\\n✅ Tài khoản SSO đã được tạo tự động.' }) }}",
+        "options": {}
+      },
+      "id": "send-mm-welcome",
+      "name": "Send Welcome Message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [910, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, message: 'Onboarding complete', keycloak: 'user created', mattermost: 'welcome sent' }) }}",
+        "options": {}
+      },
+      "id": "respond-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1130, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [{ "node": "Get Keycloak Token", "type": "main", "index": 0 }]
+      ]
+    },
+    "Get Keycloak Token": {
+      "main": [
+        [{ "node": "Create Keycloak User", "type": "main", "index": 0 }]
+      ]
+    },
+    "Create Keycloak User": {
+      "main": [
+        [{ "node": "Send Welcome Message", "type": "main", "index": 0 }]
+      ]
+    },
+    "Send Welcome Message": {
+      "main": [
+        [{ "node": "Respond to Webhook", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "active": true
+}

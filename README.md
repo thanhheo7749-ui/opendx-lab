@@ -10,7 +10,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
 ### Enterprise Digital Transformation Ecosystem — 100% Open Source
 
-*One command to spin up a fully integrated DX-Lab: SSO, Chat, Wiki, Workflow Automation, BI, and AI Assistant — all pre-connected.*
+_One command to spin up a fully integrated DX-Lab: SSO, Chat, Wiki, Workflow Automation, BI, and AI Assistant — all pre-connected._
 
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](LICENSE)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)](docker-compose.yml)
@@ -59,7 +59,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
 - [Technology Stack](#%EF%B8%8F-technology-stack)
 - [Project Structure](#-project-structure)
 - [Documentation](#-documentation)
-- [Project Status](#-project-status)
 - [Contributing](#-contributing)
 - [License](#-license)
 - [Team](#-team)
@@ -128,54 +127,56 @@ Admin creates employee "Tran Minh Duc"
 git clone https://github.com/thanhheo7749-ui/opendx-lab.git
 cd opendx-lab
 
-# 2. Copy the environment configuration
-cp .env.example .env
+# 2. Automated setup using Just (recommended)
+# Install 'just' task runner if you don't have it:
+# - Windows: winget install Casey.Just
+# - macOS:   brew install just
+# - Linux:   sudo apt install just
 
-# 3. Launch the entire ecosystem (one command!)
-docker compose up -d
+just setup
 
-# 4. Wait for all services to become healthy (~2-3 min on first run)
-docker compose ps
+# — OR fallback legacy shell setup —
+bash scripts/setup.sh
 ```
 
 Done! 🎉
 
-| Service | URL | Description |
-|---------|-----|-------------|
-| **Dashboard** | http://localhost:3000 | Main portal |
-| **Keycloak** | http://localhost:8080 | SSO Admin console |
-| **Mattermost** | http://localhost:3100 | Internal chat |
-| **Wiki.js** | http://localhost:3200 | Knowledge wiki |
-| **n8n** | http://localhost:5678 | Workflow editor |
-| **Metabase** | http://localhost:3300 | BI Dashboard |
-| **Ollama** | http://localhost:11434 | LLM API |
+| Service        | URL                    | Description       |
+| -------------- | ---------------------- | ----------------- |
+| **Dashboard**  | http://localhost:3000  | Main portal       |
+| **Keycloak**   | http://localhost:8080  | SSO Admin console |
+| **Mattermost** | http://localhost:3100  | Internal chat     |
+| **Wiki.js**    | http://localhost:3200  | Knowledge wiki    |
+| **n8n**        | http://localhost:5678  | Workflow editor   |
+| **Metabase**   | http://localhost:3300  | BI Dashboard      |
+| **Ollama**     | http://localhost:11434 | LLM API           |
 
 ---
 
 ## 🔑 Demo Credentials
 
-| Account | Username | Password | Role |
-|---------|----------|----------|------|
-| Admin | `admin` | `admin123` | Administrator |
-| HR Manager | `hr.mai` | `demo123` | HR Manager |
-| IT Staff | `it.hung` | `demo123` | IT Staff |
-| Employee | `nv.duc` | `demo123` | Employee |
+| Account    | Username  | Password   | Role          |
+| ---------- | --------- | ---------- | ------------- |
+| Admin      | `admin`   | `admin123` | Administrator |
+| HR Manager | `hr.mai`  | `demo123`  | HR Manager    |
+| IT Staff   | `it.hung` | `demo123`  | IT Staff      |
+| Employee   | `nv.duc`  | `demo123`  | Employee      |
 
 ---
 
 ## 🛠️ Technology Stack
 
-| Space | Tool | Version | License | Role |
-|-------|------|---------|---------|------|
-| **[H]** SSO | Keycloak | 25.x | Apache-2.0 | Centralized authentication |
-| **[H]** Chat | Mattermost | 10.x | MIT | Internal messaging |
-| **[H]** Wiki | Wiki.js | 2.x | AGPL-3.0 | Knowledge management |
-| **[P]** Workflow | n8n | 1.x | Sustainable Use | Workflow automation |
-| **[P]** Dashboard | Next.js | 15.x | MIT | Main web UI |
-| **[D]** Database | PostgreSQL | 16 | PostgreSQL License | Relational database |
-| **[D]** BI | Metabase | 0.50 | AGPL-3.0 | Data visualization |
-| **[I]** LLM | Ollama | latest | MIT | Local AI |
-| **Deploy** | Docker Compose | v2 | Apache-2.0 | Container orchestration |
+| Space             | Tool           | Version | License            | Role                       |
+| ----------------- | -------------- | ------- | ------------------ | -------------------------- |
+| **[H]** SSO       | Keycloak       | 25.x    | Apache-2.0         | Centralized authentication |
+| **[H]** Chat      | Mattermost     | 10.x    | MIT                | Internal messaging         |
+| **[H]** Wiki      | Wiki.js        | 2.x     | AGPL-3.0           | Knowledge management       |
+| **[P]** Workflow  | n8n            | 1.x     | Sustainable Use    | Workflow automation        |
+| **[P]** Dashboard | Next.js        | 15.x    | MIT                | Main web UI                |
+| **[D]** Database  | PostgreSQL     | 16      | PostgreSQL License | Relational database        |
+| **[D]** BI        | Metabase       | 0.50    | AGPL-3.0           | Data visualization         |
+| **[I]** LLM       | Ollama         | latest  | MIT                | Local AI                   |
+| **Deploy**        | Docker Compose | v2      | Apache-2.0         | Container orchestration    |
 
 ---
 
@@ -205,9 +206,10 @@ opendx-lab/
 │   ├── user-guide.md           # End-user guide
 │   └── api.md                  # API documentation
 ├── scripts/                    # Utility scripts
-│   ├── setup.sh                # Automated setup
-│   └── seed-data.sh            # Sample data generation
+│   ├── setup.sh                # Automated setup (one command!)
+│   └── reset.sh                # Full reset (destroy + rebuild)
 ├── .env.example                # Environment variables template
+├── justfile                    # Cross-platform developer task runner
 ├── .gitignore
 ├── .dockerignore
 ├── CHANGELOG.md                # Version history
@@ -224,29 +226,15 @@ opendx-lab/
 
 ## 📚 Documentation
 
-| Document | Description |
-|----------|-------------|
+| Document                             | Description                            |
+| ------------------------------------ | -------------------------------------- |
 | [Architecture](docs/architecture.md) | Detailed H-P-D-I architecture diagrams |
-| [Deployment](docs/deployment.md) | Production deployment guide |
-| [User Guide](docs/user-guide.md) | End-user guide |
-| [API](docs/api.md) | API endpoints documentation |
-| [Contributing](CONTRIBUTING.md) | How to contribute to the project |
-
----
-
-## 📈 Project Status
-
-### Roadmap
-
-- [x] Design H-P-D-I architecture
-- [x] Docker Compose for 8 services
-- [ ] Keycloak SSO integration across all tools
-- [ ] n8n workflow templates (onboarding, offboarding)
-- [ ] Dashboard web app (Next.js)
-- [ ] Metabase BI dashboard
-- [ ] AI Chat with Ollama integration
-- [ ] Complete documentation
-- [ ] Demo video
+| [Deployment](docs/deployment.md)     | Production deployment guide            |
+| [User Guide](docs/user-guide.md)     | End-user guide                         |
+| [Demo Script](docs/demo-script.md)   | 5-minute demo script for competition   |
+| [SSO Setup](docs/sso-setup.md)       | Keycloak SSO configuration             |
+| [API](docs/api.md)                   | API endpoints documentation            |
+| [Contributing](CONTRIBUTING.md)      | How to contribute to the project       |
 
 ---
 
@@ -275,16 +263,6 @@ git push origin feature/your-feature
 This project is developed for the **Open Source Software track** of the **Vietnam National Informatics Olympiad (OLP) 2026**, organized by [VFOSSA](https://vfossa.vn).
 
 **Theme:** DX-OS Model — Digital Transformation Operating System
-
----
-
-## 👥 Team
-
-| Member | Role | GitHub |
-|--------|------|--------|
-| [Name 1] | Infrastructure + SSO | [@github1] |
-| [Name 2] | Dashboard + BI | [@github2] |
-| [Name 3] | AI Chat + Docs | [@github3] |
 
 ---
 

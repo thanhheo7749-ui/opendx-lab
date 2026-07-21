@@ -1,0 +1,151 @@
+{
+  "id": "activation-001",
+  "name": "Employee Activation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "activation",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://keycloak:8080/realms/master/protocol/openid-connect/token",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            { "name": "grant_type", "value": "password" },
+            { "name": "client_id", "value": "admin-cli" },
+            { "name": "username", "value": "admin" },
+            { "name": "password", "value": "admin123" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "get-kc-token",
+      "name": "Get Keycloak Token",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [470, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=http://keycloak:8080/admin/realms/opendx/users?email={{ encodeURIComponent($('Webhook Trigger').item.json.body.data.email) }}&exact=true",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.access_token }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "find-kc-user",
+      "name": "Find Keycloak User",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [690, 300]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=http://keycloak:8080/admin/realms/opendx/users/{{ $json.id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Get Keycloak Token').item.json.access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ enabled: true }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "enable-kc-user",
+      "name": "Enable Keycloak User",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [910, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://mattermost:8065/hooks/1tweywjun7dk9kph3qyyq4odjh",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ username: 'DX-OS Bot', text: '### 🔄 Nhân viên quay lại làm việc\\n| Thông tin | Chi tiết |\\n|---|---|\\n| **Họ tên** | ' + $('Webhook Trigger').item.json.body.data.firstName + ' ' + $('Webhook Trigger').item.json.body.data.lastName + ' |\\n| **Email** | ' + $('Webhook Trigger').item.json.body.data.email + ' |\\n\\n🔓 Tài khoản SSO đã được kích hoạt lại.' }) }}",
+        "options": {}
+      },
+      "id": "send-mm-reactivation",
+      "name": "Send Reactivation Notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1130, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, message: 'Reactivation complete', keycloak: 'user enabled', mattermost: 'notification sent' }) }}",
+        "options": {}
+      },
+      "id": "respond-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1350, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [{ "node": "Get Keycloak Token", "type": "main", "index": 0 }]
+      ]
+    },
+    "Get Keycloak Token": {
+      "main": [
+        [{ "node": "Find Keycloak User", "type": "main", "index": 0 }]
+      ]
+    },
+    "Find Keycloak User": {
+      "main": [
+        [{ "node": "Enable Keycloak User", "type": "main", "index": 0 }]
+      ]
+    },
+    "Enable Keycloak User": {
+      "main": [
+        [{ "node": "Send Reactivation Notification", "type": "main", "index": 0 }]
+      ]
+    },
+    "Send Reactivation Notification": {
+      "main": [
+        [{ "node": "Respond to Webhook", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "active": true
+}

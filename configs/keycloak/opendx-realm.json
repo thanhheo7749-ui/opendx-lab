@@ -165,6 +165,21 @@
       "directAccessGrantsEnabled": false,
       "fullScopeAllowed": true,
       "defaultClientScopes": ["openid", "profile", "email"]
+    },
+    {
+      "clientId": "n8n-service",
+      "name": "n8n Service Account",
+      "description": "Service account client for n8n to call Keycloak Admin API (create/disable users)",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "n8n-service-secret-change-me",
+      "publicClient": false,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "fullScopeAllowed": false,
+      "defaultClientScopes": ["openid"]
     }
   ],
   "users": [
