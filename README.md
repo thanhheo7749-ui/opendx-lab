@@ -10,14 +10,13 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
 ### Enterprise Digital Transformation Ecosystem — 100% Open Source
 
-_One command to spin up a fully integrated DX-Lab: SSO, Chat, Wiki, Workflow Automation, BI, and AI Assistant — all pre-connected._
+_One command to spin up a fully integrated DX ecosystem: SSO, Chat, Wiki, Workflow Automation, BI, and AI Assistant — all pre-connected._
 
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](LICENSE)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)](docker-compose.yml)
-[![OLP 2026](https://img.shields.io/badge/OLP-Open%20Source%202026-orange)](https://vfossa.vn)
 [![Open Source](https://img.shields.io/badge/Open%20Source-100%25-brightgreen)]()
 
-[Quick Start](#-quick-start) | [Architecture](#-architecture) | [Demo](#-demo-credentials) | [Docs](docs/) | [Contributing](CONTRIBUTING.md)
+[Quick Start](#-quick-start) | [Architecture](#-architecture) | [Tech Stack](#%EF%B8%8F-technology-stack) | [Docs](docs/) | [Contributing](CONTRIBUTING.md)
 
 </div>
 
@@ -25,7 +24,7 @@ _One command to spin up a fully integrated DX-Lab: SSO, Chat, Wiki, Workflow Aut
 
 ## 📖 What is OpenDX-Lab?
 
-**OpenDX-Lab** is an open-source distribution that integrates best-of-breed open-source tools into a complete Digital Transformation ecosystem for enterprises, following the **DX-OS** model and the **H-P-D-I** (Human–Process–Data–Intelligence) architecture.
+**OpenDX-Lab** is an open-source platform that integrates best-of-breed open-source tools into a complete Digital Transformation ecosystem for enterprises, following the **H-P-D-I** (Human–Process–Data–Intelligence) architecture.
 
 ### The Problem
 
@@ -33,18 +32,18 @@ _One command to spin up a fully integrated DX-Lab: SSO, Chat, Wiki, Workflow Aut
 
 ### The Solution
 
-> **One command: `docker compose up`** → Instantly launch a complete DX ecosystem: SSO, Chat, Wiki, Workflow Automation, BI Dashboard, AI Assistant — all **pre-connected**, **single sign-on**, **data flows automatically**.
+> **One command: `docker compose up -d`** → Instantly launch a complete DX ecosystem: SSO, Chat, Wiki, Workflow Automation, BI Dashboard, AI Assistant — all **pre-connected**, **single sign-on**, **data flows automatically**.
 
 ---
 
 ## ✨ Highlights
 
-- 🔐 **Single Sign-On (SSO)** — Keycloak provides centralized authentication for all tools
+- 🔐 **Single Sign-On (SSO)** — Keycloak provides centralized authentication for all services
 - 💬 **Internal Chat** — Mattermost replaces consumer messaging apps for work
 - 📚 **Knowledge Wiki** — Wiki.js manages internal documentation and SOPs
-- 🔄 **Workflow Automation** — n8n automates cross-system processes (e.g., onboarding)
-- 📊 **BI Dashboard** — Metabase visualizes data from all systems in real-time
-- 🤖 **AI Assistant** — Ollama LLM answers questions using your company's actual data
+- 🔄 **Workflow Automation** — n8n automates cross-system processes (onboarding, offboarding)
+- 📊 **BI Dashboard** — Metabase visualizes data from all systems
+- 🤖 **AI Assistant** — Ollama + Qwen LLM answers questions using your company's data
 - 🐳 **One-command Setup** — Docker Compose launches the entire ecosystem
 - 🆓 **100% Free & Open Source** — Every component is open source
 
@@ -55,26 +54,24 @@ _One command to spin up a fully integrated DX-Lab: SSO, Chat, Wiki, Workflow Aut
 - [What is OpenDX-Lab?](#-what-is-opendx-lab)
 - [Architecture (H-P-D-I)](#-architecture)
 - [Quick Start](#-quick-start)
-- [Demo Credentials](#-demo-credentials)
 - [Technology Stack](#%EF%B8%8F-technology-stack)
 - [Project Structure](#-project-structure)
 - [Documentation](#-documentation)
 - [Contributing](#-contributing)
 - [License](#-license)
-- [Team](#-team)
 
 ---
 
 ## 🏗 Architecture
 
-### DX-OS Model — H-P-D-I Architecture
+### H-P-D-I Architecture
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
 │                      OpenDX-Lab (Docker Compose)                 │
 │                                                                  │
 │  ┌─ [H] Human ──────────────────────────────────────────────┐   │
-│  │  Keycloak (SSO)  │  Mattermost (Chat)   │  Wiki.js (Wiki) │   │
+│  │  Keycloak (SSO)  │  Mattermost (Chat)  │  Wiki.js (Wiki) │   │
 │  └───────────────────────────────────────────────────────────┘   │
 │                                                                  │
 │  ┌─ [P] Process ────────────────────────────────────────────┐   │
@@ -86,25 +83,25 @@ _One command to spin up a fully integrated DX-Lab: SSO, Chat, Wiki, Workflow Aut
 │  └───────────────────────────────────────────────────────────┘   │
 │                                                                  │
 │  ┌─ [I] Intelligence ───────────────────────────────────────┐   │
-│  │  Ollama (Local LLM)  │  AI Chat (RAG)                    │   │
+│  │  Ollama + Qwen 2.5 (Local LLM)  │  AI Chat (RAG SQL)    │   │
 │  └───────────────────────────────────────────────────────────┘   │
 │                                                                  │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
-### Demo Scenario: Employee Onboarding
+### How It Works: Employee Onboarding Example
 
 ```
-Admin creates employee "Tran Minh Duc"
+Admin creates a new employee on Dashboard
     │
-    ├──→ [H] Keycloak auto-creates SSO account
-    ├──→ [H] Mattermost auto-sends welcome message
-    ├──→ [H] Wiki.js auto-shares onboarding docs
-    ├──→ [P] n8n workflow orchestrates all 3 steps above
+    ├──→ [P] n8n workflow triggers automatically
+    ├──→ [H] Keycloak creates SSO account via Admin API
+    ├──→ [H] Mattermost sends welcome message via webhook
+    ├──→ [D] PostgreSQL stores employee record
     ├──→ [D] Metabase dashboard auto-updates metrics
     └──→ [I] AI Chat can answer "Who is the newest employee?"
 
-1 action → 6 systems react → 0 manual messages
+1 action → 6 systems react → 0 manual steps
 ```
 
 ---
@@ -113,12 +110,12 @@ Admin creates employee "Tran Minh Duc"
 
 ### System Requirements
 
-```
-✅ Docker Desktop          # https://www.docker.com/
-✅ Docker Compose v2+      # Bundled with Docker Desktop
-✅ 16GB RAM minimum        # Required for Ollama LLM
-✅ 20GB free disk space    # For Docker images
-```
+| Requirement | Minimum |
+|---|---|
+| Docker Desktop | v4+ (with Compose v2) |
+| RAM | 16 GB |
+| Disk Space | 20 GB free |
+| OS | Windows / macOS / Linux |
 
 ### Installation
 
@@ -127,56 +124,62 @@ Admin creates employee "Tran Minh Duc"
 git clone https://github.com/thanhheo7749-ui/opendx-lab.git
 cd opendx-lab
 
-# 2. Automated setup using Just (recommended)
-# Install 'just' task runner if you don't have it:
-# - Windows: winget install Casey.Just
-# - macOS:   brew install just
-# - Linux:   sudo apt install just
+# 2. Copy environment variables
+cp .env.example .env
 
-just setup
-
-# — OR fallback legacy shell setup —
-bash scripts/setup.sh
+# 3. Start all services
+docker compose up -d
 ```
 
-Done! 🎉
+Wait 2–3 minutes for all services to start, then access:
 
-| Service        | URL                    | Description       |
-| -------------- | ---------------------- | ----------------- |
-| **Dashboard**  | http://localhost:3000  | Main portal       |
-| **Keycloak**   | http://localhost:8080  | SSO Admin console |
-| **Mattermost** | http://localhost:3100  | Internal chat     |
-| **Wiki.js**    | http://localhost:3200  | Knowledge wiki    |
-| **n8n**        | http://localhost:5678  | Workflow editor   |
-| **Metabase**   | http://localhost:3300  | BI Dashboard      |
-| **Ollama**     | http://localhost:11434 | LLM API           |
+| Service | URL | Description |
+|---|---|---|
+| **Dashboard** | http://localhost:3000 | Main portal (Next.js) |
+| **Keycloak** | http://localhost:8080 | SSO Admin Console |
+| **Mattermost** | http://localhost:3100 | Internal Chat |
+| **Wiki.js** | http://localhost:3200 | Knowledge Wiki |
+| **n8n** | http://localhost:5678 | Workflow Editor |
+| **Metabase** | http://localhost:3300 | BI Dashboard |
+| **Ollama** | http://localhost:11434 | LLM API |
 
----
+### Default Keycloak Admin
 
-## 🔑 Demo Credentials
+| | |
+|---|---|
+| **URL** | http://localhost:8080/admin |
+| **Username** | `admin` |
+| **Password** | `admin123` |
 
-| Account    | Username  | Password   | Role          |
-| ---------- | --------- | ---------- | ------------- |
-| Admin      | `admin`   | `admin123` | Administrator |
-| HR Manager | `hr.mai`  | `demo123`  | HR Manager    |
-| IT Staff   | `it.hung` | `demo123`  | IT Staff      |
-| Employee   | `nv.duc`  | `demo123`  | Employee      |
+> Other services (Mattermost, Wiki.js, n8n, Metabase) require first-time setup on initial access, or can be configured to use Keycloak SSO.
 
 ---
 
 ## 🛠️ Technology Stack
 
-| Space             | Tool           | Version | License            | Role                       |
-| ----------------- | -------------- | ------- | ------------------ | -------------------------- |
-| **[H]** SSO       | Keycloak       | 25.x    | Apache-2.0         | Centralized authentication |
-| **[H]** Chat      | Mattermost     | 10.x    | MIT                | Internal messaging         |
-| **[H]** Wiki      | Wiki.js        | 2.x     | AGPL-3.0           | Knowledge management       |
-| **[P]** Workflow  | n8n            | 1.x     | Sustainable Use    | Workflow automation        |
-| **[P]** Dashboard | Next.js        | 15.x    | MIT                | Main web UI                |
-| **[D]** Database  | PostgreSQL     | 16      | PostgreSQL License | Relational database        |
-| **[D]** BI        | Metabase       | 0.50    | AGPL-3.0           | Data visualization         |
-| **[I]** LLM       | Ollama         | latest  | MIT                | Local AI                   |
-| **Deploy**        | Docker Compose | v2      | Apache-2.0         | Container orchestration    |
+| Layer | Service | Version | License | Role |
+|---|---|---|---|---|
+| **[H] Human** | Keycloak | 25.0 | Apache-2.0 | SSO, user management, RBAC |
+| **[H] Human** | Mattermost | 10.2 | MIT | Internal team chat |
+| **[H] Human** | Wiki.js | 2.x | AGPL-3.0 | Knowledge base & documentation |
+| **[P] Process** | n8n | 1.45 | Sustainable Use | Workflow automation |
+| **[P] Process** | Next.js | 16.2 | MIT | Dashboard web application |
+| **[D] Data** | PostgreSQL | 16 | PostgreSQL License | Shared relational database |
+| **[D] Data** | Metabase | 0.50.3 | AGPL-3.0 | Business intelligence & charts |
+| **[I] Intelligence** | Ollama | latest | MIT | Local LLM runtime |
+| **[I] Intelligence** | Qwen 2.5 | 3B | Apache-2.0 | Language model (Vietnamese) |
+| **Deploy** | Docker Compose | v2 | Apache-2.0 | Container orchestration |
+
+### Dashboard Tech Stack
+
+| Technology | Version | Purpose |
+|---|---|---|
+| React | 19.2 | UI library |
+| TypeScript | 5.x | Type-safe language |
+| Tailwind CSS | 4.x | Styling |
+| shadcn/ui | 4.11 | Component library |
+| Prisma | 6.9 | ORM (database access) |
+| NextAuth.js | 5.0 beta | Authentication (Keycloak OIDC) |
 
 ---
 
@@ -184,63 +187,62 @@ Done! 🎉
 
 ```
 opendx-lab/
-├── .github/                    # GitHub workflows, issue templates
+├── .github/                    # CI/CD & issue templates
 │   ├── ISSUE_TEMPLATE/
 │   │   ├── bug_report.yml
 │   │   └── feature_request.yml
 │   └── workflows/
 │       └── ci.yml
-├── configs/                    # Per-service configuration
-│   ├── keycloak/               # Keycloak realm import
-│   ├── n8n/                    # Workflow templates
+├── configs/                    # Service configurations
+│   ├── keycloak/               # Realm import (SSO config)
+│   ├── n8n/                    # Workflow templates (onboarding, offboarding)
 │   ├── metabase/               # Dashboard templates
-│   └── postgres/               # Init scripts, seed data
-├── dashboard/                  # Next.js web app (main codebase)
+│   └── postgres/               # Database init scripts
+├── dashboard/                  # Next.js web application
 │   ├── app/                    # App Router pages
 │   ├── components/             # React components
-│   ├── lib/                    # API clients, utilities
+│   ├── lib/                    # Utilities & API clients
+│   ├── prisma/                 # Database schema & seed
 │   └── public/                 # Static assets
-├── docs/                       # Project documentation
-│   ├── architecture.md         # Detailed architecture
-│   ├── deployment.md           # Deployment guide
-│   ├── user-guide.md           # End-user guide
-│   └── api.md                  # API documentation
+├── docs/                       # Documentation
+│   ├── api.md
+│   ├── architecture.md
+│   ├── demo-script.md
+│   ├── deployment.md
+│   ├── sso-setup.md
+│   └── user-guide.md
 ├── scripts/                    # Utility scripts
-│   ├── setup.sh                # Automated setup (one command!)
+│   ├── setup.sh                # Automated setup
 │   └── reset.sh                # Full reset (destroy + rebuild)
 ├── .env.example                # Environment variables template
-├── justfile                    # Cross-platform developer task runner
-├── .gitignore
-├── .dockerignore
-├── CHANGELOG.md                # Version history
-├── CODE_OF_CONDUCT.md          # Code of conduct
-├── CONTRIBUTING.md             # Contribution guidelines
-├── docker-compose.yml          # ★ Main file — one command runs all
+├── docker-compose.yml          # ★ One command launches everything
+├── justfile                    # Task runner commands
+├── CHANGELOG.md
+├── CODE_OF_CONDUCT.md
+├── CONTRIBUTING.md
 ├── LICENSE                     # GPL-3.0
-├── README.md                   # This file
-├── SECURITY.md                 # Security policy
-└── THIRD_PARTY_LICENSES.md     # Third-party license disclosures
+├── SECURITY.md
+└── THIRD_PARTY_LICENSES.md
 ```
 
 ---
 
 ## 📚 Documentation
 
-| Document                             | Description                            |
-| ------------------------------------ | -------------------------------------- |
-| [Architecture](docs/architecture.md) | Detailed H-P-D-I architecture diagrams |
-| [Deployment](docs/deployment.md)     | Production deployment guide            |
-| [User Guide](docs/user-guide.md)     | End-user guide                         |
-| [Demo Script](docs/demo-script.md)   | 5-minute demo script for competition   |
-| [SSO Setup](docs/sso-setup.md)       | Keycloak SSO configuration             |
-| [API](docs/api.md)                   | API endpoints documentation            |
-| [Contributing](CONTRIBUTING.md)      | How to contribute to the project       |
+| Document | Description |
+|---|---|
+| [Architecture](docs/architecture.md) | H-P-D-I architecture & service diagrams |
+| [Deployment](docs/deployment.md) | Production deployment guide |
+| [User Guide](docs/user-guide.md) | End-user guide |
+| [SSO Setup](docs/sso-setup.md) | Keycloak SSO configuration |
+| [API](docs/api.md) | API endpoints documentation |
+| [Demo Script](docs/demo-script.md) | Step-by-step demo walkthrough |
 
 ---
 
 ## 🤝 Contributing
 
-We welcome all contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 ```bash
 # Fork & clone
@@ -258,24 +260,16 @@ git push origin feature/your-feature
 
 ---
 
-## 🏆 OLP Open Source Software Competition 2026
-
-This project is developed for the **Open Source Software track** of the **Vietnam National Informatics Olympiad (OLP) 2026**, organized by [VFOSSA](https://vfossa.vn).
-
-**Theme:** DX-OS Model — Digital Transformation Operating System
-
----
-
 ## 📄 License
 
 This project is licensed under the **GNU General Public License v3.0**. See [LICENSE](LICENSE) for details.
+
+All integrated open-source services retain their original licenses. See [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) for details.
 
 ---
 
 <div align="center">
 
 **⭐ Star this repo if you find it useful!**
-
-Made with ❤️ for OLP Open Source 2026
 
 </div>
