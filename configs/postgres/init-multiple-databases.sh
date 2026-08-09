@@ -41,8 +41,8 @@ if [ -n "$POSTGRES_DB_WIKIJS" ]; then
 	create_user_and_database "$POSTGRES_DB_WIKIJS"
 fi
 
-if [ -n "$POSTGRES_DB_N8N" ]; then
-	create_user_and_database "$POSTGRES_DB_N8N"
+if [ -n "$POSTGRES_DB_ACTIVEPIECES" ]; then
+	create_user_and_database "$POSTGRES_DB_ACTIVEPIECES"
 fi
 
 if [ -n "$POSTGRES_DB_METABASE" ]; then

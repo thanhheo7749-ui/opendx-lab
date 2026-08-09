@@ -1,0 +1,196 @@
+// ==============================================================================
+// OpenDX-Lab Dashboard - Prisma Schema
+// SPDX-License-Identifier: GPL-3.0-or-later
+// ==============================================================================
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [vector]
+}
+
+model Department {
+  id          String     @id @default(cuid())
+  name        String     @unique
+  code        String     @unique
+  description String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  employees   Employee[]
+
+  @@map("departments")
+}
+
+model Employee {
+  id           String         @id @default(cuid())
+  firstName    String
+  lastName     String
+  email        String         @unique
+  position     String
+  departmentId String
+  department   Department     @relation(fields: [departmentId], references: [id])
+  status       EmployeeStatus @default(ACTIVE)
+  hireDate     DateTime       @default(now())
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@map("employees")
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  type      String
+  message   String
+  metadata  Json?
+  userId    String?
+  createdAt DateTime @default(now())
+
+  @@map("activity_logs")
+}
+
+enum EmployeeStatus {
+  ACTIVE
+  ON_LEAVE
+  TERMINATED
+}
+
+// =============================================================================
+// Knowledge Graph Models (Graph RAG)
+// =============================================================================
+
+model KgNode {
+  id          String   @id @default(cuid())
+  type        String // DOCUMENT, DEPARTMENT, PROCESS, POLICY, SERVICE, TOPIC, ROLE
+  name        String
+  description String?
+  metadata    Json     @default("{}")
+  source      String? // 'wikijs', 'upload', 'system', 'auto'
+  sourceUrl   String? // Original URL (Wiki.js page link, etc.)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  chunks        KgChunk[]
+  outgoingEdges KgEdge[]  @relation("EdgeSource")
+  incomingEdges KgEdge[]  @relation("EdgeTarget")
+
+  @@index([type])
+  @@index([source])
+  @@map("kg_nodes")
+}
+
+model KgEdge {
+  id        String   @id @default(cuid())
+  sourceId  String
+  targetId  String
+  relation  String // BELONGS_TO, RELATES_TO, MENTIONS, GOVERNS, OWNED_BY, TAGGED_WITH, DEPENDS_ON, PART_OF
+  weight    Float    @default(1.0)
+  metadata  Json     @default("{}")
+  createdAt DateTime @default(now())
+
+  source KgNode @relation("EdgeSource", fields: [sourceId], references: [id], onDelete: Cascade)
+  target KgNode @relation("EdgeTarget", fields: [targetId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceId, targetId, relation])
+  @@index([sourceId])
+  @@index([targetId])
+  @@index([relation])
+  @@map("kg_edges")
+}
+
+model KgChunk {
+  id         String                      @id @default(cuid())
+  nodeId     String
+  content    String
+  embedding  Unsupported("vector(768)")?
+  chunkIndex Int                         @default(0)
+  tokenCount Int?
+  createdAt  DateTime                    @default(now())
+
+  node KgNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  @@index([nodeId])
+  @@map("kg_chunks")
+}
+
+// =============================================================================
+// Workflow Execution Tracking Models
+// =============================================================================
+
+model WorkflowExecution {
+  id          String                  @id @default(cuid())
+  type        WorkflowType
+  status      WorkflowExecutionStatus @default(PENDING)
+  employeeId  String?
+  payload     Json                    @default("{}")
+  summary     String?
+  initiatedBy String?
+  startedAt   DateTime                @default(now())
+  finishedAt  DateTime?
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+  steps       WorkflowStepExecution[]
+
+  @@index([type, status])
+  @@index([employeeId])
+  @@map("workflow_executions")
+}
+
+model WorkflowStepExecution {
+  id           String                  @id @default(cuid())
+  workflowId   String
+  stepKey      String
+  title        String
+  owner        String?
+  status       WorkflowExecutionStatus @default(PENDING)
+  details      Json                    @default("{}")
+  errorCode    String?
+  errorMessage String?
+  startedAt    DateTime                @default(now())
+  finishedAt   DateTime?
+  createdAt    DateTime                @default(now())
+  updatedAt    DateTime                @updatedAt
+
+  workflow WorkflowExecution @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  @@index([workflowId, status])
+  @@map("workflow_step_executions")
+}
+
+enum WorkflowType {
+  ONBOARDING
+  OFFBOARDING
+  ACTIVATION
+}
+
+enum WorkflowExecutionStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  WAITING_APPROVAL
+  NEEDS_RETRY
+}
+
+// =============================================================================
+// Approval Request Model
+// =============================================================================
+
+model ApprovalRequest {
+  id          String   @id @default(cuid())
+  workflowId  String
+  requestType String
+  status      String   @default("PENDING")
+  requestedBy String?
+  approverId  String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status])
+  @@map("approval_requests")
+}

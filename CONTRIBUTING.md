@@ -80,12 +80,35 @@ Summary:
 
 ## 🎨 Coding & Commit Standards
 
-1. **License**: All new source code files must comply with the **GNU GPL v3.0** license. Please add a copyright header at the top of important code files.
+1. **License**: All new source code files must comply with the **GNU GPL v3.0-or-later** license. Add an SPDX header to important source, configuration, and script files.
 2. **Languages**:
    * Main application (Dashboard Next.js): Use **TypeScript/JavaScript**.
    * Utility scripts: Use **Bash** (`.sh`) or **Python**.
    * Documentation: Write in **English**.
-3. **Issues/PRs**: Clearly describe the objective, how to test, and expected results.
+3. **Dependencies**: Prefer OSI-approved open-source dependencies. Do not commit generated dependency folders such as `node_modules/`.
+4. **Issues/PRs**: Clearly describe the objective, how to test, and expected results.
+
+### License Header Examples
+
+TypeScript / JavaScript:
+
+```ts
+// SPDX-License-Identifier: GPL-3.0-or-later
+```
+
+Shell scripts:
+
+```sh
+# SPDX-License-Identifier: GPL-3.0-or-later
+```
+
+YAML / Docker Compose:
+
+```yaml
+# SPDX-License-Identifier: GPL-3.0-or-later
+```
+
+Markdown documents should use the existing HTML comment style shown at the top of the main project documents.
 
 ---
 

@@ -28,8 +28,7 @@ volumes:
     driver: local
   wikijs_data:
     driver: local
-  n8n_data:
-    driver: local
+  # Activepieces uses PostgreSQL directly, no volume needed
   metabase_data:
     driver: local
   ollama_data:
@@ -37,10 +36,10 @@ volumes:
 
 services:
   # ----------------------------------------------------------------------------
-  # [D] Data: PostgreSQL (Shared Database for keycloak, mattermost, wikijs, n8n, metabase, dashboard)
+  # [D] Data: PostgreSQL (Shared Database for keycloak, mattermost, wikijs, activepieces, metabase, dashboard)
   # ----------------------------------------------------------------------------
   postgres:
-    image: postgres:16-alpine
+    image: pgvector/pgvector:pg16
     container_name: opendx-postgres
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
@@ -50,7 +49,7 @@ services:
       POSTGRES_DB: postgres
       POSTGRES_DB_KEYCLOAK: ${POSTGRES_DB_KEYCLOAK}
       POSTGRES_DB_WIKIJS: ${POSTGRES_DB_WIKIJS}
-      POSTGRES_DB_N8N: ${POSTGRES_DB_N8N}
+      POSTGRES_DB_ACTIVEPIECES: ${POSTGRES_DB_ACTIVEPIECES}
       POSTGRES_DB_METABASE: ${POSTGRES_DB_METABASE}
       POSTGRES_DB_DASHBOARD: ${POSTGRES_DB_DASHBOARD}
       POSTGRES_DB_MATTERMOST: ${POSTGRES_DB_MATTERMOST}
@@ -158,30 +157,35 @@ services:
     restart: unless-stopped
 
   # ----------------------------------------------------------------------------
-  # [P] Process: n8n (Workflow Automation)
+  # [P] Process: Activepieces (Workflow Automation — MIT License)
   # ----------------------------------------------------------------------------
-  n8n:
-    image: docker.n8n.io/n8nio/n8n:1.45.1
-    container_name: opendx-n8n
+  activepieces:
+    image: activepieces/activepieces:latest
+    container_name: opendx-activepieces
     ports:
-      - "${N8N_PORT:-5678}:5678"
+      - "${ACTIVEPIECES_PORT:-5678}:80"
     environment:
-      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
-      DB_TYPE: ${N8N_DB_TYPE}
-      DB_POSTGRESDB_HOST: ${N8N_DB_POSTGRESDB_HOST}
-      DB_POSTGRESDB_PORT: ${N8N_DB_POSTGRESDB_PORT}
-      DB_POSTGRESDB_DATABASE: ${N8N_DB_POSTGRESDB_DATABASE}
-      DB_POSTGRESDB_USER: ${N8N_DB_POSTGRESDB_USER}
-      DB_POSTGRESDB_PASSWORD: ${N8N_DB_POSTGRESDB_PASSWORD}
-    volumes:
-      - n8n_data:/home/node/.n8n
-      - ./configs/n8n:/home/node/.n8n/configs
+      AP_ENGINE_EXECUTABLE_PATH: dist/packages/engine/main.js
+      AP_SANDBOX_RUN_MODE: THREADS
+      AP_DB_TYPE: POSTGRES
+      AP_POSTGRES_DATABASE: ${AP_POSTGRES_DATABASE}
+      AP_POSTGRES_HOST: ${AP_POSTGRES_HOST}
+      AP_POSTGRES_PORT: ${AP_POSTGRES_PORT}
+      AP_POSTGRES_USERNAME: ${AP_POSTGRES_USERNAME}
+      AP_POSTGRES_PASSWORD: ${AP_POSTGRES_PASSWORD}
+      AP_POSTGRES_USE_SSL: "false"
+      AP_ENCRYPTION_KEY: ${AP_ENCRYPTION_KEY}
+      AP_JWT_SECRET: ${AP_JWT_SECRET}
+      AP_FRONTEND_URL: ${AP_FRONTEND_URL:-http://localhost:5678}
+      AP_TELEMETRY_ENABLED: "false"
+      AP_TEMPLATES_SOURCE_URL: ""
+      AP_REDIS_TYPE: MEMORY
+      AP_QUEUE_MODE: MEMORY
     networks:
       - opendx-net
     depends_on:
       postgres:
         condition: service_healthy
-    entrypoint: ["/bin/sh", "-c", "n8n & sleep 15 && sh /home/node/.n8n/configs/import-workflows.sh ; wait"]
     restart: unless-stopped
 
   # ----------------------------------------------------------------------------

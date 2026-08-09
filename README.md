@@ -41,7 +41,7 @@ _One command to spin up a fully integrated DX ecosystem: SSO, Chat, Wiki, Workfl
 - 🔐 **Single Sign-On (SSO)** — Keycloak provides centralized authentication for all services
 - 💬 **Internal Chat** — Mattermost replaces consumer messaging apps for work
 - 📚 **Knowledge Wiki** — Wiki.js manages internal documentation and SOPs
-- 🔄 **Workflow Automation** — n8n automates cross-system processes (onboarding, offboarding)
+- 🔄 **Workflow Automation** — Activepieces automates cross-system processes (onboarding, offboarding)
 - 📊 **BI Dashboard** — Metabase visualizes data from all systems
 - 🤖 **AI Assistant** — Ollama + Qwen LLM answers questions using your company's data
 - 🐳 **One-command Setup** — Docker Compose launches the entire ecosystem
@@ -74,8 +74,8 @@ _One command to spin up a fully integrated DX ecosystem: SSO, Chat, Wiki, Workfl
 │  │  Keycloak (SSO)  │  Mattermost (Chat)  │  Wiki.js (Wiki) │   │
 │  └───────────────────────────────────────────────────────────┘   │
 │                                                                  │
-│  ┌─ [P] Process ────────────────────────────────────────────┐   │
-│  │  n8n (Workflow Automation)  │  Dashboard (Next.js)       │   │
+│  ┌─ [P] Process ─────────────────────────────────────────────┐   │
+│  │  Activepieces (Workflow Automation)  │  Dashboard (Next.js)  │   │
 │  └───────────────────────────────────────────────────────────┘   │
 │                                                                  │
 │  ┌─ [D] Data ───────────────────────────────────────────────┐   │
@@ -94,7 +94,7 @@ _One command to spin up a fully integrated DX ecosystem: SSO, Chat, Wiki, Workfl
 ```
 Admin creates a new employee on Dashboard
     │
-    ├──→ [P] n8n workflow triggers automatically
+    ├──→ [P] Activepieces workflow triggers automatically
     ├──→ [H] Keycloak creates SSO account via Admin API
     ├──→ [H] Mattermost sends welcome message via webhook
     ├──→ [D] PostgreSQL stores employee record
@@ -139,7 +139,7 @@ Wait 2–3 minutes for all services to start, then access:
 | **Keycloak** | http://localhost:8080 | SSO Admin Console |
 | **Mattermost** | http://localhost:3100 | Internal Chat |
 | **Wiki.js** | http://localhost:3200 | Knowledge Wiki |
-| **n8n** | http://localhost:5678 | Workflow Editor |
+| **Activepieces** | http://localhost:5678 | Workflow Editor |
 | **Metabase** | http://localhost:3300 | BI Dashboard |
 | **Ollama** | http://localhost:11434 | LLM API |
 
@@ -151,7 +151,7 @@ Wait 2–3 minutes for all services to start, then access:
 | **Username** | `admin` |
 | **Password** | `admin123` |
 
-> Other services (Mattermost, Wiki.js, n8n, Metabase) require first-time setup on initial access, or can be configured to use Keycloak SSO.
+> Other services (Mattermost, Wiki.js, Activepieces, Metabase) require first-time setup on initial access, or can be configured to use Keycloak SSO.
 
 ---
 
@@ -162,7 +162,7 @@ Wait 2–3 minutes for all services to start, then access:
 | **[H] Human** | Keycloak | 25.0 | Apache-2.0 | SSO, user management, RBAC |
 | **[H] Human** | Mattermost | 10.2 | MIT | Internal team chat |
 | **[H] Human** | Wiki.js | 2.x | AGPL-3.0 | Knowledge base & documentation |
-| **[P] Process** | n8n | 1.45 | Sustainable Use | Workflow automation |
+| **[P] Process** | Activepieces | latest | MIT | Workflow automation |
 | **[P] Process** | Next.js | 16.2 | MIT | Dashboard web application |
 | **[D] Data** | PostgreSQL | 16 | PostgreSQL License | Shared relational database |
 | **[D] Data** | Metabase | 0.50.3 | AGPL-3.0 | Business intelligence & charts |
@@ -237,6 +237,40 @@ opendx-lab/
 | [SSO Setup](docs/sso-setup.md) | Keycloak SSO configuration |
 | [API](docs/api.md) | API endpoints documentation |
 | [Demo Script](docs/demo-script.md) | Step-by-step demo walkthrough |
+| [Build From Source](BUILD.md) | Source build, verification, and troubleshooting guide |
+
+---
+
+## 🧪 Build From Source
+
+OpenDX-Lab is designed to run from source with standard open-source tooling. The recommended path is Docker Compose for the full ecosystem, while the Dashboard can also be built independently.
+
+### Full ecosystem
+
+```bash
+git clone https://github.com/thanhheo7749-ui/opendx-lab.git
+cd opendx-lab
+cp .env.example .env
+docker compose up -d
+```
+
+### Dashboard only
+
+```bash
+cd dashboard
+npm ci
+npx prisma generate
+npm run build
+npm run start
+```
+
+See [BUILD.md](BUILD.md) for detailed requirements, verification commands, and troubleshooting.
+
+---
+
+## 📦 Dependency & Bundling Policy
+
+OpenDX-Lab integrates third-party open-source services through official Docker images and installs JavaScript dependencies from npm using `package-lock.json`. The repository should not commit generated dependency directories such as `node_modules/`, and third-party source code must not be modified in-tree. See [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) for the license disclosure.
 
 ---
 
