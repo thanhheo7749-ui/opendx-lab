@@ -451,6 +451,31 @@ export default function BizScanPage() {
                         >
                           ❌ Bỏ qua
                         </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-xs h-7 bg-blue-500/10 text-blue-400 border-blue-500/20 hover:bg-blue-500/20"
+                          onClick={async () => {
+                            try {
+                              await fetch("/api/tickets", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                  title: `[BizScan] ${finding.title}`,
+                                  description: `${finding.description}\n\nĐề xuất: ${finding.recommendation ?? "N/A"}`,
+                                  priority: finding.severity === "CRITICAL" ? "URGENT" : "HIGH",
+                                  category: "IT",
+                                  createdBy: "BizScan Agent",
+                                }),
+                              });
+                              alert("📨 Đã tạo DX-Ticket và gửi Mattermost!");
+                            } catch {
+                              alert("❌ Tạo ticket thất bại");
+                            }
+                          }}
+                        >
+                          📨 Tạo task IT
+                        </Button>
                       </div>
                     )}
                   </CardContent>
