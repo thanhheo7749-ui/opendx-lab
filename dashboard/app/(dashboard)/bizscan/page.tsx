@@ -71,7 +71,7 @@ interface ScanApiResponse {
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 function severityEmoji(s: string) {
-  return s === "CRITICAL" ? "🔴" : s === "WARNING" ? "🟡" : "🟢";
+  return s === "CRITICAL" ? "●" : s === "WARNING" ? "●" : "●";
 }
 
 function severityColor(s: string) {
@@ -84,16 +84,16 @@ function severityColor(s: string) {
 
 function statusBadge(s: string) {
   const map: Record<string, { label: string; cls: string }> = {
-    PENDING: { label: "⏳ Chờ duyệt", cls: "bg-yellow-500/15 text-yellow-400" },
-    APPROVED: { label: "✅ Đã duyệt", cls: "bg-green-500/15 text-green-400" },
-    DISMISSED: { label: "❌ Đã bỏ qua", cls: "bg-zinc-500/15 text-zinc-400" },
-    EXECUTED: { label: "⚡ Đã thực hiện", cls: "bg-blue-500/15 text-blue-400" },
+    PENDING: { label: "Chờ duyệt", cls: "bg-yellow-500/15 text-yellow-400" },
+    APPROVED: { label: "Đã duyệt", cls: "bg-green-500/15 text-green-400" },
+    DISMISSED: { label: "Đã bỏ qua", cls: "bg-zinc-500/15 text-zinc-400" },
+    EXECUTED: { label: "Đã thực hiện", cls: "bg-blue-500/15 text-blue-400" },
   };
   return map[s] ?? { label: s, cls: "bg-zinc-500/15 text-zinc-400" };
 }
 
 function trendEmoji(cat: string) {
-  return cat === "HOT" ? "🔥" : cat === "DECLINING" ? "📉" : cat === "NEW" ? "✨" : "➡️";
+  return cat === "HOT" ? "▲" : cat === "DECLINING" ? "▼" : cat === "NEW" ? "★" : "→";
 }
 
 function trendColor(cat: string) {
@@ -188,7 +188,7 @@ export default function BizScanPage() {
         body: JSON.stringify({}),
       });
       // Show alert
-      alert("💣 Anomaly đã được inject! Bấm 'Scan Now' để agent phát hiện.");
+      alert("Bất thường đã tạo. Bấm 'Quét ngay' để phát hiện.");
     } catch (e) {
       console.error("Inject failed:", e);
     } finally {
@@ -230,14 +230,11 @@ export default function BizScanPage() {
       {/* ── Header ── */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            🔍 BizScan
-            <Badge variant="outline" className="text-xs font-normal bg-violet-500/10 text-violet-400 border-violet-500/20">
-              AI Agent
-            </Badge>
+          <h1 className="text-2xl font-bold tracking-tight">
+            BizScan
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            AI tự hành phân tích vận hành doanh nghiệp + xu hướng thị trường
+            Quét bất thường vận hành (SQL) + so sánh xu hướng thị trường (SerpApi)
           </p>
         </div>
         <div className="flex gap-2">
@@ -247,7 +244,7 @@ export default function BizScanPage() {
             onClick={simulateTick}
             className="text-xs"
           >
-            ⏩ Simulator Tick
+            Tạo dữ liệu mẫu
           </Button>
           <Button
             variant="outline"
@@ -256,7 +253,7 @@ export default function BizScanPage() {
             disabled={injecting}
             className="text-xs border-red-500/30 text-red-400 hover:bg-red-500/10"
           >
-            {injecting ? "💣 Đang inject..." : "💣 Inject Anomaly"}
+            {injecting ? "Đang tạo..." : "Giả lập bất thường"}
           </Button>
           <Button
             size="sm"
@@ -264,13 +261,7 @@ export default function BizScanPage() {
             disabled={scanning}
             className="bg-violet-600 hover:bg-violet-700 text-white"
           >
-            {scanning ? (
-              <>
-                <span className="animate-spin mr-1">⏳</span> Đang scan...
-              </>
-            ) : (
-              "🔍 Scan Now"
-            )}
+            {scanning ? "Đang quét..." : "Quét ngay"}
           </Button>
         </div>
       </div>
@@ -304,7 +295,7 @@ export default function BizScanPage() {
               {latestFindings.length}
               {criticalCount > 0 && (
                 <span className="text-sm text-red-400">
-                  ({criticalCount} 🔴)
+                  ({criticalCount} critical)
                 </span>
               )}
             </div>
@@ -350,7 +341,7 @@ export default function BizScanPage() {
         <Card className="bg-violet-500/5 border-violet-500/20">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
-              ⚡ Kết quả Scan mới nhất
+              Kết quả quét mới nhất
               <Badge variant="outline" className="text-xs bg-green-500/10 text-green-400 border-green-500/20">
                 {latestScan.scan.durationMs}ms
               </Badge>
@@ -367,7 +358,7 @@ export default function BizScanPage() {
                   }`}
                 >
                   <div className="font-medium text-xs mb-1">
-                    {check.hasAnomaly ? severityEmoji(check.severity) : "✅"} {check.name}
+                    {check.hasAnomaly ? severityEmoji(check.severity) : "○"} {check.name}
                   </div>
                   <div className="text-xs opacity-80 line-clamp-2">{check.message}</div>
                 </div>
@@ -382,14 +373,14 @@ export default function BizScanPage() {
         {/* ── Findings ── */}
         <div className="space-y-4">
           <h2 className="text-lg font-semibold flex items-center gap-2">
-            ⚠️ Vấn đề nội bộ
+            Vấn đề nội bộ
             <Badge variant="outline" className="text-xs">{latestFindings.length}</Badge>
           </h2>
 
           {latestFindings.length === 0 && !loading ? (
             <Card className="bg-card/50">
               <CardContent className="py-8 text-center text-muted-foreground text-sm">
-                Chưa có dữ liệu. Bấm "Scan Now" để bắt đầu.
+                Chưa có dữ liệu. Bấm "Quét ngay" để bắt đầu.
               </CardContent>
             </Card>
           ) : (
@@ -419,17 +410,17 @@ export default function BizScanPage() {
 
                     {finding.rootCause && (
                       <p className="text-xs text-muted-foreground mb-1">
-                        🔎 <strong>Nguyên nhân:</strong> {finding.rootCause}
+                        <strong>Nguyên nhân:</strong> {finding.rootCause}
                       </p>
                     )}
                     {finding.recommendation && (
                       <p className="text-xs text-muted-foreground mb-1">
-                        💡 <strong>Đề xuất:</strong> {finding.recommendation}
+                        <strong>Đề xuất:</strong> {finding.recommendation}
                       </p>
                     )}
                     {finding.estimatedImpact && (
                       <p className="text-xs text-muted-foreground mb-2">
-                        📈 <strong>Tác động:</strong> {finding.estimatedImpact}
+                        <strong>Tác động:</strong> {finding.estimatedImpact}
                       </p>
                     )}
 
@@ -441,7 +432,7 @@ export default function BizScanPage() {
                           className="text-xs h-7 bg-green-500/10 text-green-400 border-green-500/20 hover:bg-green-500/20"
                           onClick={() => approveFinding(finding.id, "APPROVE")}
                         >
-                          ✅ Duyệt
+                          Duyệt
                         </Button>
                         <Button
                           variant="outline"
@@ -449,7 +440,7 @@ export default function BizScanPage() {
                           className="text-xs h-7"
                           onClick={() => approveFinding(finding.id, "DISMISS")}
                         >
-                          ❌ Bỏ qua
+                          Bỏ qua
                         </Button>
                         <Button
                           variant="outline"
@@ -468,13 +459,13 @@ export default function BizScanPage() {
                                   createdBy: "BizScan Agent",
                                 }),
                               });
-                              alert("📨 Đã tạo DX-Ticket và gửi Mattermost!");
+                              alert("Đã tạo DX-Ticket và gửi Mattermost.");
                             } catch {
-                              alert("❌ Tạo ticket thất bại");
+                              alert("Tạo ticket thất bại.");
                             }
                           }}
                         >
-                          📨 Tạo task IT
+                          Tạo task IT
                         </Button>
                       </div>
                     )}
@@ -488,7 +479,7 @@ export default function BizScanPage() {
         {/* ── Market Trends ── */}
         <div className="space-y-4">
           <h2 className="text-lg font-semibold flex items-center gap-2">
-            🌐 Xu hướng thị trường
+            Xu hướng thị trường
             <Badge variant="outline" className="text-xs">{marketData.length}</Badge>
           </h2>
 
@@ -524,20 +515,20 @@ export default function BizScanPage() {
                   </div>
 
                   <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground mb-2">
-                    <div>💰 Giá bạn: <strong>{formatVND(item.yourPrice)}đ</strong></div>
+                    <div>Giá bạn: <strong>{formatVND(item.yourPrice)}đ</strong></div>
                     {item.marketAvgPrice && (
-                      <div>📊 Thị trường: <strong>{formatVND(item.marketAvgPrice)}đ</strong></div>
+                      <div>Thị trường: <strong>{formatVND(item.marketAvgPrice)}đ</strong></div>
                     )}
                   </div>
 
                   {item.priceDiff && (
                     <p className="text-xs mb-1">
-                      {item.priceDiff.includes("đắt") ? "⚠️" : "✅"} {item.priceDiff}
+                      {item.priceDiff.includes("đắt") ? "▲" : "○"} {item.priceDiff}
                     </p>
                   )}
 
                   <p className="text-xs text-muted-foreground">
-                    💡 {item.recommendation}
+                    {item.recommendation}
                   </p>
                 </CardContent>
               </Card>
@@ -549,7 +540,7 @@ export default function BizScanPage() {
       {/* ── Scan History Timeline ── */}
       <Card className="bg-card/50 backdrop-blur border-border/50">
         <CardHeader>
-          <CardTitle className="text-sm">📋 Lịch sử Scan</CardTitle>
+          <CardTitle className="text-sm">Lịch sử quét</CardTitle>
         </CardHeader>
         <CardContent>
           {scans.length === 0 ? (
@@ -588,14 +579,14 @@ export default function BizScanPage() {
                     </div>
                     <div className="flex-shrink-0 flex items-center gap-1">
                       {findingCount === 0 ? (
-                        <Badge className="text-[10px] bg-emerald-500/15 text-emerald-400">✅ OK</Badge>
+                        <Badge className="text-[10px] bg-emerald-500/15 text-emerald-400">OK</Badge>
                       ) : (
                         <>
                           {criticals > 0 && (
-                            <Badge className="text-[10px] bg-red-500/15 text-red-400">🔴 {criticals}</Badge>
+                            <Badge className="text-[10px] bg-red-500/15 text-red-400">{criticals} critical</Badge>
                           )}
                           {warnings > 0 && (
-                            <Badge className="text-[10px] bg-amber-500/15 text-amber-400">🟡 {warnings}</Badge>
+                            <Badge className="text-[10px] bg-amber-500/15 text-amber-400">{warnings} warning</Badge>
                           )}
                         </>
                       )}

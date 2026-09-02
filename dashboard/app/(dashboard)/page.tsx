@@ -617,21 +617,25 @@ export default function CommandCenter() {
                 {dailyRevenue.length === 0 ? (
                   <p className="text-xs text-muted-foreground text-center py-8">Chưa có dữ liệu trong 7 ngày gần</p>
                 ) : (
-                  <div className="flex items-end gap-2 h-[140px]">
+                  <div className="flex items-end gap-2" style={{ height: "140px" }}>
                     {dailyRevenue.map((day) => {
-                      const height = Math.max((day.revenue / maxRevenue) * 100, 4);
+                      const barHeight = Math.max(Math.round((day.revenue / maxRevenue) * 120), 6);
                       const dateLabel = new Date(day.day).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" });
                       return (
-                        <div key={day.day} className="flex-1 flex flex-col items-center gap-1">
-                          <span className="text-[9px] text-muted-foreground tabular-nums">
+                        <div key={day.day} className="flex-1 flex flex-col items-center justify-end h-full">
+                          <span className="text-[9px] text-muted-foreground tabular-nums mb-1">
                             {formatVND(day.revenue)}
                           </span>
                           <div
-                            className="w-full rounded-t bg-gradient-to-t from-violet-600/80 to-violet-400/80 hover:from-violet-500 hover:to-violet-300 transition-colors"
-                            style={{ height: `${height}%` }}
+                            className="w-full rounded-t"
+                            style={{
+                              height: `${barHeight}px`,
+                              backgroundColor: "rgb(124, 58, 237)",
+                              opacity: 0.75,
+                            }}
                             title={`${dateLabel}: ${new Intl.NumberFormat("vi-VN").format(day.revenue)}đ / ${day.orders} đơn`}
                           />
-                          <span className="text-[9px] text-muted-foreground">{dateLabel}</span>
+                          <span className="text-[9px] text-muted-foreground mt-1">{dateLabel}</span>
                         </div>
                       );
                     })}
