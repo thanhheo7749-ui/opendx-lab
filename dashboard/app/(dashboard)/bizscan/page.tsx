@@ -391,11 +391,16 @@ export default function BizScanPage() {
                   key={finding.id}
                   className={`border ${severityColor(finding.severity)} bg-card/50 transition-all hover:shadow-md`}
                 >
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between gap-2 mb-2">
+                  <CardContent className="p-4 space-y-3">
+                    {/* Header */}
+                    <div className="flex items-start justify-between gap-2">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-sm">{severityEmoji(finding.severity)}</span>
+                          <span
+                            className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                              finding.severity === "CRITICAL" ? "bg-red-500" : "bg-amber-500"
+                            }`}
+                          />
                           <Badge variant="outline" className={`text-[10px] ${severityColor(finding.severity)}`}>
                             {finding.severity}
                           </Badge>
@@ -403,33 +408,52 @@ export default function BizScanPage() {
                             {finding.category}
                           </Badge>
                         </div>
-                        <h3 className="text-sm font-semibold">{finding.title}</h3>
+                        <h3 className="text-sm font-semibold leading-snug">{finding.title}</h3>
                       </div>
-                      <Badge className={`text-[10px] ${badge.cls}`}>{badge.label}</Badge>
+                      <Badge className={`text-[10px] flex-shrink-0 ${badge.cls}`}>{badge.label}</Badge>
                     </div>
 
+                    {/* Root Cause */}
                     {finding.rootCause && (
-                      <p className="text-xs text-muted-foreground mb-1">
-                        <strong>Nguyên nhân:</strong> {finding.rootCause}
-                      </p>
-                    )}
-                    {finding.recommendation && (
-                      <p className="text-xs text-muted-foreground mb-1">
-                        <strong>Đề xuất:</strong> {finding.recommendation}
-                      </p>
-                    )}
-                    {finding.estimatedImpact && (
-                      <p className="text-xs text-muted-foreground mb-2">
-                        <strong>Tác động:</strong> {finding.estimatedImpact}
-                      </p>
+                      <div className="rounded-md bg-muted/40 p-2.5 border border-border/30">
+                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Nguyên nhân</p>
+                        <p className="text-xs leading-relaxed">{finding.rootCause}</p>
+                      </div>
                     )}
 
+                    {/* Recommendation - split numbered items */}
+                    {finding.recommendation && (
+                      <div className="rounded-md bg-emerald-500/5 p-2.5 border border-emerald-500/15">
+                        <p className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1.5">Đề xuất hành động</p>
+                        <ul className="space-y-1">
+                          {finding.recommendation
+                            .split(/\d+\)\s*/)
+                            .filter(Boolean)
+                            .map((item: string, idx: number) => (
+                              <li key={idx} className="flex gap-2 text-xs leading-relaxed">
+                                <span className="text-emerald-600 dark:text-emerald-400 font-bold flex-shrink-0">{idx + 1}.</span>
+                                <span>{item.trim().replace(/\.$/, "")}</span>
+                              </li>
+                            ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Impact */}
+                    {finding.estimatedImpact && (
+                      <div className="flex items-center gap-2 text-xs px-2.5 py-1.5 rounded-md bg-violet-500/5 border border-violet-500/15">
+                        <span className="text-[10px] font-semibold text-violet-600 dark:text-violet-400 uppercase">Tác động:</span>
+                        <span className="text-violet-700 dark:text-violet-300 font-medium">{finding.estimatedImpact}</span>
+                      </div>
+                    )}
+
+                    {/* Actions */}
                     {finding.status === "PENDING" && (
-                      <div className="flex gap-2 mt-3">
+                      <div className="flex gap-2 pt-1 border-t border-border/30">
                         <Button
                           variant="outline"
                           size="sm"
-                          className="text-xs h-7 bg-green-500/10 text-green-400 border-green-500/20 hover:bg-green-500/20"
+                          className="text-xs h-7 bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20 hover:bg-green-500/20"
                           onClick={() => approveFinding(finding.id, "APPROVE")}
                         >
                           Duyệt
@@ -445,7 +469,7 @@ export default function BizScanPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="text-xs h-7 bg-blue-500/10 text-blue-400 border-blue-500/20 hover:bg-blue-500/20"
+                          className="text-xs h-7 bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 hover:bg-blue-500/20"
                           onClick={async () => {
                             try {
                               await fetch("/api/tickets", {
@@ -456,7 +480,7 @@ export default function BizScanPage() {
                                   description: `${finding.description}\n\nĐề xuất: ${finding.recommendation ?? "N/A"}`,
                                   priority: finding.severity === "CRITICAL" ? "URGENT" : "HIGH",
                                   category: "IT",
-                                  createdBy: "BizScan Agent",
+                                  createdBy: "BizScan",
                                 }),
                               });
                               alert("Đã tạo DX-Ticket và gửi Mattermost.");
