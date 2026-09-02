@@ -16,6 +16,9 @@ export interface ScanCheckResult {
   hasAnomaly: boolean;
   severity: "CRITICAL" | "WARNING" | "INFO";
   message: string;
+  rootCause: string | null;
+  recommendation: string | null;
+  estimatedImpact: string | null;
   data: Record<string, unknown>;
 }
 
@@ -86,6 +89,15 @@ async function checkRevenueDrop(): Promise<ScanCheckResult> {
     message: hasAnomaly
       ? `Doanh thu giảm ${Math.abs(changePct)}% so với tuần trước (${formatVND(currentRevenue)}đ vs ${formatVND(previousRevenue)}đ). Số đơn: ${currentOrders} vs ${previousOrders}.`
       : `Doanh thu ổn định: ${changePct > 0 ? "+" : ""}${changePct}% so với tuần trước (${formatVND(currentRevenue)}đ).`,
+    rootCause: hasAnomaly
+      ? `Số đơn hàng giảm từ ${previousOrders} xuống ${currentOrders} (giảm ${previousOrders - currentOrders} đơn). Có thể do giảm traffic, chiến dịch QC kém hiệu quả, hoặc thiếu khuyến mãi.`
+      : null,
+    recommendation: hasAnomaly
+      ? `1) Kiểm tra nguồn traffic từ các kênh (Facebook, TikTok, Shopee) xem kênh nào giảm mạnh nhất. 2) Chạy flash sale hoặc voucher giảm giá 10-15% trong 3 ngày tới. 3) Đẩy mạnh remarketing cho khách cũ chưa mua lại.`
+      : null,
+    estimatedImpact: hasAnomaly
+      ? `Nếu phục hồi về mức tuần trước: +${formatVND(previousRevenue - currentRevenue)}đ doanh thu`
+      : null,
     data: {
       currentRevenue,
       previousRevenue,
@@ -160,6 +172,15 @@ async function checkAdWaste(): Promise<ScanCheckResult> {
     message: hasAnomaly
       ? `${wastefulCampaigns.length} chiến dịch QC đang đốt tiền (ROAS < 1.0). Tổng chi phí lãng phí 7 ngày: ${formatVND(totalWaste)}đ. Campaigns: ${wastefulCampaigns.map((c) => `"${c.name}" (ROAS: ${c.roas})`).join(", ")}.`
       : "Tất cả chiến dịch quảng cáo đang hoạt động hiệu quả.",
+    rootCause: hasAnomaly
+      ? `ROAS < 1.0 nghĩa là chi nhiều hơn thu. Nguyên nhân phổ biến: target audience sai, creative (hình/video) cũ không hấp dẫn, landing page chuyển đổi kém.`
+      : null,
+    recommendation: hasAnomaly
+      ? `1) TẮT ngay các campaign ROAS < 0.5 (đang lỗ nặng). 2) Campaign ROAS 0.5-1.0: thử đổi creative mới hoặc thu hẹp audience. 3) Chuyển ngân sách sang kênh đang có ROAS tốt nhất. 4) A/B test ít nhất 3 mẫu quảng cáo mới.`
+      : null,
+    estimatedImpact: hasAnomaly
+      ? `Tiết kiệm ${formatVND(totalWaste)}đ/tuần nếu tắt campaign lỗ`
+      : null,
     data: {
       totalCampaigns: campaigns.length,
       wastefulCount: wastefulCampaigns.length,
@@ -199,6 +220,7 @@ async function checkDeadStock(): Promise<ScanCheckResult> {
   const formatVND = (n: number) =>
     new Intl.NumberFormat("vi-VN").format(Math.round(n));
 
+  const topDeadItems = deadStock.slice(0, 3).map((inv) => inv.product.name).join(", ");
   return {
     id: "dead_stock",
     name: "Kiểm tra tồn kho",
@@ -208,6 +230,15 @@ async function checkDeadStock(): Promise<ScanCheckResult> {
     message: hasAnomaly
       ? `${deadStock.length} sản phẩm tồn kho > 30 ngày (vốn kẹt: ${formatVND(stuckCapital)}đ). ${outOfStock.length} sản phẩm hết hàng hoàn toàn.`
       : "Tồn kho khỏe mạnh, không có sản phẩm ứ đọng.",
+    rootCause: hasAnomaly
+      ? `Sản phẩm ế nặng nhất: ${topDeadItems}. Nguyên nhân có thể: sản phẩm không phù hợp mùa, giá cao hơn thị trường, hoặc thiếu marketing.`
+      : null,
+    recommendation: hasAnomaly
+      ? `1) Giảm giá 20-30% cho ${deadStock.length} SP tồn > 30 ngày để giải phóng vốn. 2) Tạo combo/bundle với sản phẩm bán chạy. 3) SP tồn > 60 ngày: xem xét thanh lý hoặc tặng kèm đơn hàng. ${outOfStock.length > 0 ? `4) Nhập lại ${outOfStock.length} SP đã hết hàng nếu vẫn có nhu cầu.` : ""}`
+      : null,
+    estimatedImpact: hasAnomaly
+      ? `Thu hồi tối đa ${formatVND(stuckCapital * 0.7)}đ vốn kẹt (giả sử bán giảm 30%)`
+      : null,
     data: {
       deadStockCount: deadStock.length,
       outOfStockCount: outOfStock.length,
@@ -256,6 +287,15 @@ async function checkCustomerChurn(): Promise<ScanCheckResult> {
     message: hasAnomaly
       ? `${churnedVIPs.length} khách VIP/Super VIP không mua lại sau 45 ngày. Tổng giá trị: ${formatVND(totalLostValue)}đ. Khách lâu nhất: ${churnedVIPs[0]?.name} (${Math.round((Date.now() - (churnedVIPs[0]?.lastPurchase?.getTime() ?? 0)) / 86400000)} ngày).`
       : "Tất cả khách hàng VIP vẫn đang hoạt động.",
+    rootCause: hasAnomaly
+      ? `Khách VIP không quay lại có thể do: trải nghiệm mua hàng không tốt, giá không cạnh tranh, hoặc đơn giản là quên. Cần chăm sóc chủ động.`
+      : null,
+    recommendation: hasAnomaly
+      ? `1) Gửi tin nhắn/Zalo cá nhân cho TOP 5 khách VIP có giá trị cao nhất, kèm voucher giảm 15% riêng. 2) Tạo chương trình "Quay lại nhận quà" cho khách > 30 ngày chưa mua. 3) Gọi điện hỏi thăm khách > 60 ngày — tìm hiểu lý do. 4) Review giá so với đối thủ trên Shopee/Lazada.`
+      : null,
+    estimatedImpact: hasAnomaly
+      ? `Nếu 30% khách VIP quay lại: +${formatVND(totalLostValue * 0.3 / (churnedVIPs[0] ? Math.max(churnedVIPs[0].orderCount, 1) : 1))}đ doanh thu tiềm năng`
+      : null,
     data: {
       churnedCount: churnedVIPs.length,
       totalLostValue,
@@ -325,6 +365,15 @@ async function checkMarginSqueeze(): Promise<ScanCheckResult> {
     message: hasAnomaly
       ? `Biên lợi nhuận giảm ${Math.abs(marginChange)} điểm % (${currentMargin}% vs ${previousMargin}% tháng trước). Tổng discount tháng này: ${formatVND(currentDiscount)}đ.`
       : `Biên lợi nhuận ổn định: ${currentMargin}% (${marginChange > 0 ? "+" : ""}${marginChange} điểm % so với tháng trước).`,
+    rootCause: hasAnomaly
+      ? `Biên lợi nhuận giảm do: tổng discount tăng (${formatVND(currentDiscount)}đ), hoặc chi phí đầu vào tăng mà chưa điều chỉnh giá bán.`
+      : null,
+    recommendation: hasAnomaly
+      ? `1) Giảm mức discount từ 15-20% xuống 10% — khách vẫn mua khi giảm vừa phải. 2) Review giá vốn top 10 sản phẩm bán chạy, nếu nhà cung cấp tăng giá thì thương lượng lại. 3) Tăng giá bán 5-10% cho sản phẩm ít cạnh tranh. 4) Ưu tiên push sản phẩm có biên lợi nhuận cao.`
+      : null,
+    estimatedImpact: hasAnomaly
+      ? `Phục hồi biên LN về ${previousMargin}%: +${formatVND((previousMargin - currentMargin) / 100 * currentRevenue)}đ lợi nhuận/tháng`
+      : null,
     data: {
       currentMargin,
       previousMargin,
@@ -366,6 +415,9 @@ export async function runAllChecks(): Promise<ScanCheckResult[]> {
         hasAnomaly: false,
         severity: "INFO",
         message: `Lỗi khi chạy kiểm tra: ${error instanceof Error ? error.message : "Unknown"}`,
+        rootCause: null,
+        recommendation: null,
+        estimatedImpact: null,
         data: { error: true },
       });
     }
@@ -400,8 +452,11 @@ export async function runFullScan(scanType: "SCHEDULED" | "MANUAL" = "MANUAL") {
           scanId: scan.id,
           severity: a.severity,
           category: a.category,
-          title: a.message.split(".")[0] + ".", // First sentence as title
+          title: a.message.split(".")[0] + ".",
           description: a.message,
+          rootCause: a.rootCause,
+          recommendation: a.recommendation,
+          estimatedImpact: a.estimatedImpact,
           rawData: a.data as object,
           status: "PENDING",
         })),
