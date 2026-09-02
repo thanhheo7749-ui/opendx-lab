@@ -3,8 +3,6 @@
 // ==============================================================================
 // OpenDX-Lab — Command Center (Redesigned Homepage)
 // SPDX-License-Identifier: GPL-3.0-or-later
-//
-// Unified view: Service Health + Alerts + Business Pulse + Quick Actions
 // ==============================================================================
 
 import { useEffect, useState, useCallback } from "react";
@@ -97,22 +95,18 @@ function formatVND(n: number) {
   return n.toString();
 }
 
-function layerColor(layer: string) {
-  return layer === "H"
-    ? "var(--hdpi-human)"
-    : layer === "P"
-      ? "var(--hdpi-process)"
-      : layer === "D"
-        ? "var(--hdpi-data)"
-        : "var(--hdpi-intelligence)";
-}
+const LAYER_LABELS: Record<string, string> = {
+  H: "Human",
+  P: "Process",
+  D: "Data",
+  I: "Intelligence",
+};
 
-const CHANNEL_EMOJI: Record<string, string> = {
-  facebook: "📘",
-  tiktok: "🎵",
-  shopee: "🛒",
-  lazada: "🔵",
-  zalo: "💬",
+const LAYER_COLORS: Record<string, string> = {
+  H: "var(--hdpi-human)",
+  P: "var(--hdpi-process)",
+  D: "var(--hdpi-data)",
+  I: "var(--hdpi-intelligence)",
 };
 
 // ── Main Component ─────────────────────────────────────────────────────────────
@@ -120,7 +114,6 @@ const CHANNEL_EMOJI: Record<string, string> = {
 export default function CommandCenter() {
   const { data: session } = useSession();
 
-  // State
   const [services, setServices] = useState<ServiceStatus[]>([]);
   const [healthOverall, setHealthOverall] = useState<string>("LOADING");
   const [pulse, setPulse] = useState<PulseSummary | null>(null);
@@ -146,7 +139,7 @@ export default function CommandCenter() {
   const [scanning, setScanning] = useState(false);
   const [scanResult, setScanResult] = useState<{ summary: string; anomalyCount: number } | null>(null);
 
-  // ── Fetch Data ────────────────────────────────────────────────────────────
+  // ── Fetch ─────────────────────────────────────────────────────────────────
 
   const fetchAll = useCallback(async () => {
     const [healthRes, pulseRes, scanRes, empRes] = await Promise.allSettled([
@@ -156,14 +149,12 @@ export default function CommandCenter() {
       fetch("/api/employees"),
     ]);
 
-    // Health
     if (healthRes.status === "fulfilled" && healthRes.value.ok) {
       const h = await healthRes.value.json();
       setServices(h.services ?? []);
       setHealthOverall(h.overall ?? "DOWN");
     }
 
-    // Pulse
     if (pulseRes.status === "fulfilled" && pulseRes.value.ok) {
       const p = await pulseRes.value.json();
       if (p.success) {
@@ -174,7 +165,6 @@ export default function CommandCenter() {
       }
     }
 
-    // Scan findings
     if (scanRes.status === "fulfilled" && scanRes.value.ok) {
       const s = await scanRes.value.json();
       if (s.success && s.scans?.[0]) {
@@ -182,7 +172,6 @@ export default function CommandCenter() {
       }
     }
 
-    // Employees (for offboard dialog)
     if (empRes.status === "fulfilled" && empRes.value.ok) {
       const e = await empRes.value.json();
       setEmployees((e.employees ?? []).filter((emp: Employee) => emp.status === "ACTIVE"));
@@ -210,12 +199,8 @@ export default function CommandCenter() {
         body: JSON.stringify({ employeeId: selectedEmployee }),
       });
       const data = await res.json();
-      if (data.success) {
-        setOffboardResult(data.results);
-        await fetchAll();
-      } else {
-        setOffboardResult({ error: data.error });
-      }
+      setOffboardResult(data.success ? data.results : { error: data.error });
+      if (data.success) await fetchAll();
     } catch {
       setOffboardResult({ error: "Kết nối thất bại" });
     } finally {
@@ -241,13 +226,9 @@ export default function CommandCenter() {
         setTicketOpen(false);
         setTicketTitle("");
         setTicketDesc("");
-        alert("✅ Ticket đã tạo và gửi thông báo Mattermost!");
       }
-    } catch {
-      alert("❌ Tạo ticket thất bại");
-    } finally {
-      setTicketSubmitting(false);
-    }
+    } catch { /* ignore */ }
+    finally { setTicketSubmitting(false); }
   };
 
   const handleScan = async () => {
@@ -257,20 +238,13 @@ export default function CommandCenter() {
       const res = await fetch("/api/bizscan/scan", { method: "POST" });
       const data = await res.json();
       if (data.success) {
-        setScanResult({
-          summary: data.scan.summary,
-          anomalyCount: data.scan.anomalyCount,
-        });
+        setScanResult({ summary: data.scan.summary, anomalyCount: data.scan.anomalyCount });
         await fetchAll();
       }
-    } catch {
-      // ignore
-    } finally {
-      setScanning(false);
-    }
+    } catch { /* ignore */ }
+    finally { setScanning(false); }
   };
 
-  // ── Revenue chart (pure CSS bars) ──
   const maxRevenue = Math.max(...dailyRevenue.map((d) => d.revenue), 1);
   const totalChannelRevenue = channels.reduce((sum, c) => sum + c.revenue, 0);
 
@@ -279,7 +253,7 @@ export default function CommandCenter() {
       <div className="flex items-center justify-center h-[60vh]">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-border border-t-foreground rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-muted-foreground text-sm">Đang tải Command Center...</p>
+          <p className="text-muted-foreground text-sm">Đang tải...</p>
         </div>
       </div>
     );
@@ -287,24 +261,24 @@ export default function CommandCenter() {
 
   return (
     <div className="space-y-6">
-      {/* ════════════════════════════════════════════════════════════════════ */}
-      {/* SECTION A: LIVE SERVICE STATUS BAR                                 */}
-      {/* ════════════════════════════════════════════════════════════════════ */}
+      {/* ──────────────────────────────────────────────────────────────────── */}
+      {/* SECTION A: SERVICE HEALTH                                          */}
+      {/* ──────────────────────────────────────────────────────────────────── */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-            <span className={`w-2 h-2 rounded-full ${healthOverall === "HEALTHY" ? "bg-emerald-500 animate-pulse" : healthOverall === "DEGRADED" ? "bg-amber-500 animate-pulse" : "bg-red-500"}`} />
-            Hạ tầng H-P-D-I
-            <Badge variant="outline" className={`text-[10px] ml-1 ${
-              healthOverall === "HEALTHY" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-              : healthOverall === "DEGRADED" ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
-              : "bg-red-500/10 text-red-400 border-red-500/20"
-            }`}>
-              {services.filter((s) => s.status === "UP").length}/{services.length} UP
-            </Badge>
-          </h2>
-          <span className="text-[10px] text-muted-foreground">
-            Auto-refresh 30s
+          <div className="flex items-center gap-2">
+            <span className={`w-2 h-2 rounded-full ${
+              healthOverall === "HEALTHY" ? "bg-emerald-500" : healthOverall === "DEGRADED" ? "bg-amber-500" : "bg-red-500"
+            }`} />
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              Trạng thái hạ tầng
+            </span>
+            <span className="text-[10px] text-muted-foreground">
+              — {services.filter((s) => s.status === "UP").length}/{services.length} hoạt động
+            </span>
+          </div>
+          <span className="text-[10px] text-muted-foreground/50">
+            Tự cập nhật mỗi 30s · Nguồn: Docker container ping
           </span>
         </div>
 
@@ -312,103 +286,121 @@ export default function CommandCenter() {
           {services.map((svc) => (
             <div
               key={svc.name}
-              className={`flex items-center gap-2 p-2.5 rounded-lg border transition-all ${
+              className={`p-2.5 rounded-lg border transition-all ${
                 svc.status === "UP"
-                  ? "border-border/50 bg-card/50 hover:bg-card"
+                  ? "border-border/40 bg-card/30"
                   : "border-red-500/30 bg-red-500/5"
               }`}
             >
-              <div
-                className="w-1.5 h-6 rounded-full flex-shrink-0"
-                style={{ backgroundColor: layerColor(svc.layer) }}
-              />
-              <div className="min-w-0">
-                <p className="text-xs font-medium text-foreground truncate">{svc.name}</p>
-                <div className="flex items-center gap-1">
-                  <span className={`w-1.5 h-1.5 rounded-full ${svc.status === "UP" ? "bg-emerald-500" : "bg-red-500"}`} />
-                  <span className="text-[10px] text-muted-foreground">{svc.responseMs}ms</span>
-                </div>
+              <div className="flex items-center gap-1.5 mb-1">
+                <span
+                  className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: svc.status === "UP" ? "#22c55e" : "#ef4444" }}
+                />
+                <span className="text-xs font-medium truncate">{svc.name}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] text-muted-foreground">
+                  {LAYER_LABELS[svc.layer]}
+                </span>
+                <span className="text-[10px] text-muted-foreground tabular-nums">
+                  {svc.responseMs}ms
+                </span>
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* ════════════════════════════════════════════════════════════════════ */}
-      {/* SECTION B: ALERT CENTER + QUICK ACTIONS                            */}
-      {/* ════════════════════════════════════════════════════════════════════ */}
+      {/* ──────────────────────────────────────────────────────────────────── */}
+      {/* SECTION B: ALERTS + ACTIONS                                        */}
+      {/* ──────────────────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* ── Alert Center (2 cols) ── */}
-        <Card className="lg:col-span-2 bg-card/50 backdrop-blur border-border/50">
+        {/* Alerts */}
+        <Card className="lg:col-span-2 bg-card/30 border-border/40">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm flex items-center gap-2">
-                ⚠️ Cảnh báo cần xử lý
-                {findings.length > 0 && (
-                  <Badge className="text-[10px] bg-red-500/15 text-red-400">{findings.length}</Badge>
-                )}
-              </CardTitle>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-xs h-7"
-                onClick={() => window.location.href = "/bizscan"}
-              >
-                Xem tất cả →
-              </Button>
+              <div>
+                <CardTitle className="text-sm font-medium">Cảnh báo vận hành</CardTitle>
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                  Nguồn: BizScan quét bảng sb_orders, sb_inventory, sb_ad_daily_stats
+                </p>
+              </div>
+              {findings.length > 0 && (
+                <Badge variant="outline" className="text-[10px] bg-red-500/10 text-red-400 border-red-500/20">
+                  {findings.length} cần xử lý
+                </Badge>
+              )}
             </div>
           </CardHeader>
           <CardContent>
             {findings.length === 0 ? (
-              <div className="text-center py-6">
-                <p className="text-3xl mb-2">✅</p>
-                <p className="text-sm text-muted-foreground">Mọi thứ ổn! Không có cảnh báo.</p>
+              <div className="text-center py-6 text-sm text-muted-foreground">
+                Không có cảnh báo. Bấm &quot;Quét vận hành&quot; để kiểm tra.
               </div>
             ) : (
-              <div className="space-y-2 max-h-[240px] overflow-y-auto pr-1">
+              <div className="space-y-2 max-h-[220px] overflow-y-auto">
                 {findings.slice(0, 5).map((f) => (
                   <div
                     key={f.id}
-                    className={`p-3 rounded-lg border text-sm transition-all hover:shadow-sm ${
+                    className={`p-3 rounded-lg border text-sm ${
                       f.severity === "CRITICAL"
-                        ? "bg-red-500/5 border-red-500/20"
-                        : "bg-amber-500/5 border-amber-500/20"
+                        ? "border-red-500/20 bg-red-500/5"
+                        : "border-amber-500/20 bg-amber-500/5"
                     }`}
                   >
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-sm flex-shrink-0">
-                          {f.severity === "CRITICAL" ? "🔴" : "🟡"}
-                        </span>
+                        <span
+                          className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                            f.severity === "CRITICAL" ? "bg-red-500" : "bg-amber-500"
+                          }`}
+                        />
                         <span className="text-xs truncate">{f.title}</span>
                       </div>
-                      <Badge variant="outline" className="text-[10px] flex-shrink-0">{f.category}</Badge>
+                      <span className="text-[10px] text-muted-foreground flex-shrink-0 uppercase">{f.category}</span>
                     </div>
                   </div>
                 ))}
+                {findings.length > 5 && (
+                  <button
+                    className="text-xs text-muted-foreground hover:text-foreground w-full text-center py-1"
+                    onClick={() => window.location.href = "/bizscan"}
+                  >
+                    Xem thêm {findings.length - 5} cảnh báo →
+                  </button>
+                )}
               </div>
             )}
           </CardContent>
         </Card>
 
-        {/* ── Quick Actions (1 col) ── */}
-        <Card className="bg-card/50 backdrop-blur border-border/50">
+        {/* Quick Actions */}
+        <Card className="bg-card/30 border-border/40">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">⚡ Hành động nhanh</CardTitle>
+            <CardTitle className="text-sm font-medium">Thao tác nhanh</CardTitle>
+            <p className="text-[10px] text-muted-foreground">
+              Mỗi thao tác kết nối thật tới Keycloak, Mattermost, PostgreSQL
+            </p>
           </CardHeader>
           <CardContent className="space-y-2">
-            {/* Offboard button */}
+            {/* Offboard */}
             <Dialog open={offboardOpen} onOpenChange={setOffboardOpen}>
               <DialogTrigger asChild>
-                <Button variant="outline" className="w-full justify-start text-xs h-10 gap-2 hover:bg-red-500/5 hover:border-red-500/30" id="btn-offboard">
-                  🔒 Offboard nhân viên
+                <Button variant="outline" className="w-full justify-start text-xs h-9 gap-2" id="btn-offboard">
+                  <span className="w-4 h-4 flex items-center justify-center">
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                    </svg>
+                  </span>
+                  Thu hồi quyền nhân viên
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>🔒 Thu hồi quyền truy cập</DialogTitle>
+                  <DialogTitle>Thu hồi quyền truy cập</DialogTitle>
                   <DialogDescription>
-                    Chọn nhân viên → Khóa SSO + Chat + Ghi audit log
+                    Chọn nhân viên → Hệ thống tự động: khóa đăng nhập SSO (Keycloak), vô hiệu tài khoản chat (Mattermost), ghi nhật ký kiểm toán (PostgreSQL)
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
@@ -426,10 +418,12 @@ export default function CommandCenter() {
                   </Select>
 
                   {offboardResult && (
-                    <div className="p-3 rounded-lg bg-muted/50 text-xs space-y-1">
+                    <div className="p-3 rounded-lg bg-muted/50 text-xs space-y-1 border">
+                      <p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-wider">Kết quả thực thi:</p>
                       {Object.entries(offboardResult).map(([key, value]) => (
-                        <div key={key}>
-                          <strong className="capitalize">{key}:</strong> {value}
+                        <div key={key} className="flex gap-2">
+                          <span className="text-muted-foreground capitalize min-w-[80px]">{key}:</span>
+                          <span>{value}</span>
                         </div>
                       ))}
                     </div>
@@ -440,40 +434,50 @@ export default function CommandCenter() {
                     disabled={!selectedEmployee || offboarding}
                     className="w-full bg-red-600 hover:bg-red-700 text-white"
                   >
-                    {offboarding ? "⏳ Đang xử lý..." : "🔒 Xác nhận Offboard"}
+                    {offboarding ? "Đang xử lý..." : "Xác nhận thu hồi"}
                   </Button>
                 </div>
               </DialogContent>
             </Dialog>
 
-            {/* Scan button */}
+            {/* Scan */}
             <Button
               variant="outline"
-              className="w-full justify-start text-xs h-10 gap-2 hover:bg-violet-500/5 hover:border-violet-500/30"
+              className="w-full justify-start text-xs h-9 gap-2"
               onClick={handleScan}
               disabled={scanning}
               id="btn-scan"
             >
-              {scanning ? "⏳ Đang scan..." : "🔍 Scan kinh doanh"}
+              <span className="w-4 h-4 flex items-center justify-center">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                </svg>
+              </span>
+              {scanning ? "Đang quét..." : "Quét vận hành"}
             </Button>
 
-            {/* Ticket button */}
+            {/* Ticket */}
             <Dialog open={ticketOpen} onOpenChange={setTicketOpen}>
               <DialogTrigger asChild>
-                <Button variant="outline" className="w-full justify-start text-xs h-10 gap-2 hover:bg-blue-500/5 hover:border-blue-500/30" id="btn-ticket">
-                  🎫 Tạo DX-Ticket
+                <Button variant="outline" className="w-full justify-start text-xs h-9 gap-2" id="btn-ticket">
+                  <span className="w-4 h-4 flex items-center justify-center">
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z" />
+                    </svg>
+                  </span>
+                  Tạo yêu cầu hỗ trợ
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>🎫 Tạo Ticket IT</DialogTitle>
+                  <DialogTitle>Tạo yêu cầu hỗ trợ IT</DialogTitle>
                   <DialogDescription>
-                    Tạo yêu cầu hỗ trợ → Gửi thông báo Mattermost
+                    Tạo ticket → Lưu vào PostgreSQL → Gửi thông báo Mattermost webhook
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-3">
                   <Input
-                    placeholder="Tiêu đề ticket..."
+                    placeholder="Tiêu đề..."
                     value={ticketTitle}
                     onChange={(e) => setTicketTitle(e.target.value)}
                   />
@@ -488,10 +492,10 @@ export default function CommandCenter() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="LOW">🟢 Thấp</SelectItem>
-                      <SelectItem value="NORMAL">🔵 Bình thường</SelectItem>
-                      <SelectItem value="HIGH">🟡 Cao</SelectItem>
-                      <SelectItem value="URGENT">🔴 Khẩn cấp</SelectItem>
+                      <SelectItem value="LOW">Thấp</SelectItem>
+                      <SelectItem value="NORMAL">Bình thường</SelectItem>
+                      <SelectItem value="HIGH">Cao</SelectItem>
+                      <SelectItem value="URGENT">Khẩn cấp</SelectItem>
                     </SelectContent>
                   </Select>
                   <Button
@@ -499,75 +503,95 @@ export default function CommandCenter() {
                     disabled={!ticketTitle.trim() || ticketSubmitting}
                     className="w-full"
                   >
-                    {ticketSubmitting ? "⏳ Đang tạo..." : "📨 Tạo & Gửi Mattermost"}
+                    {ticketSubmitting ? "Đang tạo..." : "Tạo và gửi thông báo"}
                   </Button>
                 </div>
               </DialogContent>
             </Dialog>
 
-            {/* Scan result toast */}
+            {/* Scan result */}
             {scanResult && (
-              <div className={`p-3 rounded-lg text-xs ${
+              <div className={`p-3 rounded-lg text-xs border ${
                 scanResult.anomalyCount > 0
-                  ? "bg-amber-500/10 border border-amber-500/20"
-                  : "bg-emerald-500/10 border border-emerald-500/20"
+                  ? "border-amber-500/20 bg-amber-500/5"
+                  : "border-emerald-500/20 bg-emerald-500/5"
               }`}>
-                <p className="font-medium">{scanResult.anomalyCount > 0 ? "⚠️" : "✅"} {scanResult.summary}</p>
+                <p className="font-medium">{scanResult.summary}</p>
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  Nguồn: SQL queries trên sb_orders, sb_inventory, sb_ad_daily_stats
+                </p>
               </div>
             )}
           </CardContent>
         </Card>
       </div>
 
-      {/* ════════════════════════════════════════════════════════════════════ */}
-      {/* SECTION C: BUSINESS PULSE                                          */}
-      {/* ════════════════════════════════════════════════════════════════════ */}
+      {/* ──────────────────────────────────────────────────────────────────── */}
+      {/* SECTION C: BUSINESS DATA                                           */}
+      {/* ──────────────────────────────────────────────────────────────────── */}
       {pulse && (
         <>
+          {/* Data source banner */}
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/30 border border-border/30">
+            <span className="w-1.5 h-1.5 rounded-full bg-violet-500 flex-shrink-0" />
+            <p className="text-[10px] text-muted-foreground">
+              <strong>Nguồn dữ liệu:</strong> Bảng <code className="bg-muted px-1 rounded">sb_orders</code> ({pulse.totalOrders.toLocaleString()} đơn hàng),{" "}
+              <code className="bg-muted px-1 rounded">sb_products</code> ({pulse.totalProducts} sản phẩm),{" "}
+              <code className="bg-muted px-1 rounded">sb_customers</code> ({pulse.totalCustomers} khách hàng)
+              — Dữ liệu mẫu 6 tháng, giả lập từ seed script
+            </p>
+          </div>
+
           {/* KPI Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <Card className="bg-card/50 border-border/50">
+            <Card className="bg-card/30 border-border/40">
               <CardContent className="pt-4 pb-3 px-4">
                 <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Doanh thu 7 ngày</p>
                 <p className="text-xl font-bold tabular-nums">{formatVND(pulse.currentRevenue)}đ</p>
-                <p className={`text-xs ${pulse.revenueChange >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                  {pulse.revenueChange >= 0 ? "↑" : "↓"} {Math.abs(pulse.revenueChange)}% vs tuần trước
+                <p className={`text-[10px] ${pulse.revenueChange >= 0 ? "text-emerald-500" : "text-red-500"}`}>
+                  {pulse.revenueChange >= 0 ? "+" : ""}{pulse.revenueChange}% so với tuần trước
                 </p>
               </CardContent>
             </Card>
-            <Card className="bg-card/50 border-border/50">
+            <Card className="bg-card/30 border-border/40">
               <CardContent className="pt-4 pb-3 px-4">
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Đơn hàng</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Đơn hàng (7 ngày)</p>
                 <p className="text-xl font-bold tabular-nums">{pulse.currentOrders}</p>
-                <p className="text-xs text-muted-foreground">{pulse.totalOrders} tổng cộng</p>
+                <p className="text-[10px] text-muted-foreground">Tổng cộng: {pulse.totalOrders.toLocaleString()}</p>
               </CardContent>
             </Card>
-            <Card className="bg-card/50 border-border/50">
+            <Card className="bg-card/30 border-border/40">
               <CardContent className="pt-4 pb-3 px-4">
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Sản phẩm</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Sản phẩm đang bán</p>
                 <p className="text-xl font-bold tabular-nums">{pulse.totalProducts}</p>
-                <p className="text-xs text-muted-foreground">{pulse.totalCustomers} khách hàng</p>
+                <p className="text-[10px] text-muted-foreground">{pulse.totalCustomers} khách hàng</p>
               </CardContent>
             </Card>
-            <Card className="bg-card/50 border-border/50">
+            <Card className="bg-card/30 border-border/40">
               <CardContent className="pt-4 pb-3 px-4">
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Lợi nhuận</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Lợi nhuận (7 ngày)</p>
                 <p className="text-xl font-bold tabular-nums">{formatVND(pulse.currentProfit)}đ</p>
-                <p className="text-xs text-muted-foreground">7 ngày gần nhất</p>
+                <p className="text-[10px] text-muted-foreground">
+                  Tính từ: sellPrice - costPrice
+                </p>
               </CardContent>
             </Card>
           </div>
 
-          {/* Revenue Chart + Channel + Top Products */}
+          {/* Revenue Chart + Channels */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {/* Revenue bar chart */}
-            <Card className="lg:col-span-2 bg-card/50 border-border/50">
+            <Card className="lg:col-span-2 bg-card/30 border-border/40">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm">📊 Doanh thu 7 ngày</CardTitle>
+                <div>
+                  <CardTitle className="text-sm font-medium">Doanh thu theo ngày</CardTitle>
+                  <p className="text-[10px] text-muted-foreground">
+                    Truy vấn: SUM(totalAmount) FROM sb_orders WHERE status=COMPLETED GROUP BY DATE(orderDate)
+                  </p>
+                </div>
               </CardHeader>
               <CardContent>
                 {dailyRevenue.length === 0 ? (
-                  <p className="text-xs text-muted-foreground text-center py-8">Chưa có dữ liệu</p>
+                  <p className="text-xs text-muted-foreground text-center py-8">Chưa có dữ liệu trong 7 ngày gần</p>
                 ) : (
                   <div className="flex items-end gap-2 h-[140px]">
                     {dailyRevenue.map((day) => {
@@ -579,9 +603,9 @@ export default function CommandCenter() {
                             {formatVND(day.revenue)}
                           </span>
                           <div
-                            className="w-full rounded-t-md bg-gradient-to-t from-violet-600 to-violet-400 transition-all hover:from-violet-500 hover:to-violet-300"
+                            className="w-full rounded-t bg-gradient-to-t from-violet-600/80 to-violet-400/80 hover:from-violet-500 hover:to-violet-300 transition-colors"
                             style={{ height: `${height}%` }}
-                            title={`${dateLabel}: ${formatVND(day.revenue)}đ / ${day.orders} đơn`}
+                            title={`${dateLabel}: ${new Intl.NumberFormat("vi-VN").format(day.revenue)}đ / ${day.orders} đơn`}
                           />
                           <span className="text-[9px] text-muted-foreground">{dateLabel}</span>
                         </div>
@@ -592,10 +616,14 @@ export default function CommandCenter() {
               </CardContent>
             </Card>
 
-            {/* Channel breakdown */}
-            <Card className="bg-card/50 border-border/50">
+            <Card className="bg-card/30 border-border/40">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm">📱 Kênh bán hàng</CardTitle>
+                <div>
+                  <CardTitle className="text-sm font-medium">Kênh bán hàng</CardTitle>
+                  <p className="text-[10px] text-muted-foreground">
+                    Trường &quot;channel&quot; trong sb_orders
+                  </p>
+                </div>
               </CardHeader>
               <CardContent className="space-y-3">
                 {channels.map((ch) => {
@@ -603,16 +631,14 @@ export default function CommandCenter() {
                   return (
                     <div key={ch.channel}>
                       <div className="flex items-center justify-between text-xs mb-1">
-                        <span>
-                          {CHANNEL_EMOJI[ch.channel] ?? "📦"} {ch.channel}
-                        </span>
-                        <span className="text-muted-foreground tabular-nums">
+                        <span className="capitalize">{ch.channel}</span>
+                        <span className="text-muted-foreground tabular-nums text-[10px]">
                           {ch.orders} đơn · {formatVND(ch.revenue)}đ
                         </span>
                       </div>
                       <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-gradient-to-r from-violet-500 to-indigo-400 rounded-full transition-all"
+                          className="h-full bg-violet-500/70 rounded-full transition-all"
                           style={{ width: `${pct}%` }}
                         />
                       </div>
@@ -625,26 +651,29 @@ export default function CommandCenter() {
 
           {/* Top Products */}
           {topProducts.length > 0 && (
-            <Card className="bg-card/50 border-border/50">
+            <Card className="bg-card/30 border-border/40">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm">🏆 Top sản phẩm bán chạy (7 ngày)</CardTitle>
+                <div>
+                  <CardTitle className="text-sm font-medium">Sản phẩm bán chạy (7 ngày)</CardTitle>
+                  <p className="text-[10px] text-muted-foreground">
+                    Truy vấn: COUNT(sb_order_items) JOIN sb_products GROUP BY product ORDER BY sales DESC LIMIT 5
+                  </p>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
                   {topProducts.map((p, i) => (
                     <div
                       key={p.sku}
-                      className="p-3 rounded-lg border border-border/50 bg-muted/20 hover:bg-muted/40 transition-colors"
+                      className="p-3 rounded-lg border border-border/30 bg-muted/10 hover:bg-muted/20 transition-colors"
                     >
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-lg">
-                          {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `#${i + 1}`}
-                        </span>
-                        <Badge variant="outline" className="text-[10px]">{p.sku}</Badge>
+                        <span className="text-xs font-bold text-muted-foreground">#{i + 1}</span>
+                        <span className="text-[10px] text-muted-foreground font-mono">{p.sku}</span>
                       </div>
                       <p className="text-xs font-medium truncate">{p.name}</p>
                       <p className="text-[10px] text-muted-foreground mt-1">
-                        {p.sales} đã bán · {formatVND(p.revenue)}đ
+                        {p.sales} bán · {formatVND(p.revenue)}đ
                       </p>
                     </div>
                   ))}
