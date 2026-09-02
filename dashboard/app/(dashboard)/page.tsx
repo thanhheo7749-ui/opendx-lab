@@ -137,7 +137,7 @@ export default function CommandCenter() {
   const [ticketPriority, setTicketPriority] = useState("NORMAL");
 
   const [scanning, setScanning] = useState(false);
-  const [scanResult, setScanResult] = useState<{ summary: string; anomalyCount: number } | null>(null);
+  const [scanResult, setScanResult] = useState<{ summary: string; anomalyCount: number; details?: string; timestamp?: string; durationMs?: number } | null>(null);
 
   // ── Fetch ─────────────────────────────────────────────────────────────────
 
@@ -174,7 +174,9 @@ export default function CommandCenter() {
 
     if (empRes.status === "fulfilled" && empRes.value.ok) {
       const e = await empRes.value.json();
-      setEmployees((e.employees ?? []).filter((emp: Employee) => emp.status === "ACTIVE"));
+      // API trả về mảng trực tiếp, không phải { employees: [...] }
+      const list = Array.isArray(e) ? e : (e.employees ?? []);
+      setEmployees(list.filter((emp: Employee) => emp.status === "ACTIVE"));
     }
 
     setLoading(false);
@@ -238,7 +240,19 @@ export default function CommandCenter() {
       const res = await fetch("/api/bizscan/scan", { method: "POST" });
       const data = await res.json();
       if (data.success) {
-        setScanResult({ summary: data.scan.summary, anomalyCount: data.scan.anomalyCount });
+        // Build detailed summary showing each check
+        const checkDetails = (data.checks ?? [])
+          .map((c: { name: string; hasAnomaly: boolean; message: string }) =>
+            `${c.hasAnomaly ? "●" : "○"} ${c.name}: ${c.message.split(".")[0]}`
+          )
+          .join("\n");
+        setScanResult({
+          summary: data.scan.summary,
+          anomalyCount: data.scan.anomalyCount,
+          details: checkDetails,
+          timestamp: new Date().toLocaleTimeString("vi-VN"),
+          durationMs: data.scan.durationMs,
+        });
         await fetchAll();
       }
     } catch { /* ignore */ }
@@ -516,9 +530,19 @@ export default function CommandCenter() {
                   ? "border-amber-500/20 bg-amber-500/5"
                   : "border-emerald-500/20 bg-emerald-500/5"
               }`}>
-                <p className="font-medium">{scanResult.summary}</p>
-                <p className="text-[10px] text-muted-foreground mt-1">
-                  Nguồn: SQL queries trên sb_orders, sb_inventory, sb_ad_daily_stats
+                <div className="flex items-center justify-between mb-1">
+                  <p className="font-medium">{scanResult.summary}</p>
+                  {scanResult.durationMs && (
+                    <span className="text-[9px] text-muted-foreground">{scanResult.durationMs}ms</span>
+                  )}
+                </div>
+                {scanResult.details && (
+                  <pre className="text-[10px] text-muted-foreground mt-1 whitespace-pre-wrap font-mono leading-relaxed">
+                    {scanResult.details}
+                  </pre>
+                )}
+                <p className="text-[9px] text-muted-foreground mt-2 pt-1 border-t border-border/30">
+                  Quét lúc {scanResult.timestamp} · 5 checks trên bảng sb_orders, sb_inventory, sb_ad_daily_stats, sb_customers
                 </p>
               </div>
             )}
