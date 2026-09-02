@@ -176,7 +176,7 @@ services:
       AP_POSTGRES_USE_SSL: "false"
       AP_ENCRYPTION_KEY: ${AP_ENCRYPTION_KEY}
       AP_JWT_SECRET: ${AP_JWT_SECRET}
-      AP_FRONTEND_URL: ${AP_FRONTEND_URL:-http://localhost:5678}
+      AP_FRONTEND_URL: http://localhost:80
       AP_TELEMETRY_ENABLED: "false"
       AP_TEMPLATES_SOURCE_URL: ""
       AP_REDIS_TYPE: MEMORY
@@ -254,6 +254,8 @@ services:
       METABASE_SECRET_KEY: ${METABASE_SECRET_KEY}
       AUTH_TRUST_HOST: "true"
       KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
       MATTERMOST_URL: http://mattermost:8065
       WIKIJS_URL: http://wikijs:3000
       N8N_URL: http://n8n:5678

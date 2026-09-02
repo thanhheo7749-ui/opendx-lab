@@ -56,13 +56,13 @@ function classifyByKeywords(q: string): IntentType | null {
     return "WORKFLOW";
   }
 
-  // WORKFLOW patterns (explicit action commands)
-  if (/\b(onboard|offboard|thêm nhân viên mới|kích hoạt quy trình|tuyển.*mới|cho.*nghỉ việc)\b/i.test(q)) {
+  // WORKFLOW patterns (explicit action commands — must have clear action verbs)
+  if (/\b(onboard|offboard|thêm nhân viên mới|kích hoạt quy trình|tuyển.*mới|cho.*nghỉ việc|chạy quy trình|thực hiện.*onboarding|bắt đầu.*offboarding)\b/i.test(q)) {
     return "WORKFLOW";
   }
 
-  // DB_QUERY patterns (data/number questions)
-  if (/\b(bao nhiêu|mấy|thống kê|danh sách|liệt kê|tổng số|số lượng|count|how many|list|tên.*nhân viên|phòng ban nào|ai.*mới.*gia nhập|nhân viên.*nào)\b/i.test(q)) {
+  // DB_QUERY patterns (data/number questions — check BEFORE knowledge to catch HR data queries)
+  if (/\b(bao nhiêu|mấy|thống kê|danh sách|liệt kê|tổng số|số lượng|count|how many|list|tên.*nhân viên|phòng ban nào|ai.*mới.*gia nhập|nhân viên.*nào|nhân sự|theo từng|theo phòng|từng phòng|theo bộ phận|phân bổ|biểu đồ|báo cáo.*nhân|report)\b/i.test(q)) {
     return "DB_QUERY";
   }
 
@@ -121,6 +121,16 @@ export async function POST(request: NextRequest) {
         if (found) intent = found;
       } catch (err) {
         console.warn("[ai/chat] Intent classification failed, defaulting to DB_QUERY:", err);
+      }
+
+      // Safety guard: WORKFLOW should ONLY trigger with explicit action keywords.
+      // LLM sometimes misclassifies data questions as WORKFLOW — prevent accidental triggers.
+      if (intent === "WORKFLOW") {
+        const hasActionVerb = /\b(onboard|offboard|thêm.*mới|kích hoạt|tuyển.*mới|cho.*nghỉ|chạy quy trình|thực hiện|bắt đầu)\b/i.test(userQuestion);
+        if (!hasActionVerb) {
+          console.warn(`[ai/chat] WORKFLOW downgraded to DB_QUERY (no action verb): "${userQuestion}"`);
+          intent = "DB_QUERY";
+        }
       }
     }
 

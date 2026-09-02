@@ -12,7 +12,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { X, ExternalLink, Trash2, FileText, Link2, Loader2, ChevronDown, ChevronRight } from "lucide-react";
+import { X, ExternalLink, Trash2, FileText, Link2, Loader2, ChevronDown, ChevronRight, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { GraphNode, GraphLink } from "./GraphCanvas";
 
@@ -186,6 +186,29 @@ export function NodeDetailPanel({
           </div>
         )}
 
+        {/* Wiki.js Link */}
+        {(node.sourceUrl || ["POLICY", "PROCESS", "DOCUMENT"].includes(node.type)) && (
+          <a
+            href={node.sourceUrl || `http://localhost:3200/vi/home`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50/50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors text-xs group"
+          >
+            <BookOpen className="w-3.5 h-3.5 text-indigo-500 flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <div className="font-medium text-indigo-700 dark:text-indigo-300 group-hover:underline truncate">
+                {node.sourceUrl ? "Xem trên Wiki.js" : "Mở Wiki.js"}
+              </div>
+              {node.sourceUrl && (
+                <div className="text-[10px] text-indigo-400 truncate mt-0.5">
+                  {node.sourceUrl.replace(/^https?:\/\/[^/]+/, "")}
+                </div>
+              )}
+            </div>
+            <ExternalLink className="w-3 h-3 text-indigo-400 flex-shrink-0" />
+          </a>
+        )}
+
         {/* Metadata */}
         <div className="grid grid-cols-2 gap-2 text-xs">
           <div className="bg-muted rounded-lg p-2">
@@ -309,15 +332,15 @@ export function NodeDetailPanel({
 
       {/* Footer actions */}
       <div className="p-3 border-t border-border flex gap-2">
-        {node.source === "wikijs" && (
+        {(node.sourceUrl || node.source === "wikijs" || node.source === "system") && (
           <a
-            href="http://localhost:3200"
+            href={node.sourceUrl || "http://localhost:3200"}
             target="_blank"
             rel="noopener noreferrer"
             className="flex-1 inline-flex items-center justify-center text-xs h-8 px-3 rounded-md border border-border hover:bg-muted transition-colors"
           >
-            <ExternalLink className="w-3 h-3 mr-1" />
-            Wiki.js
+            <BookOpen className="w-3 h-3 mr-1" />
+            {node.sourceUrl ? "Wiki.js" : "Mở Wiki.js"}
           </a>
         )}
         <Button

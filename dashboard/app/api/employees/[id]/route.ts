@@ -5,7 +5,12 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { triggerOffboarding, triggerActivation } from "@/lib/activepieces";
+import { disableUser, enableUser } from "@/lib/keycloak-admin";
+import {
+  notifyStatusChange,
+  deactivateUser as mmDeactivate,
+  activateUser as mmActivate,
+} from "@/lib/mattermost";
 import {
   createWorkflowExecutionRecord,
   updateWorkflowStepStatus,
@@ -52,8 +57,15 @@ export async function PATCH(
         },
       });
 
-      // Trigger tracked offboarding workflow if terminated
+      // ── Offboarding: ACTIVE/ON_LEAVE → TERMINATED ──────────────────
       if (body.status === "TERMINATED") {
+        // Step 1: Disable Keycloak SSO account
+        const kcResult = await disableUser(employee.email);
+
+        // Step 2: Deactivate Mattermost account
+        const mmResult = await mmDeactivate(employee.email);
+
+        // Step 3: Create workflow execution record for tracking
         const workflow = await createWorkflowExecutionRecord({
           type: "OFFBOARDING",
           employeeId: employee.id,
@@ -62,30 +74,36 @@ export async function PATCH(
         });
         workflowId = workflow.id;
 
-        const webhookResult = await triggerOffboarding({
+        // Update workflow step statuses
+        await updateWorkflowStepStatus({
           workflowId: workflow.id,
-          firstName: employee.firstName,
-          lastName: employee.lastName,
-          email: employee.email,
-          department: employee.department.name,
+          stepKey: "disable_sso_account",
+          status: kcResult.ok ? "COMPLETED" : "FAILED",
+          errorCode: kcResult.ok ? undefined : kcResult.action,
+          errorMessage: kcResult.ok ? undefined : (kcResult.error ?? `SSO ${kcResult.action}`),
         });
 
-        if (!webhookResult.ok) {
-          await updateWorkflowStepStatus({
-            workflowId: workflow.id,
-            stepKey: "disable_sso_account",
-            status: "FAILED",
-            errorCode: webhookResult.reason,
-            errorMessage:
-              webhookResult.reason === "network_error"
-                ? webhookResult.errorMessage
-                : `Webhook failed: ${webhookResult.reason}`,
-          });
-        }
+        // Step 4: Send consolidated Mattermost notification
+        notifyStatusChange({
+          employeeName: `${employee.firstName} ${employee.lastName}`,
+          email: employee.email,
+          department: employee.department.name,
+          fromStatus: before.status,
+          toStatus: body.status,
+          keycloakResult: kcResult.ok ? "🔒 Đã vô hiệu hóa tài khoản" : `❌ ${kcResult.error ?? kcResult.action}`,
+          mattermostResult: mmResult.ok ? "🔒 Đã vô hiệu hóa tài khoản" : `❌ ${mmResult.error ?? mmResult.action}`,
+        }).catch(err => console.error("[mattermost] notification error:", err));
       }
 
-      // Trigger tracked activation workflow if reactivated
-      if (before.status === "TERMINATED" && body.status === "ACTIVE") {
+      // ── Re-activation: TERMINATED → ACTIVE ────────────────────────
+      else if (before.status === "TERMINATED" && body.status === "ACTIVE") {
+        // Step 1: Enable Keycloak SSO account
+        const kcResult = await enableUser(employee.email);
+
+        // Step 2: Reactivate Mattermost account
+        const mmResult = await mmActivate(employee.email);
+
+        // Step 3: Create workflow execution record
         const workflow = await createWorkflowExecutionRecord({
           type: "ACTIVATION",
           employeeId: employee.id,
@@ -94,26 +112,36 @@ export async function PATCH(
         });
         workflowId = workflow.id;
 
-        const webhookResult = await triggerActivation({
+        // Update workflow step statuses
+        await updateWorkflowStepStatus({
           workflowId: workflow.id,
-          firstName: employee.firstName,
-          lastName: employee.lastName,
-          email: employee.email,
-          department: employee.department.name,
+          stepKey: "enable_sso_account",
+          status: kcResult.ok ? "COMPLETED" : "FAILED",
+          errorCode: kcResult.ok ? undefined : kcResult.action,
+          errorMessage: kcResult.ok ? undefined : (kcResult.error ?? `SSO ${kcResult.action}`),
         });
 
-        if (!webhookResult.ok) {
-          await updateWorkflowStepStatus({
-            workflowId: workflow.id,
-            stepKey: "enable_sso_account",
-            status: "FAILED",
-            errorCode: webhookResult.reason,
-            errorMessage:
-              webhookResult.reason === "network_error"
-                ? webhookResult.errorMessage
-                : `Webhook failed: ${webhookResult.reason}`,
-          });
-        }
+        // Step 4: Send consolidated Mattermost notification
+        notifyStatusChange({
+          employeeName: `${employee.firstName} ${employee.lastName}`,
+          email: employee.email,
+          department: employee.department.name,
+          fromStatus: before.status,
+          toStatus: body.status,
+          keycloakResult: kcResult.ok ? "🔓 Đã kích hoạt lại tài khoản" : `❌ ${kcResult.error ?? kcResult.action}`,
+          mattermostResult: mmResult.ok ? "🔓 Đã kích hoạt lại tài khoản" : `❌ ${mmResult.error ?? mmResult.action}`,
+        }).catch(err => console.error("[mattermost] notification error:", err));
+      }
+
+      // ── Other status changes (e.g., ACTIVE ↔ ON_LEAVE) ───────────
+      else {
+        notifyStatusChange({
+          employeeName: `${employee.firstName} ${employee.lastName}`,
+          email: employee.email,
+          department: employee.department.name,
+          fromStatus: before.status,
+          toStatus: body.status,
+        }).catch(err => console.error("[mattermost] notification error:", err));
       }
     }
 

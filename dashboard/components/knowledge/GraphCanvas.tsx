@@ -26,6 +26,7 @@ export interface GraphNode {
   type: string;
   description?: string | null;
   source?: string | null;
+  sourceUrl?: string | null;
   val: number;
   chunkCount: number;
   // Force graph internal props
@@ -102,9 +103,9 @@ export function GraphCanvas({
   useEffect(() => {
     if (fgRef.current && graphData.nodes.length > 0) {
       // Configure forces for ~5cm node spacing
-      fgRef.current.d3Force("charge")?.strength(-300);
-      fgRef.current.d3Force("link")?.distance(150);
-      fgRef.current.d3Force("center")?.strength(0.05);
+      fgRef.current.d3Force("charge")?.strength(-800);
+      fgRef.current.d3Force("link")?.distance(250);
+      fgRef.current.d3Force("center")?.strength(0.02);
 
       setTimeout(() => {
         fgRef.current?.zoomToFit(400, 60);
@@ -129,7 +130,10 @@ export function GraphCanvas({
 
   const nodeCanvasObject = useCallback(
     (node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
-      const label = node.name || "";
+      const rawLabel = node.name || "";
+      // Truncate long labels to prevent overlap
+      const maxChars = 20;
+      const label = rawLabel.length > maxChars ? rawLabel.substring(0, maxChars) + "…" : rawLabel;
       const fontSize = Math.max(10 / globalScale, 2);
       const nodeSize = Math.sqrt(node.val || 1) * 3 + 4;
       const isSelected = node.id === selectedNodeId;
@@ -170,8 +174,26 @@ export function GraphCanvas({
         ctx.font = `${isHighlighted ? "bold " : ""}${fontSize}px Inter, sans-serif`;
         ctx.textAlign = "center";
         ctx.textBaseline = "top";
+
+        // Show full label on hover/select, truncated otherwise
+        const displayLabel = isHighlighted ? rawLabel : label;
+        const textWidth = ctx.measureText(displayLabel).width;
+        const textX = node.x!;
+        const textY = node.y! + nodeSize + 3;
+        const padX = 3 / globalScale;
+        const padY = 1 / globalScale;
+
+        // Draw dark background behind label
+        ctx.fillStyle = `rgba(15, 23, 42, ${alpha * 0.75})`;
+        ctx.fillRect(
+          textX - textWidth / 2 - padX,
+          textY - padY,
+          textWidth + padX * 2,
+          fontSize + padY * 2
+        );
+
         ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
-        ctx.fillText(label, node.x!, node.y! + nodeSize + 2);
+        ctx.fillText(displayLabel, textX, textY);
       }
     },
     [selectedNodeId, hoveredNodeId, getNeighborIds]

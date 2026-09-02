@@ -15,46 +15,46 @@ const prisma = new PrismaClient();
 
 const NODES = [
   // DEPARTMENT nodes (from real departments)
-  { type: "DEPARTMENT", name: "Phòng Nhân sự (HR)", description: "Quản lý tuyển dụng, đào tạo, chấm công, lương thưởng và phúc lợi nhân viên.", source: "system" },
-  { type: "DEPARTMENT", name: "Phòng Kỹ thuật (Engineering)", description: "Phát triển và bảo trì hệ thống phần mềm, hạ tầng kỹ thuật.", source: "system" },
-  { type: "DEPARTMENT", name: "Phòng Kinh doanh (Sales)", description: "Quản lý bán hàng, chăm sóc khách hàng, phát triển thị trường.", source: "system" },
-  { type: "DEPARTMENT", name: "Phòng Marketing", description: "Xây dựng chiến lược thương hiệu, quảng cáo, truyền thông.", source: "system" },
-  { type: "DEPARTMENT", name: "Phòng Tài chính (Finance)", description: "Quản lý ngân sách, kế toán, báo cáo tài chính.", source: "system" },
+  { type: "DEPARTMENT", name: "Phòng Nhân sự (HR)", description: "Quản lý tuyển dụng, đào tạo, chấm công, lương thưởng và phúc lợi nhân viên.", source: "system", sourceUrl: null },
+  { type: "DEPARTMENT", name: "Phòng Kỹ thuật (Engineering)", description: "Phát triển và bảo trì hệ thống phần mềm, hạ tầng kỹ thuật.", source: "system", sourceUrl: null },
+  { type: "DEPARTMENT", name: "Phòng Kinh doanh (Sales)", description: "Quản lý bán hàng, chăm sóc khách hàng, phát triển thị trường.", source: "system", sourceUrl: null },
+  { type: "DEPARTMENT", name: "Phòng Marketing", description: "Xây dựng chiến lược thương hiệu, quảng cáo, truyền thông.", source: "system", sourceUrl: null },
+  { type: "DEPARTMENT", name: "Phòng Tài chính (Finance)", description: "Quản lý ngân sách, kế toán, báo cáo tài chính.", source: "system", sourceUrl: null },
 
   // PROCESS nodes
-  { type: "PROCESS", name: "Quy trình Onboarding", description: "Quy trình tiếp nhận nhân viên mới: tạo tài khoản, cấp thiết bị, đào tạo ban đầu, giới thiệu team, ký hợp đồng. Thời gian hoàn thành: 5 ngày làm việc.", source: "system" },
-  { type: "PROCESS", name: "Quy trình Offboarding", description: "Quy trình khi nhân viên nghỉ việc: thu hồi thiết bị, vô hiệu hóa tài khoản, thanh toán lương/phép còn lại, phỏng vấn exit interview.", source: "system" },
-  { type: "PROCESS", name: "Quy trình Đánh giá hiệu suất", description: "Đánh giá KPI hàng quý: tự đánh giá → quản lý đánh giá → HR review → feedback 1-on-1. Deadline: ngày 15 mỗi quý.", source: "system" },
-  { type: "PROCESS", name: "Quy trình Xin nghỉ phép", description: "Nhân viên gửi đơn → quản lý duyệt → HR cập nhật → thông báo team. Nghỉ phép < 3 ngày chỉ cần quản lý duyệt.", source: "system" },
-  { type: "PROCESS", name: "Quy trình Tuyển dụng", description: "Yêu cầu tuyển dụng → HR đăng tin → sàng lọc CV → phỏng vấn vòng 1 (HR) → phỏng vấn vòng 2 (Tech) → offer → onboarding.", source: "system" },
+  { type: "PROCESS", name: "Quy trình Onboarding", description: "Quy trình tiếp nhận nhân viên mới: tạo tài khoản, cấp thiết bị, đào tạo ban đầu, giới thiệu team, ký hợp đồng. Thời gian hoàn thành: 5 ngày làm việc.", source: "system", sourceUrl: "http://localhost:3200/vi/quy-trinh/onboarding" },
+  { type: "PROCESS", name: "Quy trình Offboarding", description: "Quy trình khi nhân viên nghỉ việc: thu hồi thiết bị, vô hiệu hóa tài khoản, thanh toán lương/phép còn lại, phỏng vấn exit interview.", source: "system", sourceUrl: "http://localhost:3200/vi/quy-trinh/offboarding" },
+  { type: "PROCESS", name: "Quy trình Đánh giá hiệu suất", description: "Đánh giá KPI hàng quý: tự đánh giá → quản lý đánh giá → HR review → feedback 1-on-1. Deadline: ngày 15 mỗi quý.", source: "system", sourceUrl: "http://localhost:3200/vi/quy-trinh/danh-gia-hieu-suat" },
+  { type: "PROCESS", name: "Quy trình Xin nghỉ phép", description: "Nhân viên gửi đơn → quản lý duyệt → HR cập nhật → thông báo team. Nghỉ phép < 3 ngày chỉ cần quản lý duyệt.", source: "system", sourceUrl: "http://localhost:3200/vi/quy-trinh/xin-nghi-phep" },
+  { type: "PROCESS", name: "Quy trình Tuyển dụng", description: "Yêu cầu tuyển dụng → HR đăng tin → sàng lọc CV → phỏng vấn vòng 1 (HR) → phỏng vấn vòng 2 (Tech) → offer → onboarding.", source: "system", sourceUrl: "http://localhost:3200/vi/quy-trinh/tuyen-dung" },
 
   // POLICY nodes
-  { type: "POLICY", name: "Chính sách Nghỉ phép", description: "Nhân viên chính thức: 12 ngày phép/năm. Thâm niên 3 năm: +2 ngày/năm. Nghỉ bệnh: 30 ngày/năm (có chứng nhận). Nghỉ không lương: tối đa 30 ngày/năm.", source: "system" },
-  { type: "POLICY", name: "Chính sách Lương & Phúc lợi", description: "Lương gross 13 tháng + thưởng KPI. Bảo hiểm sức khỏe PVI. Hỗ trợ ăn trưa 30k/ngày. Thưởng sinh nhật, cưới hỏi, thai sản.", source: "system" },
-  { type: "POLICY", name: "Chính sách Bảo mật Thông tin", description: "Mọi dữ liệu công ty phải bảo mật. Không chia sẻ mật khẩu, tài liệu nội bộ. VPN bắt buộc khi remote. 2FA cho tất cả hệ thống.", source: "system" },
-  { type: "POLICY", name: "Chính sách Làm việc từ xa", description: "Hybrid: 3 ngày tại văn phòng + 2 ngày remote. Phải online 9h-17h. Báo cáo daily standup. Đánh giá qua output, không tracking giờ.", source: "system" },
-  { type: "POLICY", name: "Nội quy Công ty", description: "Giờ làm việc: 8h30-17h30 (nghỉ trưa 12h-13h). Dress code: business casual. Không hút thuốc trong khuôn viên. Báo nghỉ trước 8h sáng.", source: "system" },
+  { type: "POLICY", name: "Chính sách Nghỉ phép", description: "Nhân viên chính thức: 12 ngày phép/năm. Thâm niên 3 năm: +2 ngày/năm. Nghỉ bệnh: 30 ngày/năm (có chứng nhận). Nghỉ không lương: tối đa 30 ngày/năm.", source: "system", sourceUrl: "http://localhost:3200/vi/chinh-sach/nghi-phep" },
+  { type: "POLICY", name: "Chính sách Lương & Phúc lợi", description: "Lương gross 13 tháng + thưởng KPI. Bảo hiểm sức khỏe PVI. Hỗ trợ ăn trưa 30k/ngày. Thưởng sinh nhật, cưới hỏi, thai sản.", source: "system", sourceUrl: "http://localhost:3200/vi/chinh-sach/luong-phuc-loi" },
+  { type: "POLICY", name: "Chính sách Bảo mật Thông tin", description: "Mọi dữ liệu công ty phải bảo mật. Không chia sẻ mật khẩu, tài liệu nội bộ. VPN bắt buộc khi remote. 2FA cho tất cả hệ thống.", source: "system", sourceUrl: "http://localhost:3200/vi/chinh-sach/bao-mat-thong-tin" },
+  { type: "POLICY", name: "Chính sách Làm việc từ xa", description: "Hybrid: 3 ngày tại văn phòng + 2 ngày remote. Phải online 9h-17h. Báo cáo daily standup. Đánh giá qua output, không tracking giờ.", source: "system", sourceUrl: "http://localhost:3200/vi/chinh-sach/lam-viec-tu-xa" },
+  { type: "POLICY", name: "Nội quy Công ty", description: "Giờ làm việc: 8h30-17h30 (nghỉ trưa 12h-13h). Dress code: business casual. Không hút thuốc trong khuôn viên. Báo nghỉ trước 8h sáng.", source: "system", sourceUrl: "http://localhost:3200/vi/chinh-sach/noi-quy-cong-ty" },
 
   // DOCUMENT nodes
-  { type: "DOCUMENT", name: "Sổ tay Nhân viên 2024", description: "Tài liệu toàn diện về quy định, chính sách, quyền lợi của nhân viên. Cập nhật tháng 1/2024.", source: "upload" },
-  { type: "DOCUMENT", name: "Hướng dẫn sử dụng OpenDX-Lab", description: "Tài liệu hướng dẫn sử dụng hệ thống dashboard quản lý nhân sự, AI chat, workflow automation.", source: "upload" },
-  { type: "DOCUMENT", name: "Quy chế Đào tạo nội bộ", description: "Chương trình đào tạo: mentor 1-1, workshop hàng tháng, budget học online 5 triệu/năm, chứng chỉ IT được hỗ trợ 100%.", source: "upload" },
+  { type: "DOCUMENT", name: "Sổ tay Nhân viên 2024", description: "Tài liệu toàn diện về quy định, chính sách, quyền lợi của nhân viên. Cập nhật tháng 1/2024.", source: "upload", sourceUrl: "http://localhost:3200/vi/tai-lieu/so-tay-nhan-vien-2024" },
+  { type: "DOCUMENT", name: "Hướng dẫn sử dụng OpenDX-Lab", description: "Tài liệu hướng dẫn sử dụng hệ thống dashboard quản lý nhân sự, AI chat, workflow automation.", source: "upload", sourceUrl: "http://localhost:3200/vi/tai-lieu/huong-dan-opendx-lab" },
+  { type: "DOCUMENT", name: "Quy chế Đào tạo nội bộ", description: "Chương trình đào tạo: mentor 1-1, workshop hàng tháng, budget học online 5 triệu/năm, chứng chỉ IT được hỗ trợ 100%.", source: "upload", sourceUrl: "http://localhost:3200/vi/tai-lieu/quy-che-dao-tao" },
 
   // SERVICE nodes (from existing services)
-  { type: "SERVICE", name: "Wiki.js", description: "Hệ thống quản lý tài liệu nội bộ. Lưu trữ SOP, chính sách, hướng dẫn kỹ thuật.", source: "system" },
-  { type: "SERVICE", name: "Mattermost", description: "Nền tảng nhắn tin nội bộ, thay thế Slack. Channels theo team/project.", source: "system" },
-  { type: "SERVICE", name: "Activepieces", description: "Workflow automation platform. Tự động hóa onboarding, offboarding, thông báo.", source: "system" },
-  { type: "SERVICE", name: "Metabase", description: "Business Intelligence dashboard. Báo cáo nhân sự, thống kê, biểu đồ.", source: "system" },
-  { type: "SERVICE", name: "Keycloak", description: "Identity & Access Management. Single Sign-On (SSO), quản lý user, phân quyền.", source: "system" },
+  { type: "SERVICE", name: "Wiki.js", description: "Hệ thống quản lý tài liệu nội bộ. Lưu trữ SOP, chính sách, hướng dẫn kỹ thuật.", source: "system", sourceUrl: "http://localhost:3200" },
+  { type: "SERVICE", name: "Mattermost", description: "Nền tảng nhắn tin nội bộ, thay thế Slack. Channels theo team/project.", source: "system", sourceUrl: "http://localhost:3100" },
+  { type: "SERVICE", name: "Activepieces", description: "Workflow automation platform. Tự động hóa onboarding, offboarding, thông báo.", source: "system", sourceUrl: "http://localhost:5678" },
+  { type: "SERVICE", name: "Metabase", description: "Business Intelligence dashboard. Báo cáo nhân sự, thống kê, biểu đồ.", source: "system", sourceUrl: "http://localhost:3300" },
+  { type: "SERVICE", name: "Keycloak", description: "Identity & Access Management. Single Sign-On (SSO), quản lý user, phân quyền.", source: "system", sourceUrl: "http://localhost:8080" },
 
   // ROLE nodes
-  { type: "ROLE", name: "HR Manager", description: "Quản lý phòng nhân sự. Phê duyệt tuyển dụng, chính sách, đánh giá.", source: "system" },
-  { type: "ROLE", name: "Team Lead", description: "Trưởng nhóm kỹ thuật. Quản lý sprint, code review, mentoring.", source: "system" },
-  { type: "ROLE", name: "Nhân viên mới", description: "Nhân viên trong giai đoạn thử việc (2 tháng). Cần hoàn thành onboarding checklist.", source: "system" },
+  { type: "ROLE", name: "HR Manager", description: "Quản lý phòng nhân sự. Phê duyệt tuyển dụng, chính sách, đánh giá.", source: "system", sourceUrl: null },
+  { type: "ROLE", name: "Team Lead", description: "Trưởng nhóm kỹ thuật. Quản lý sprint, code review, mentoring.", source: "system", sourceUrl: null },
+  { type: "ROLE", name: "Nhân viên mới", description: "Nhân viên trong giai đoạn thử việc (2 tháng). Cần hoàn thành onboarding checklist.", source: "system", sourceUrl: null },
 
   // TOPIC nodes
-  { type: "TOPIC", name: "An toàn Lao động", description: "Quy định về an toàn lao động, phòng cháy chữa cháy, sơ cứu y tế tại nơi làm việc.", source: "system" },
-  { type: "TOPIC", name: "Văn hóa Công ty", description: "Giá trị cốt lõi: Minh bạch - Hợp tác - Đổi mới - Trách nhiệm. Team building hàng quý.", source: "system" },
+  { type: "TOPIC", name: "An toàn Lao động", description: "Quy định về an toàn lao động, phòng cháy chữa cháy, sơ cứu y tế tại nơi làm việc.", source: "system", sourceUrl: null },
+  { type: "TOPIC", name: "Văn hóa Công ty", description: "Giá trị cốt lõi: Minh bạch - Hợp tác - Đổi mới - Trách nhiệm. Team building hàng quý.", source: "system", sourceUrl: null },
 ];
 
 // Edge definitions: [sourceName, targetName, relation, weight]
@@ -175,6 +175,7 @@ export async function POST() {
           name: node.name,
           description: node.description,
           source: node.source,
+          sourceUrl: node.sourceUrl,
           metadata: {},
         },
       });

@@ -194,3 +194,210 @@ model ApprovalRequest {
   @@index([status])
   @@map("approval_requests")
 }
+
+// =============================================================================
+// BizScan — Business Simulation Data
+// =============================================================================
+
+model SbProduct {
+  id        String   @id @default(cuid())
+  name      String // "Áo khoác denim nữ"
+  sku       String   @unique // "AKD-001"
+  category  String // "Áo", "Quần", "Váy", "Đầm", "Giày", "Túi", "Phụ kiện", "Set đồ"
+  costPrice Float // Giá gốc (VND)
+  sellPrice Float // Giá bán (VND)
+  imageUrl  String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  inventory  SbInventory?
+  orderItems SbOrderItem[]
+
+  @@index([category])
+  @@map("sb_products")
+}
+
+model SbCustomer {
+  id            String    @id @default(cuid())
+  name          String // "Nguyễn Thị Mai"
+  phone         String?   @unique
+  email         String?
+  channel       String // "facebook", "tiktok", "shopee", "lazada", "zalo"
+  totalSpent    Float     @default(0)
+  orderCount    Int       @default(0)
+  firstPurchase DateTime?
+  lastPurchase  DateTime?
+  tier          String    @default("NORMAL") // NORMAL, VIP, SUPER_VIP
+  createdAt     DateTime  @default(now())
+
+  orders SbOrder[]
+
+  @@index([tier])
+  @@index([channel])
+  @@map("sb_customers")
+}
+
+model SbOrder {
+  id          String   @id @default(cuid())
+  customerId  String
+  channel     String // "shopee", "tiktok", "facebook", "lazada", "zalo"
+  status      String   @default("COMPLETED") // PENDING, COMPLETED, CANCELLED, RETURNED
+  totalAmount Float
+  shippingFee Float    @default(0)
+  discount    Float    @default(0)
+  profit      Float    @default(0)
+  orderDate   DateTime @default(now())
+
+  customer SbCustomer  @relation(fields: [customerId], references: [id])
+  items    SbOrderItem[]
+
+  @@index([orderDate])
+  @@index([channel])
+  @@index([status])
+  @@map("sb_orders")
+}
+
+model SbOrderItem {
+  id        String @id @default(cuid())
+  orderId   String
+  productId String
+  quantity  Int
+  unitPrice Float
+
+  order   SbOrder   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product SbProduct @relation(fields: [productId], references: [id])
+
+  @@map("sb_order_items")
+}
+
+model SbInventory {
+  id            String    @id @default(cuid())
+  productId     String    @unique
+  quantity      Int
+  lastRestockAt DateTime?
+  daysInStock   Int       @default(0)
+
+  product SbProduct @relation(fields: [productId], references: [id])
+
+  @@map("sb_inventory")
+}
+
+model SbAdCampaign {
+  id          String    @id @default(cuid())
+  name        String // "FB - Áo khoác mùa đông"
+  channel     String // "facebook", "tiktok", "google"
+  status      String    @default("ACTIVE") // ACTIVE, PAUSED, ENDED
+  dailyBudget Float // VND/ngày
+  startDate   DateTime
+  endDate     DateTime?
+  createdAt   DateTime  @default(now())
+
+  dailyStats SbAdDailyStat[]
+
+  @@index([status])
+  @@map("sb_ad_campaigns")
+}
+
+model SbAdDailyStat {
+  id          String   @id @default(cuid())
+  campaignId  String
+  date        DateTime
+  spent       Float // Chi phí ngày đó
+  impressions Int      @default(0)
+  clicks      Int      @default(0)
+  orders      Int      @default(0)
+  revenue     Float    @default(0)
+  cpc         Float    @default(0) // Cost Per Click
+  roas        Float    @default(0) // Return On Ad Spend
+
+  campaign SbAdCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, date])
+  @@index([date])
+  @@map("sb_ad_daily_stats")
+}
+
+// =============================================================================
+// BizScan — Scan Results & Findings
+// =============================================================================
+
+model SbScanResult {
+  id          String        @id @default(cuid())
+  status      String        @default("COMPLETED") // RUNNING, COMPLETED, FAILED
+  scanType    String        @default("SCHEDULED") // SCHEDULED, MANUAL
+  summary     String?
+  tokensUsed  Int           @default(0)
+  durationMs  Int?
+  startedAt   DateTime      @default(now())
+  completedAt DateTime?
+
+  findings SbScanFinding[]
+
+  @@index([startedAt])
+  @@map("sb_scan_results")
+}
+
+model SbScanFinding {
+  id              String    @id @default(cuid())
+  scanId          String
+  severity        String // CRITICAL, WARNING, INFO
+  category        String // REVENUE, COST, INVENTORY, CUSTOMER, ADS, MARKET
+  title           String // "Doanh thu giảm 18% so với tuần trước"
+  description     String // Chi tiết phân tích
+  rootCause       String? // Nguyên nhân gốc rễ (từ Analyst Agent)
+  recommendation  String? // Đề xuất hành động (từ Advisor Agent)
+  estimatedImpact String? // "Tiết kiệm ~12 triệu/tháng"
+  rawData         Json      @default("{}") // Raw SQL/API results
+  status          String    @default("PENDING") // PENDING, APPROVED, DISMISSED, EXECUTED
+  approvedAt      DateTime?
+  executedAt      DateTime?
+  createdAt       DateTime  @default(now())
+
+  scan SbScanResult @relation(fields: [scanId], references: [id], onDelete: Cascade)
+
+  @@index([scanId])
+  @@index([severity])
+  @@index([status])
+  @@map("sb_scan_findings")
+}
+
+// =============================================================================
+// BizScan — Market Intelligence
+// =============================================================================
+
+model SbMarketTrend {
+  id              String   @id @default(cuid())
+  keyword         String // "áo khoác denim"
+  source          String // "google_trends", "shopee_suggest", "serpapi"
+  searchVolume    Int? // Lượt tìm kiếm ước tính
+  trendScore      Float    @default(0) // 0-100
+  changePercent   Float? // % thay đổi so với kỳ trước
+  avgPrice        Float? // Giá trung bình trên sàn
+  competitorCount Int? // Số shop bán SP tương tự
+  snapshot        Json     @default("{}") // Raw data
+  fetchedAt       DateTime @default(now())
+
+  @@index([keyword])
+  @@index([fetchedAt])
+  @@map("sb_market_trends")
+}
+
+// ── DX-Ticket: Internal Service Desk ─────────────────────────────────────────
+
+model DxTicket {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  priority    String   @default("NORMAL") // LOW, NORMAL, HIGH, URGENT
+  status      String   @default("OPEN")   // OPEN, IN_PROGRESS, RESOLVED, CLOSED
+  category    String   @default("IT")     // IT, HR, GENERAL
+  createdBy   String?  // employee name or email
+  assignedTo  String?  // IT person name
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  resolvedAt  DateTime?
+
+  @@index([status])
+  @@index([priority])
+  @@map("dx_tickets")
+}

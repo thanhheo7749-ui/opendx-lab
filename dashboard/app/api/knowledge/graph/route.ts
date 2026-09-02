@@ -37,6 +37,7 @@ export async function GET(request: NextRequest) {
         name: true,
         description: true,
         source: true,
+        sourceUrl: true,
         _count: {
           select: {
             chunks: true,
@@ -73,6 +74,7 @@ export async function GET(request: NextRequest) {
       type: n.type,
       description: n.description,
       source: n.source,
+      sourceUrl: n.sourceUrl,
       // Node size based on connection count
       val: Math.max(1, n._count.outgoingEdges + n._count.incomingEdges),
       chunkCount: n._count.chunks,

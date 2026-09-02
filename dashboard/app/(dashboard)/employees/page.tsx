@@ -203,7 +203,8 @@ export default function EmployeesPage() {
     status: "" as "ACTIVE" | "ON_LEAVE" | "TERMINATED",
   });
 
-  const isAdmin = session?.user?.roles?.includes("admin") || session?.user?.roles?.includes("manager");
+  // In demo mode (no SSO), allow all operations. When SSO is configured, check roles.
+  const isAdmin = !session ? true : (session.user?.roles?.includes("admin") || session.user?.roles?.includes("manager"));
 
   const fetchEmployees = useCallback(async () => {
     setLoading(true);

@@ -13,6 +13,7 @@ const vi = {
   "nav.analytics": "Phân tích",
   "nav.aiChat": "AI Chat",
   "nav.knowledgeGraph": "Knowledge Graph",
+  "nav.bizscan": "BizScan",
   "nav.services": "Dịch vụ",
 
   // -- Header --
@@ -161,6 +162,7 @@ const en: Record<keyof typeof vi, string> = {
   "nav.analytics": "Analytics",
   "nav.aiChat": "AI Chat",
   "nav.knowledgeGraph": "Knowledge Graph",
+  "nav.bizscan": "BizScan",
   "nav.services": "Services",
 
   // -- Header --

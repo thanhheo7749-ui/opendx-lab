@@ -147,8 +147,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       setStreamingId(assistantId);
       setCurrentStep("classifying");
 
-      // 30-second timeout
-      const timeoutId = setTimeout(() => controller.abort(), 30000);
+      // 60-second timeout (Ollama cold start can take ~20s)
+      const timeoutId = setTimeout(() => controller.abort(), 60000);
 
       try {
         const res = await fetch("/api/ai/chat", {
@@ -230,7 +230,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
                 ? {
                     ...m,
                     content:
-                      "⏱️ Yêu cầu đã quá thời gian (30 giây). Hãy thử câu hỏi ngắn hơn hoặc kiểm tra kết nối đến Ollama.",
+                      "⏱️ Yêu cầu đã quá thời gian (60 giây). Hãy thử câu hỏi ngắn hơn hoặc kiểm tra kết nối đến Ollama.",
                   }
                 : m
             )

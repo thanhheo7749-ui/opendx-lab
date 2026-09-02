@@ -35,7 +35,7 @@ export async function chatFast(
   model: string = DEFAULT_MODEL
 ): Promise<string> {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 5000);
+  const timeout = setTimeout(() => controller.abort(), 15000);
 
   try {
     const res = await fetch(`${OLLAMA_API_URL}/api/chat`, {
@@ -67,7 +67,7 @@ export async function chatFast(
   } catch (err) {
     clearTimeout(timeout);
     if (err instanceof Error && err.name === "AbortError") {
-      console.warn("[chatFast] Timeout after 5s — defaulting to DB_QUERY");
+      console.warn("[chatFast] Timeout after 15s — defaulting to DB_QUERY");
       return "DB_QUERY"; // Safe fallback
     }
     throw err;
@@ -82,29 +82,43 @@ export async function chat(
   messages: ChatMessage[],
   model: string = DEFAULT_MODEL
 ): Promise<string> {
-  const res = await fetch(`${OLLAMA_API_URL}/api/chat`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model,
-      messages,
-      stream: false,
-      keep_alive: "10m",
-      options: {
-        temperature: 0.1,
-        num_predict: 512,
-        num_ctx: 2048, // Enough for SQL generation
-      },
-    }),
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30000);
 
-  if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`Ollama API error (${res.status}): ${errText}`);
+  try {
+    const res = await fetch(`${OLLAMA_API_URL}/api/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model,
+        messages,
+        stream: false,
+        keep_alive: "10m",
+        options: {
+          temperature: 0.1,
+          num_predict: 512,
+          num_ctx: 2048, // Enough for SQL generation
+        },
+      }),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeout);
+
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`Ollama API error (${res.status}): ${errText}`);
+    }
+
+    const data: OllamaResponse = await res.json();
+    return data.message.content;
+  } catch (err) {
+    clearTimeout(timeout);
+    if (err instanceof Error && err.name === "AbortError") {
+      throw new Error("Ollama SQL generation timeout (30s). Model may be loading.");
+    }
+    throw err;
   }
-
-  const data: OllamaResponse = await res.json();
-  return data.message.content;
 }
 
 /**
