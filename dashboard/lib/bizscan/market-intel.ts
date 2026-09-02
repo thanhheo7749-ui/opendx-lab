@@ -258,11 +258,14 @@ export async function compareWithMarket(): Promise<MarketComparison[]> {
   const comparisons: MarketComparison[] = [];
 
   for (const product of products) {
-    // Find matching trend (fuzzy match: check if any trend keyword is in product name)
-    const matchingTrend = trends.find((t) =>
-      product.name.toLowerCase().includes(t.keyword.toLowerCase()) ||
-      t.keyword.toLowerCase().includes(product.category.toLowerCase())
-    );
+    // Find matching trend — require at least 2 matching words for product name match
+    const productWords = product.name.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+    const matchingTrend = trends.find((t) => {
+      const trendWords = t.keyword.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+      // Count overlapping words
+      const overlap = productWords.filter(pw => trendWords.some(tw => pw.includes(tw) || tw.includes(pw))).length;
+      return overlap >= 2; // Need at least 2 matching words
+    });
 
     if (!matchingTrend) continue;
 

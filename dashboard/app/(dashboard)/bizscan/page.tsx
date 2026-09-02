@@ -510,53 +510,77 @@ export default function BizScanPage() {
           {marketData.length === 0 && !loading ? (
             <Card className="bg-card/50">
               <CardContent className="py-8 text-center text-muted-foreground text-sm">
-                Chưa có dữ liệu thị trường. Sẽ tự cập nhật khi scan.
+                Chưa có dữ liệu. Bấm "Quét ngay" để cập nhật.
               </CardContent>
             </Card>
           ) : (
-            marketData.slice(0, 8).map((item, i) => (
-              <Card
-                key={i}
-                className={`border ${trendColor(item.category)} bg-card/50 transition-all hover:shadow-md`}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span>{trendEmoji(item.category)}</span>
-                        <Badge variant="outline" className={`text-[10px] ${trendColor(item.category)}`}>
+            <Card className="bg-card/50 border-border/40">
+              <CardContent className="p-0">
+                {/* Table header */}
+                <div className="grid grid-cols-12 gap-2 px-4 py-2 border-b border-border/30 text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
+                  <div className="col-span-4">Sản phẩm</div>
+                  <div className="col-span-2 text-right">Giá bạn</div>
+                  <div className="col-span-2 text-right">Thị trường</div>
+                  <div className="col-span-1 text-center">Trend</div>
+                  <div className="col-span-3">Gợi ý</div>
+                </div>
+
+                {/* Rows */}
+                {marketData.slice(0, 10).map((item, i) => {
+                  const isExpensive = item.priceDiff?.includes("đắt");
+                  const isCheap = item.priceDiff?.includes("rẻ");
+                  return (
+                    <div
+                      key={i}
+                      className={`grid grid-cols-12 gap-2 px-4 py-2.5 border-b border-border/20 last:border-0 text-xs items-center hover:bg-muted/30 transition-colors ${
+                        item.category === "HOT" ? "bg-orange-500/3" : ""
+                      }`}
+                    >
+                      {/* Product name + category badge */}
+                      <div className="col-span-4 flex items-center gap-2 min-w-0">
+                        <Badge
+                          variant="outline"
+                          className={`text-[9px] px-1.5 flex-shrink-0 ${trendColor(item.category)}`}
+                        >
                           {item.category}
                         </Badge>
-                        {item.trendChange && (
-                          <span className="text-xs text-muted-foreground">{item.trendChange} search</span>
+                        <span className="truncate font-medium">{item.productName}</span>
+                      </div>
+
+                      {/* Your price */}
+                      <div className="col-span-2 text-right tabular-nums font-medium">
+                        {formatVND(item.yourPrice)}đ
+                      </div>
+
+                      {/* Market price */}
+                      <div className="col-span-2 text-right tabular-nums">
+                        {item.marketAvgPrice ? (
+                          <span className={isExpensive ? "text-red-500" : isCheap ? "text-emerald-500" : ""}>
+                            {formatVND(item.marketAvgPrice)}đ
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
                         )}
                       </div>
-                      <h3 className="text-sm font-semibold">{item.productName}</h3>
+
+                      {/* Trend score */}
+                      <div className="col-span-1 text-center">
+                        <span className={`tabular-nums font-bold ${
+                          item.trendScore >= 70 ? "text-orange-500" : item.trendScore >= 40 ? "text-foreground" : "text-muted-foreground"
+                        }`}>
+                          {item.trendScore}
+                        </span>
+                      </div>
+
+                      {/* Recommendation */}
+                      <div className="col-span-3 text-[11px] text-muted-foreground leading-snug truncate" title={item.recommendation}>
+                        {item.recommendation}
+                      </div>
                     </div>
-                    <div className="text-right text-xs">
-                      <div className="font-bold">Trend: {item.trendScore}/100</div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground mb-2">
-                    <div>Giá bạn: <strong>{formatVND(item.yourPrice)}đ</strong></div>
-                    {item.marketAvgPrice && (
-                      <div>Thị trường: <strong>{formatVND(item.marketAvgPrice)}đ</strong></div>
-                    )}
-                  </div>
-
-                  {item.priceDiff && (
-                    <p className="text-xs mb-1">
-                      {item.priceDiff.includes("đắt") ? "▲" : "○"} {item.priceDiff}
-                    </p>
-                  )}
-
-                  <p className="text-xs text-muted-foreground">
-                    {item.recommendation}
-                  </p>
-                </CardContent>
-              </Card>
-            ))
+                  );
+                })}
+              </CardContent>
+            </Card>
           )}
         </div>
       </div>
