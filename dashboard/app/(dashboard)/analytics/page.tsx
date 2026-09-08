@@ -12,9 +12,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   BarChart3,
   PieChart,
-  Users,
-  Building2,
-  Activity,
+  ShoppingCart,
+  Package,
+  Megaphone,
   ExternalLink,
 } from "lucide-react";
 import MetabaseEmbed from "@/components/MetabaseEmbed";
@@ -29,26 +29,26 @@ export default function AnalyticsPage() {
   const dashboardConfigs = [
     {
       id: 1,
-      metabaseId: 2,
-      title: t("home.human"),
-      description: t("metrics.totalEmployees"),
-      icon: Users,
+      metabaseId: 5,
+      title: "Doanh thu & Đơn hàng",
+      description: "Tổng quan doanh thu, lợi nhuận, xu hướng bán hàng",
+      icon: ShoppingCart,
       color: "text-blue-600 dark:text-blue-400",
     },
     {
       id: 2,
-      metabaseId: 3,
-      title: t("metrics.departments"),
-      description: t("section.staffByDept"),
-      icon: Building2,
+      metabaseId: 6,
+      title: "Sản phẩm & Tồn kho",
+      description: "Top SP, tồn kho, tốc độ bán",
+      icon: Package,
       color: "text-emerald-600 dark:text-emerald-400",
     },
     {
       id: 3,
-      metabaseId: 4,
-      title: t("section.recentActivity"),
-      description: "Activity & Trends",
-      icon: Activity,
+      metabaseId: 7,
+      title: "Quảng cáo & Kênh bán",
+      description: "ROAS, chi phí, hiệu quả từng campaign",
+      icon: Megaphone,
       color: "text-amber-600 dark:text-amber-400",
     },
   ];
