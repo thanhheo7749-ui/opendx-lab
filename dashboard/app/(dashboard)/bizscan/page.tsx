@@ -234,7 +234,7 @@ export default function BizScanPage() {
             BizScan
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Quét bất thường vận hành (SQL) + so sánh xu hướng thị trường (SerpApi)
+            Quét bất thường vận hành — hỗ trợ ra quyết định cho chủ cửa hàng
           </p>
         </div>
         <div className="flex gap-2">
@@ -263,6 +263,16 @@ export default function BizScanPage() {
           >
             {scanning ? "Đang quét..." : "Quét ngay"}
           </Button>
+        </div>
+      </div>
+
+      {/* ── Data Transparency Banner ── */}
+      <div className="rounded-lg bg-amber-500/5 border border-amber-500/15 px-4 py-2.5 text-xs text-amber-700 dark:text-amber-300 flex items-start gap-2">
+        <span className="flex-shrink-0 mt-0.5">i</span>
+        <div>
+          <strong>Nguồn dữ liệu:</strong> Seed data 10.000 đơn hàng mẫu (sb_orders, sb_products, sb_inventory, sb_ad_campaigns).
+          Trong triển khai thực tế, dữ liệu sẽ đến từ API Shopee/Lazada/TikTok Shop.
+          Mỗi finding được tạo từ câu SQL cụ thể — bấm "Xem dữ liệu gốc" trong mỗi thẻ để kiểm chứng.
         </div>
       </div>
 
