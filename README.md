@@ -1,114 +1,98 @@
 <!--
-OpenDX-Lab - Digital Transformation Ecosystem
-Copyright (C) 2026 OpenDX-Lab Contributors
+ShopWise — Decision Intelligence for SME Retail
+Copyright (C) 2026 ShopWise Contributors
 SPDX-License-Identifier: GPL-3.0-or-later
 -->
 
 <div align="center">
 
-# 🏢 OpenDX-Lab
+# ShopWise
 
-### Enterprise Digital Transformation Ecosystem — 100% Open Source
+### Decision Intelligence Platform for SME Retail — 100% Open Source
 
-_One command to spin up a fully integrated DX ecosystem: SSO, Chat, Wiki, Workflow Automation, BI, and AI Assistant — all pre-connected._
+_AI-powered decision support for e-commerce shop owners: inventory, pricing, supplier selection, and ad spend — backed by data, not guesswork._
 
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](LICENSE)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)](docker-compose.yml)
 [![Open Source](https://img.shields.io/badge/Open%20Source-100%25-brightgreen)]()
 
-[Quick Start](#-quick-start) | [Architecture](#-architecture) | [Tech Stack](#%EF%B8%8F-technology-stack) | [Docs](docs/) | [Contributing](CONTRIBUTING.md)
+[Quick Start](#quick-start) | [Features](#features) | [Architecture](#architecture) | [Tech Stack](#technology-stack) | [Docs](docs/)
 
 </div>
 
 ---
 
-## 📖 What is OpenDX-Lab?
+## What is ShopWise?
 
-**OpenDX-Lab** is an open-source platform that integrates best-of-breed open-source tools into a complete Digital Transformation ecosystem for enterprises, following the **H-P-D-I** (Human–Process–Data–Intelligence) architecture.
+**ShopWise** is an open-source **Decision Support System** built for small-to-medium e-commerce shop owners in Vietnam (Shopee, Lazada, TikTok Shop, Facebook). It integrates sales data analysis, market intelligence, and supplier comparison into a single platform that helps shop owners make better business decisions.
 
 ### The Problem
 
-> Enterprises use 4–5 disconnected software systems (HR, IT, Accounting…). Employees rely on **messaging apps + memory** as the "glue" between systems. Forget one message = system error. Too busy = delays.
+> SME shop owners (1–10 employees) make dozens of daily decisions — restocking, pricing, ad budgets, supplier selection — based on gut feeling and spreadsheets. No access to enterprise-grade analytics. Mistakes cost real money.
 
 ### The Solution
 
-> **One command: `docker compose up -d`** → Instantly launch a complete DX ecosystem: SSO, Chat, Wiki, Workflow Automation, BI Dashboard, AI Assistant — all **pre-connected**, **single sign-on**, **data flows automatically**.
+> **ShopWise** scans your business data, surfaces problems proactively, recommends options with pros/cons/estimated impact, lets you simulate outcomes before committing, and tracks whether predictions were accurate — creating a continuous learning loop.
 
 ---
 
-## ✨ Highlights
+## Features
 
-- 🔐 **Single Sign-On (SSO)** — Keycloak provides centralized authentication for all services
-- 💬 **Internal Chat** — Mattermost replaces consumer messaging apps for work
-- 📚 **Knowledge Wiki** — Wiki.js manages internal documentation and SOPs
-- 🔄 **Workflow Automation** — Activepieces automates cross-system processes (onboarding, offboarding)
-- 📊 **BI Dashboard** — Metabase visualizes data from all systems
-- 🤖 **AI Assistant** — Ollama + Qwen LLM answers questions using your company's data
-- 🐳 **One-command Setup** — Docker Compose launches the entire ecosystem
-- 🆓 **100% Free & Open Source** — Every component is open source
-
----
-
-## 📋 Table of Contents
-
-- [What is OpenDX-Lab?](#-what-is-opendx-lab)
-- [Architecture (H-P-D-I)](#-architecture)
-- [Quick Start](#-quick-start)
-- [Technology Stack](#%EF%B8%8F-technology-stack)
-- [Project Structure](#-project-structure)
-- [Documentation](#-documentation)
-- [Contributing](#-contributing)
-- [License](#-license)
+- **Decision Feed** — Auto-detects inventory shortages, pricing anomalies, and underperforming ads
+- **Decision Advisor** — Analyzes data and presents 2–3 actionable options with estimated impact
+- **What-if Simulator** — Test pricing, inventory, and ad spend scenarios before committing
+- **Supplier Matcher** — Multi-criteria scoring (price, quality, delivery, location) across suppliers
+- **Decision Journal** — Track decisions over 7 days, compare predicted vs actual outcomes
+- **Knowledge Graph** — Visualize relationships between products, suppliers, customers, and channels
+- **BizScan** — Deep scan for operational anomalies and opportunities
+- **AI Chat** — Ask questions about your business data in natural language
+- **BI Dashboards** — Metabase-powered visual analytics for revenue, products, and campaigns
 
 ---
 
-## 🏗 Architecture
-
-### H-P-D-I Architecture
+## Architecture
 
 ```
-┌──────────────────────────────────────────────────────────────────┐
-│                      OpenDX-Lab (Docker Compose)                 │
-│                                                                  │
-│  ┌─ [H] Human ──────────────────────────────────────────────┐   │
-│  │  Keycloak (SSO)  │  Mattermost (Chat)  │  Wiki.js (Wiki) │   │
-│  └───────────────────────────────────────────────────────────┘   │
-│                                                                  │
-│  ┌─ [P] Process ─────────────────────────────────────────────┐   │
-│  │  Activepieces (Workflow Automation)  │  Dashboard (Next.js)  │   │
-│  └───────────────────────────────────────────────────────────┘   │
-│                                                                  │
-│  ┌─ [D] Data ───────────────────────────────────────────────┐   │
-│  │  PostgreSQL (Database)  │  Metabase (BI Dashboard)       │   │
-│  └───────────────────────────────────────────────────────────┘   │
-│                                                                  │
-│  ┌─ [I] Intelligence ───────────────────────────────────────┐   │
-│  │  Ollama + Qwen 2.5 (Local LLM)  │  AI Chat (RAG SQL)    │   │
-│  └───────────────────────────────────────────────────────────┘   │
-│                                                                  │
-└──────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────┐
+│                    ShopWise (Docker Compose)                    │
+│                                                                │
+│  ┌─ Discovery ─────────────────────────────────────────────┐   │
+│  │  Decision Feed  │  BizScan  │  Knowledge Graph          │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                │
+│  ┌─ Decision ──────────────────────────────────────────────┐   │
+│  │  Decision Advisor  │  Simulator  │  Supplier Matcher     │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                │
+│  ┌─ Analysis ──────────────────────────────────────────────┐   │
+│  │  Decision Journal  │  Metabase BI  │  AI Chat (Ollama)  │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                │
+│  ┌─ Infrastructure ───────────────────────────────────────┐    │
+│  │  PostgreSQL  │  Keycloak SSO  │  Mattermost  │ Wiki.js │    │
+│  └─────────────────────────────────────────────────────────┘   │
+└────────────────────────────────────────────────────────────────┘
 ```
 
-### How It Works: Employee Onboarding Example
+### End-to-End Flow
 
 ```
-Admin creates a new employee on Dashboard
-    │
-    ├──→ [P] Activepieces workflow triggers automatically
-    ├──→ [H] Keycloak creates SSO account via Admin API
-    ├──→ [H] Mattermost sends welcome message via webhook
-    ├──→ [D] PostgreSQL stores employee record
-    ├──→ [D] Metabase dashboard auto-updates metrics
-    └──→ [I] AI Chat can answer "Who is the newest employee?"
-
-1 action → 6 systems react → 0 manual steps
+Homepage (Decision Feed)
+  → "12 products running low" → Click
+    → /decision?type=inventory (auto-selected)
+      → Analyze → Choose option
+        → "Simulate first" → /simulator
+        → "Confirm" → Record decision + reason
+          → Saved to sb_decisions
+            → /journal (tracked for 7 days)
+              → Compare predicted vs actual impact
 ```
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
-### System Requirements
+### Requirements
 
 | Requirement | Minimum |
 |---|---|
@@ -129,181 +113,121 @@ cp .env.example .env
 
 # 3. Start all services
 docker compose up -d
+
+# 4. Push database schema & seed sample data
+docker exec opendx-dashboard npx prisma db push
+docker exec opendx-dashboard npx tsx prisma/seed-bizscan.ts
 ```
 
-Wait 2–3 minutes for all services to start, then access:
+Wait 2–3 minutes for services to start, then access:
 
 | Service | URL | Description |
 |---|---|---|
-| **Dashboard** | http://localhost:3000 | Main portal (Next.js) |
-| **Keycloak** | http://localhost:8080 | SSO Admin Console |
-| **Mattermost** | http://localhost:3100 | Internal Chat |
-| **Wiki.js** | http://localhost:3200 | Knowledge Wiki |
-| **Activepieces** | http://localhost:5678 | Workflow Editor |
-| **Metabase** | http://localhost:3300 | BI Dashboard |
-| **Ollama** | http://localhost:11434 | LLM API |
-
-### Default Keycloak Admin
-
-| | |
-|---|---|
-| **URL** | http://localhost:8080/admin |
-| **Username** | `admin` |
-| **Password** | `admin123` |
-
-> Other services (Mattermost, Wiki.js, Activepieces, Metabase) require first-time setup on initial access, or can be configured to use Keycloak SSO.
+| **Dashboard** | http://localhost:3000 | ShopWise main app |
+| **Metabase** | http://localhost:3300 | BI dashboards |
+| **Keycloak** | http://localhost:8080 | SSO admin |
+| **Mattermost** | http://localhost:3100 | Team chat |
+| **Wiki.js** | http://localhost:3200 | Knowledge base |
+| **Ollama** | http://localhost:11434 | Local LLM API |
 
 ---
 
-## 🛠️ Technology Stack
+## Technology Stack
 
-| Layer | Service | Version | License | Role |
-|---|---|---|---|---|
-| **[H] Human** | Keycloak | 25.0 | Apache-2.0 | SSO, user management, RBAC |
-| **[H] Human** | Mattermost | 10.2 | MIT | Internal team chat |
-| **[H] Human** | Wiki.js | 2.x | AGPL-3.0 | Knowledge base & documentation |
-| **[P] Process** | Activepieces | latest | MIT | Workflow automation |
-| **[P] Process** | Next.js | 16.2 | MIT | Dashboard web application |
-| **[D] Data** | PostgreSQL | 16 | PostgreSQL License | Shared relational database |
-| **[D] Data** | Metabase | 0.50.3 | AGPL-3.0 | Business intelligence & charts |
-| **[I] Intelligence** | Ollama | latest | MIT | Local LLM runtime |
-| **[I] Intelligence** | Qwen 2.5 | 3B | Apache-2.0 | Language model (Vietnamese) |
-| **Deploy** | Docker Compose | v2 | Apache-2.0 | Container orchestration |
+| Layer | Service | License | Role |
+|---|---|---|---|
+| **Frontend** | Next.js 15 (App Router) | MIT | Dashboard web app |
+| **UI** | shadcn/ui + Tailwind CSS | MIT | Component library |
+| **ORM** | Prisma | Apache 2.0 | Database access |
+| **Database** | PostgreSQL 17 | PostgreSQL | Relational data store |
+| **BI** | Metabase | AGPL-3.0 | Business intelligence |
+| **LLM** | Ollama (Gemma/Llama) | MIT | Local AI inference |
+| **Auth** | Keycloak + NextAuth | Apache/MIT | SSO & authentication |
+| **Chat** | Mattermost | MIT | Internal communication |
+| **Wiki** | Wiki.js | AGPL-3.0 | Documentation |
+| **Deploy** | Docker Compose | Apache 2.0 | Container orchestration |
 
-### Dashboard Tech Stack
+---
 
-| Technology | Version | Purpose |
+## Database Models
+
+| Model | Table | Purpose |
 |---|---|---|
-| React | 19.2 | UI library |
-| TypeScript | 5.x | Type-safe language |
-| Tailwind CSS | 4.x | Styling |
-| shadcn/ui | 4.11 | Component library |
-| Prisma | 6.9 | ORM (database access) |
-| NextAuth.js | 5.0 beta | Authentication (Keycloak OIDC) |
+| `SbProduct` | `sb_products` | Product catalog |
+| `SbCustomer` | `sb_customers` | Customer profiles & tiers |
+| `SbOrder` / `SbOrderItem` | `sb_orders` / `sb_order_items` | Sales transactions |
+| `SbInventory` | `sb_inventory` | Stock levels & reorder points |
+| `SbAdCampaign` / `SbAdDailyStat` | `sb_ad_campaigns` / `sb_ad_daily_stats` | Ad performance |
+| `SbMarketTrend` | `sb_market_trends` | Market intelligence |
+| `SbDecision` | `sb_decisions` | Decision journal |
+| `SbSupplier` / `SbSupplierProduct` | `sb_suppliers` / `sb_supplier_products` | Supplier catalog |
+| `KgNode` / `KgEdge` | `kg_nodes` / `kg_edges` | Knowledge graph |
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 opendx-lab/
-├── .github/                    # CI/CD & issue templates
-│   ├── ISSUE_TEMPLATE/
-│   │   ├── bug_report.yml
-│   │   └── feature_request.yml
-│   └── workflows/
-│       └── ci.yml
-├── configs/                    # Service configurations
-│   ├── keycloak/               # Realm import (SSO config)
-│   ├── n8n/                    # Workflow templates (onboarding, offboarding)
-│   ├── metabase/               # Dashboard templates
-│   └── postgres/               # Database init scripts
-├── dashboard/                  # Next.js web application
-│   ├── app/                    # App Router pages
-│   ├── components/             # React components
-│   ├── lib/                    # Utilities & API clients
-│   ├── prisma/                 # Database schema & seed
-│   └── public/                 # Static assets
-├── docs/                       # Documentation
-│   ├── api.md
-│   ├── architecture.md
-│   ├── demo-script.md
-│   ├── deployment.md
-│   ├── sso-setup.md
-│   └── user-guide.md
-├── scripts/                    # Utility scripts
-│   ├── setup.sh                # Automated setup
-│   └── reset.sh                # Full reset (destroy + rebuild)
-├── .env.example                # Environment variables template
-├── docker-compose.yml          # ★ One command launches everything
-├── justfile                    # Task runner commands
-├── CHANGELOG.md
-├── CODE_OF_CONDUCT.md
-├── CONTRIBUTING.md
-├── LICENSE                     # GPL-3.0
-├── SECURITY.md
-└── THIRD_PARTY_LICENSES.md
+├── docker-compose.yml            # All services
+├── dashboard/
+│   ├── app/
+│   │   ├── (dashboard)/
+│   │   │   ├── page.tsx          # Homepage (Decision Feed + KPI)
+│   │   │   ├── decision/         # Decision Advisor
+│   │   │   ├── simulator/        # What-if Simulator
+│   │   │   ├── supplier/         # Supplier Matcher
+│   │   │   ├── journal/          # Decision Journal
+│   │   │   ├── bizscan/          # BizScan
+│   │   │   ├── knowledge-graph/  # Knowledge Graph
+│   │   │   ├── analytics/        # Metabase BI
+│   │   │   └── ai-chat/          # AI Chat
+│   │   └── api/
+│   │       ├── decision/         # Decision APIs (feed, log, supplier, feedback)
+│   │       ├── bizscan/          # BizScan APIs
+│   │       ├── simulator/        # Simulator API
+│   │       └── ...
+│   ├── lib/
+│   │   └── decision/             # Business logic (advisor, supplier, feedback)
+│   └── prisma/
+│       ├── schema.prisma         # Database schema
+│       └── seed-bizscan.ts       # Sample data generator
+├── configs/                      # Service configs (Keycloak, Metabase, etc.)
+├── docs/                         # Documentation
+└── scripts/                      # Utility scripts
 ```
 
 ---
 
-## 📚 Documentation
+## Documentation
 
 | Document | Description |
 |---|---|
-| [Architecture](docs/architecture.md) | H-P-D-I architecture & service diagrams |
+| [Architecture](docs/architecture.md) | System architecture & service diagrams |
 | [Deployment](docs/deployment.md) | Production deployment guide |
 | [User Guide](docs/user-guide.md) | End-user guide |
 | [SSO Setup](docs/sso-setup.md) | Keycloak SSO configuration |
 | [API](docs/api.md) | API endpoints documentation |
-| [Demo Script](docs/demo-script.md) | Step-by-step demo walkthrough |
-| [Build From Source](BUILD.md) | Source build, verification, and troubleshooting guide |
+| [Build From Source](BUILD.md) | Source build & troubleshooting |
 
 ---
 
-## 🧪 Build From Source
+## Contributing
 
-OpenDX-Lab is designed to run from source with standard open-source tooling. The recommended path is Docker Compose for the full ecosystem, while the Dashboard can also be built independently.
-
-### Full ecosystem
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 ```bash
-git clone https://github.com/thanhheo7749-ui/opendx-lab.git
-cd opendx-lab
-cp .env.example .env
-docker compose up -d
-```
-
-### Dashboard only
-
-```bash
-cd dashboard
-npm ci
-npx prisma generate
-npm run build
-npm run start
-```
-
-See [BUILD.md](BUILD.md) for detailed requirements, verification commands, and troubleshooting.
-
----
-
-## 📦 Dependency & Bundling Policy
-
-OpenDX-Lab integrates third-party open-source services through official Docker images and installs JavaScript dependencies from npm using `package-lock.json`. The repository should not commit generated dependency directories such as `node_modules/`, and third-party source code must not be modified in-tree. See [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) for the license disclosure.
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
-
-```bash
-# Fork & clone
 git clone https://github.com/YOUR_USERNAME/opendx-lab.git
-
-# Create a branch
 git checkout -b feature/your-feature
-
-# Commit & push
 git commit -m "feat: add your feature"
 git push origin feature/your-feature
-
 # Open a Pull Request
 ```
 
 ---
 
-## 📄 License
+## License
 
-This project is licensed under the **GNU General Public License v3.0**. See [LICENSE](LICENSE) for details.
+This project is licensed under **GNU General Public License v3.0**. See [LICENSE](LICENSE).
 
-All integrated open-source services retain their original licenses. See [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) for details.
-
----
-
-<div align="center">
-
-**⭐ Star this repo if you find it useful!**
-
-</div>
+All integrated open-source services retain their original licenses. See [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md).
