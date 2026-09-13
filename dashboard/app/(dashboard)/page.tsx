@@ -148,7 +148,7 @@ export default function HomePage() {
       {/* ── Header ────────────────────────────────────────────────────── */}
       <div>
         <h1 className="text-2xl font-bold text-foreground">
-          Chào {firstName} 👋
+          Xin chào, {firstName}
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
           Tổng quan hoạt động kinh doanh và các quyết định cần xử lý
@@ -171,9 +171,8 @@ export default function HomePage() {
         <CardContent className="space-y-3">
           {decisions.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              <p className="text-3xl mb-2">✅</p>
-              <p className="text-sm">Không có vấn đề cần quyết định hôm nay</p>
-              <p className="text-xs mt-1">Hệ thống quét tự động mỗi lần bạn truy cập</p>
+              <p className="text-sm">Không có vấn đề cần quyết định hôm nay.</p>
+              <p className="text-xs mt-1">Hệ thống quét tự động mỗi lần bạn truy cập.</p>
             </div>
           ) : (
             decisions.map((d, i) => (
@@ -187,7 +186,6 @@ export default function HomePage() {
                       : "border-border bg-card hover:border-emerald-300"
                   }`}
                 >
-                  <span className="text-2xl flex-shrink-0 mt-0.5">{d.icon}</span>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
                       <p className="text-sm font-semibold text-foreground truncate">{d.title}</p>
@@ -379,15 +377,21 @@ export default function HomePage() {
       {/* ── Quick links ───────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { href: "/decision", label: "Tư vấn quyết định", icon: "⚖️", desc: "Nhập hàng, giá, QC" },
-          { href: "/simulator", label: "Mô phỏng What-if", icon: "🔮", desc: "Thử trước khi quyết" },
-          { href: "/bizscan", label: "Quét vấn đề", icon: "🔍", desc: "Phát hiện bất thường" },
-          { href: "/knowledge-graph", label: "Bản đồ quan hệ", icon: "🗺️", desc: "SP ↔ NCC ↔ Kênh" },
+          { href: "/decision", label: "Tư vấn quyết định", desc: "Nhập hàng, giá, QC",
+            svg: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 3v17.25m0 0c-1.472 0-2.882.265-4.185.75M12 20.25c1.472 0 2.882.265 4.185.75M18.75 4.97A48.416 48.416 0 0 0 12 4.5c-2.291 0-4.545.16-6.75.47m13.5 0c1.01.143 2.01.317 3 .52m-3-.52 2.62 10.726c.122.499-.106 1.028-.589 1.202a5.988 5.988 0 0 1-2.031.352 5.988 5.988 0 0 1-2.031-.352c-.483-.174-.711-.703-.59-1.202L18.75 4.971Zm-16.5.52c.99-.203 1.99-.377 3-.52m0 0 2.62 10.726c.122.499-.106 1.028-.589 1.202a5.989 5.989 0 0 1-2.031.352 5.989 5.989 0 0 1-2.031-.352c-.483-.174-.711-.703-.59-1.202L5.25 4.971Z" /></svg> },
+          { href: "/simulator", label: "Mô phỏng What-if", desc: "Thử trước khi quyết",
+            svg: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" /></svg> },
+          { href: "/bizscan", label: "Quét vấn đề", desc: "Phát hiện bất thường",
+            svg: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg> },
+          { href: "/knowledge-graph", label: "Bản đồ quan hệ", desc: "SP — NCC — Kênh",
+            svg: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z" /></svg> },
         ].map((item) => (
           <Link key={item.href} href={item.href}>
             <Card className="shadow-sm hover:shadow-md hover:border-emerald-300 dark:hover:border-emerald-700 transition-all cursor-pointer h-full">
               <CardContent className="p-4 flex items-center gap-3">
-                <span className="text-2xl">{item.icon}</span>
+                <div className="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
+                  {item.svg}
+                </div>
                 <div>
                   <p className="text-sm font-medium">{item.label}</p>
                   <p className="text-[10px] text-muted-foreground">{item.desc}</p>
@@ -399,21 +403,9 @@ export default function HomePage() {
       </div>
 
       {/* ── Footer note ───────────────────────────────────────────────── */}
-      <div className="rounded-xl bg-muted/30 border border-border p-3">
-        <div className="flex items-start gap-2">
-          <span className="text-sm">💡</span>
-          <div>
-            <p className="text-xs text-muted-foreground">
-              <span className="font-medium text-foreground">ShopWise</span> — Trí tuệ hỗ trợ quyết định kinh doanh.
-              Dữ liệu từ <code className="text-[10px] bg-muted px-1 rounded">sb_orders</code>,{" "}
-              <code className="text-[10px] bg-muted px-1 rounded">sb_products</code>,{" "}
-              <code className="text-[10px] bg-muted px-1 rounded">sb_inventory</code>,{" "}
-              <code className="text-[10px] bg-muted px-1 rounded">sb_ad_campaigns</code>.
-              Mọi gợi ý đều ghi rõ nguồn dữ liệu và giả định.
-            </p>
-          </div>
-        </div>
-      </div>
+      <p className="text-[11px] text-muted-foreground text-center">
+        Nguồn: đơn hàng, tồn kho, quảng cáo, xu hướng thị trường. Mọi gợi ý đều ghi rõ cơ sở dữ liệu.
+      </p>
     </div>
   );
 }

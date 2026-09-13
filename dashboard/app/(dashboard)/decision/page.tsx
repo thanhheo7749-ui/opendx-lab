@@ -84,7 +84,7 @@ export default function DecisionPage() {
           <p className="text-sm text-muted-foreground mt-1">Chọn loại quyết định — hệ thống phân tích dữ liệu và đề xuất phương án.</p>
         </div>
         <Link href="/bizscan">
-          <Button variant="outline" size="sm" className="text-xs gap-1.5">🔍 Quét vấn đề</Button>
+          <Button variant="outline" size="sm" className="text-xs">Quét vấn đề</Button>
         </Link>
       </div>
 
@@ -165,8 +165,8 @@ export default function DecisionPage() {
                     <p className="text-xs text-muted-foreground mt-0.5">Quyết định cuối cùng luôn thuộc về bạn.</p>
                   </div>
                   <div className="flex gap-2 flex-shrink-0">
-                    {currentDT && <Link href={currentDT.simLink}><Button variant="outline" size="sm" className="text-xs">🔮 Mô phỏng trước</Button></Link>}
-                    <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs" onClick={() => setShowReasonInput(true)}>✅ Xác nhận</Button>
+                    {currentDT && <Link href={currentDT.simLink}><Button variant="outline" size="sm" className="text-xs">Mô phỏng trước</Button></Link>}
+                    <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs" onClick={() => setShowReasonInput(true)}>Xác nhận</Button>
                   </div>
                 </div>
                 {showReasonInput && (
@@ -186,8 +186,7 @@ export default function DecisionPage() {
           {recorded && (
             <Card className="bg-emerald-500/10 border-emerald-500/30">
               <CardContent className="p-4 text-center space-y-2">
-                <p className="text-lg">✅</p>
-                <p className="text-sm font-medium">Đã ghi nhận quyết định!</p>
+                <p className="text-sm font-medium">Đã ghi nhận quyết định</p>
                 <p className="text-xs text-muted-foreground">Hệ thống sẽ theo dõi kết quả sau 7 ngày.</p>
                 <div className="flex gap-2 justify-center pt-2">
                   <Link href="/journal"><Button variant="outline" size="sm" className="text-xs">Xem nhật ký QĐ</Button></Link>
@@ -199,7 +198,7 @@ export default function DecisionPage() {
 
           <div className="pt-2 border-t border-border/30">
             <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={() => setShowRawData(!showRawData)}>
-              {showRawData ? "Ẩn dữ liệu gốc" : "📊 Xem dữ liệu gốc"}
+              {showRawData ? "Ẩn dữ liệu gốc" : "Xem dữ liệu gốc"}
             </Button>
             {showRawData && <pre className="mt-2 p-3 rounded-md bg-muted/50 text-[11px] overflow-auto max-h-60">{JSON.stringify(result.rawMetrics, null, 2)}</pre>}
           </div>
@@ -209,10 +208,9 @@ export default function DecisionPage() {
       {!selectedType && !loading && (
         <Card className="bg-card/30 border-dashed">
           <CardContent className="py-12 text-center text-muted-foreground space-y-3">
-            <p className="text-3xl">⚖️</p>
             <p className="text-sm">Chọn một loại quyết định ở trên để bắt đầu.</p>
             <p className="text-xs">Hệ thống sẽ phân tích dữ liệu bán hàng và đề xuất phương án tối ưu.</p>
-            <Link href="/bizscan"><Button variant="outline" size="sm" className="text-xs">🔍 Hoặc quét vấn đề trước</Button></Link>
+            <Link href="/bizscan"><Button variant="outline" size="sm" className="text-xs">Hoặc quét vấn đề trước</Button></Link>
           </CardContent>
         </Card>
       )}

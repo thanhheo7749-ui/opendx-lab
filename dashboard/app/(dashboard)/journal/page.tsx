@@ -33,7 +33,6 @@ interface Stats {
   decisions: Decision[];
 }
 
-const typeIcons: Record<string, string> = { inventory: "📦", pricing: "💰", adspend: "📊", supplier: "🏭" };
 const typeLabels: Record<string, string> = { inventory: "Nhập hàng", pricing: "Giá", adspend: "Quảng cáo", supplier: "NCC" };
 
 function formatDate(s: string) {
@@ -74,7 +73,7 @@ export default function JournalPage() {
           <p className="text-sm text-muted-foreground mt-1">Theo dõi quyết định đã ra và so sánh dự đoán vs thực tế.</p>
         </div>
         <Link href="/decision">
-          <Button variant="outline" size="sm" className="text-xs gap-1.5">⚖️ Tư vấn mới</Button>
+          <Button variant="outline" size="sm" className="text-xs">Tư vấn mới</Button>
         </Link>
       </div>
 
@@ -110,11 +109,10 @@ export default function JournalPage() {
       {!stats?.decisions?.length ? (
         <Card className="bg-card/30 border-dashed">
           <CardContent className="py-12 text-center text-muted-foreground space-y-3">
-            <p className="text-3xl">📋</p>
             <p className="text-sm">Chưa có quyết định nào được ghi nhận.</p>
-            <p className="text-xs">Hãy vào Tư vấn quyết định → chọn phương án → xác nhận để bắt đầu theo dõi.</p>
+            <p className="text-xs">Vào Tư vấn quyết định → chọn phương án → xác nhận để bắt đầu theo dõi.</p>
             <Link href="/decision">
-              <Button variant="outline" size="sm" className="text-xs mt-2">⚖️ Bắt đầu tư vấn</Button>
+              <Button variant="outline" size="sm" className="text-xs mt-2">Bắt đầu tư vấn</Button>
             </Link>
           </CardContent>
         </Card>
@@ -129,15 +127,14 @@ export default function JournalPage() {
               <Card key={d.id} className={`shadow-sm transition-all hover:shadow-md ${isPending ? "border-l-2 border-l-amber-400" : "border-l-2 border-l-emerald-400"}`}>
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
-                    <span className="text-xl flex-shrink-0 mt-0.5">{typeIcons[d.type] || "📝"}</span>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-xs text-muted-foreground">{formatDate(d.createdAt)}</span>
                         <Badge variant="outline" className="text-[10px]">{typeLabels[d.type] || d.type}</Badge>
                         {isPending ? (
-                          <Badge className="text-[10px] bg-amber-500/15 text-amber-600 border-amber-500/30">⏳ Đang theo dõi</Badge>
+                          <Badge className="text-[10px] bg-amber-500/15 text-amber-600 border-amber-500/30">Đang theo dõi</Badge>
                         ) : (
-                          <Badge className="text-[10px] bg-emerald-500/15 text-emerald-600 border-emerald-500/30">✅ Đã thực hiện</Badge>
+                          <Badge className="text-[10px] bg-emerald-500/15 text-emerald-600 border-emerald-500/30">Đã thực hiện</Badge>
                         )}
                       </div>
                       <p className="text-sm font-semibold truncate">{d.title}</p>
@@ -173,16 +170,9 @@ export default function JournalPage() {
         </div>
       )}
 
-      {/* Footer note */}
-      <div className="rounded-xl bg-muted/30 border border-border p-3">
-        <div className="flex items-start gap-2">
-          <span className="text-sm">💡</span>
-          <p className="text-xs text-muted-foreground">
-            Mỗi quyết định được theo dõi <strong className="text-foreground">7 ngày</strong>. Sau đó hệ thống so sánh tác động dự đoán vs thực tế
-            để đánh giá độ chính xác. Dữ liệu từ <code className="text-[10px] bg-muted px-1 rounded">sb_decisions</code>.
-          </p>
-        </div>
-      </div>
+      <p className="text-[11px] text-muted-foreground text-center">
+        Mỗi quyết định được theo dõi 7 ngày. Sau đó hệ thống so sánh dự đoán vs thực tế để đánh giá độ chính xác.
+      </p>
     </div>
   );
 }

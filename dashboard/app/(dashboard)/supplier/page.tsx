@@ -88,7 +88,7 @@ export default function SupplierPage() {
             </div>
           </div>
           <Button className="mt-3 bg-emerald-600 hover:bg-emerald-700 text-white text-sm" onClick={handleCompare} disabled={!selectedProduct || loading}>
-            {loading ? "Đang so sánh..." : "🏭 So sánh NCC"}
+            {loading ? "Đang so sánh..." : "So sánh NCC"}
           </Button>
         </CardContent>
       </Card>
@@ -113,7 +113,7 @@ export default function SupplierPage() {
 
           {/* Recommendation */}
           <div className="rounded-xl bg-emerald-500/5 border border-emerald-500/20 p-3">
-            <p className="text-xs font-medium text-emerald-700 dark:text-emerald-400 mb-0.5">💡 Khuyến nghị</p>
+            <p className="text-xs font-medium text-emerald-700 dark:text-emerald-400 mb-0.5">Khuyến nghị</p>
             <p className="text-sm">{comparison.recommendation}</p>
           </div>
 
@@ -130,9 +130,9 @@ export default function SupplierPage() {
                   <CardHeader className="pb-2 pt-4 px-4">
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-sm font-semibold">{s.supplierName}</CardTitle>
-                      {s.rank === 1 && <Badge className="text-[10px] bg-emerald-500/15 text-emerald-600 border-emerald-500/30">⭐ Tốt nhất</Badge>}
+                      {s.rank === 1 && <Badge className="text-[10px] bg-emerald-500/15 text-emerald-600 border-emerald-500/30">Tốt nhất</Badge>}
                     </div>
-                    <p className="text-xs text-muted-foreground">📍 {s.province}</p>
+                    <p className="text-xs text-muted-foreground">{s.province}</p>
                   </CardHeader>
                   <CardContent className="px-4 pb-4 space-y-3">
                     {/* Key metrics */}
@@ -197,9 +197,8 @@ export default function SupplierPage() {
       {!comparison && !loadingProducts && (
         <Card className="bg-card/30 border-dashed">
           <CardContent className="py-12 text-center text-muted-foreground space-y-2">
-            <p className="text-3xl">🏭</p>
             <p className="text-sm">Chọn sản phẩm và bấm "So sánh NCC" để bắt đầu.</p>
-            <p className="text-xs">Hệ thống sẽ chấm điểm NCC theo: giá (40%), chất lượng (20%), thời gian giao (20%), khoảng cách (20%).</p>
+            <p className="text-xs">Chấm điểm NCC theo: giá (40%), chất lượng (20%), thời gian giao (20%), khoảng cách (20%).</p>
           </CardContent>
         </Card>
       )}
