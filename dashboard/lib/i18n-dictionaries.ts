@@ -1,5 +1,5 @@
 // ==============================================================================
-// OpenDX-Lab Dashboard - i18n Dictionaries (VI + EN)
+// ShopWise — i18n Dictionaries (VI + EN)
 // SPDX-License-Identifier: GPL-3.0-or-later
 // ==============================================================================
 
@@ -10,13 +10,15 @@ const vi = {
   "nav.overview": "Tổng quan",
   "nav.employees": "Nhân viên",
   "nav.workflows": "Quy trình",
-  "nav.analytics": "Phân tích",
-  "nav.aiChat": "AI Chat",
-  "nav.knowledgeGraph": "Knowledge Graph",
-  "nav.bizscan": "BizScan",
+  "nav.analytics": "Phân tích BI",
+  "nav.aiChat": "Hỏi AI",
+  "nav.knowledgeGraph": "Bản đồ quan hệ",
+  "nav.bizscan": "Phát hiện vấn đề",
   "nav.decision": "Tư vấn quyết định",
-  "nav.simulator": "Mô phỏng",
+  "nav.simulator": "Mô phỏng What-if",
   "nav.services": "Dịch vụ",
+  "nav.supplier": "Nhà cung cấp",
+  "nav.journal": "Nhật ký QĐ",
 
   // -- Header --
   "header.profile": "Hồ sơ",
@@ -33,7 +35,7 @@ const vi = {
   "breadcrumb.services": "Dịch vụ",
 
   // -- Dashboard home --
-  "home.title": "Tổng quan",
+  "home.title": "Tổng quan shop",
   "home.hdpiStatus": "Trạng thái hệ thống",
   "home.human": "Con người",
   "home.process": "Quy trình",
@@ -43,6 +45,8 @@ const vi = {
   "home.workflowsActive": "quy trình sẵn sàng",
   "home.databaseOnline": "cơ sở dữ liệu",
   "home.aiReady": "mô hình AI",
+  "home.decisionsToday": "Quyết định cần xử lý",
+  "home.noDecisions": "Không có vấn đề cần quyết định hôm nay 👍",
 
   // -- Metrics --
   "metrics.totalEmployees": "Tổng nhân viên",
@@ -125,7 +129,7 @@ const vi = {
 
   // -- AI Chat --
   "aiChat.title": "Trợ lý AI",
-  "aiChat.subtitle": "Hỏi đáp dữ liệu nhân sự bằng AI — hỗ trợ tiếng Việt",
+  "aiChat.subtitle": "Hỏi đáp dữ liệu kinh doanh bằng AI — hỗ trợ tiếng Việt",
   "aiChat.placeholder": "Nhập câu hỏi...",
   "aiChat.send": "Gửi",
   "aiChat.thinking": "Đang suy nghĩ...",
@@ -152,8 +156,8 @@ const vi = {
   "analytics.embedError": "Không thể tải dashboard Metabase.",
 
   // -- Knowledge Graph --
-  "kg.title": "Knowledge Graph Explorer",
-  "kg.subtitle": "Khám phá và quản lý tri thức doanh nghiệp",
+  "kg.title": "Bản đồ quan hệ kinh doanh",
+  "kg.subtitle": "Liên kết sản phẩm, NCC, kênh bán, thị trường & vị trí",
 } as const;
 
 const en: Record<keyof typeof vi, string> = {
@@ -161,13 +165,15 @@ const en: Record<keyof typeof vi, string> = {
   "nav.overview": "Overview",
   "nav.employees": "Employees",
   "nav.workflows": "Workflows",
-  "nav.analytics": "Analytics",
-  "nav.aiChat": "AI Chat",
-  "nav.knowledgeGraph": "Knowledge Graph",
-  "nav.bizscan": "BizScan",
+  "nav.analytics": "Analytics BI",
+  "nav.aiChat": "Ask AI",
+  "nav.knowledgeGraph": "Business Map",
+  "nav.bizscan": "Issue Scanner",
   "nav.decision": "Decision Advisor",
-  "nav.simulator": "Simulator",
+  "nav.simulator": "What-if Simulator",
   "nav.services": "Services",
+  "nav.supplier": "Suppliers",
+  "nav.journal": "Decision Log",
 
   // -- Header --
   "header.profile": "Profile",
@@ -184,7 +190,7 @@ const en: Record<keyof typeof vi, string> = {
   "breadcrumb.services": "Services",
 
   // -- Dashboard home --
-  "home.title": "Overview",
+  "home.title": "Shop Overview",
   "home.hdpiStatus": "System status",
   "home.human": "Human",
   "home.process": "Process",
@@ -194,6 +200,8 @@ const en: Record<keyof typeof vi, string> = {
   "home.workflowsActive": "workflows ready",
   "home.databaseOnline": "database",
   "home.aiReady": "AI model",
+  "home.decisionsToday": "Decisions needed",
+  "home.noDecisions": "No issues to decide today \ud83d\udc4d",
 
   // -- Metrics --
   "metrics.totalEmployees": "Total employees",
@@ -276,7 +284,7 @@ const en: Record<keyof typeof vi, string> = {
 
   // -- AI Chat --
   "aiChat.title": "AI Assistant",
-  "aiChat.subtitle": "Ask questions about HR data with AI — supports Vietnamese",
+  "aiChat.subtitle": "Ask questions about business data with AI — supports Vietnamese",
   "aiChat.placeholder": "Type a question...",
   "aiChat.send": "Send",
   "aiChat.thinking": "Thinking...",
@@ -303,8 +311,8 @@ const en: Record<keyof typeof vi, string> = {
   "analytics.embedError": "Failed to load Metabase dashboard.",
 
   // -- Knowledge Graph --
-  "kg.title": "Knowledge Graph Explorer",
-  "kg.subtitle": "Explore and manage enterprise knowledge",
+  "kg.title": "Business Relationship Map",
+  "kg.subtitle": "Connect products, suppliers, channels, market & location",
 };
 
 export type DictionaryKey = keyof typeof vi;

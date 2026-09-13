@@ -1,5 +1,5 @@
 // ==============================================================================
-// OpenDX-Lab Dashboard - Root Layout
+// ShopWise — Decision Intelligence for Shop Owners
 // SPDX-License-Identifier: GPL-3.0-or-later
 // ==============================================================================
 
@@ -15,8 +15,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "OpenDX Lab - Digital Operating System",
-  description: "Hệ thống quản lý vận hành doanh nghiệp số - Digital Operating System for Enterprise",
+  title: "ShopWise — Trí tuệ hỗ trợ quyết định kinh doanh",
+  description: "Hỗ trợ chủ shop ra quyết định nhập hàng, định giá, quảng cáo, nhà cung cấp — dựa trên dữ liệu thực tế",
 };
 
 export default function RootLayout({
