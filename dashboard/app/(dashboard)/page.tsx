@@ -1,7 +1,7 @@
 "use client";
 
 // ==============================================================================
-// OpenDX-Lab — Command Center (Redesigned Homepage)
+// ShopWise — Homepage: Decision Feed + Business Pulse
 // SPDX-License-Identifier: GPL-3.0-or-later
 // ==============================================================================
 
@@ -10,39 +10,18 @@ import { useSession } from "next-auth/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import Link from "next/link";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-interface ServiceStatus {
-  name: string;
-  layer: "H" | "P" | "D" | "I";
-  status: "UP" | "DOWN";
-  responseMs: number;
-}
-
-interface Finding {
-  id: string;
-  severity: string;
-  category: string;
+interface DecisionFeedItem {
+  type: string;
+  urgency: "HIGH" | "MEDIUM" | "LOW";
+  icon: string;
   title: string;
-  status: string;
-  createdAt: string;
+  summary: string;
+  link: string;
+  metric?: string;
 }
 
 interface PulseSummary {
@@ -71,21 +50,6 @@ interface TopProduct {
   revenue: number;
 }
 
-interface ChannelData {
-  channel: string;
-  orders: number;
-  revenue: number;
-}
-
-interface Employee {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  status: string;
-  department: { name: string };
-}
-
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 function formatVND(n: number) {
@@ -95,179 +59,85 @@ function formatVND(n: number) {
   return n.toString();
 }
 
-const LAYER_LABELS: Record<string, string> = {
-  H: "Human",
-  P: "Process",
-  D: "Data",
-  I: "Intelligence",
-};
+// ── Mini spark chart ───────────────────────────────────────────────────────────
 
-const LAYER_COLORS: Record<string, string> = {
-  H: "var(--hdpi-human)",
-  P: "var(--hdpi-process)",
-  D: "var(--hdpi-data)",
-  I: "var(--hdpi-intelligence)",
-};
+function SparkLine({ data, height = 40 }: { data: number[]; height?: number }) {
+  if (!data.length) return null;
+  const max = Math.max(...data, 1);
+  const min = Math.min(...data, 0);
+  const range = max - min || 1;
+  const w = 120;
+  const points = data
+    .map((v, i) => `${(i / (data.length - 1)) * w},${height - ((v - min) / range) * (height - 4) - 2}`)
+    .join(" ");
+  return (
+    <svg width={w} height={height} className="text-emerald-500">
+      <polyline
+        points={points}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
 
-// ── Main Component ─────────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+// MAIN PAGE
+// ══════════════════════════════════════════════════════════════════════════════
 
-export default function CommandCenter() {
+export default function HomePage() {
   const { data: session } = useSession();
-
-  const [services, setServices] = useState<ServiceStatus[]>([]);
-  const [healthOverall, setHealthOverall] = useState<string>("LOADING");
   const [pulse, setPulse] = useState<PulseSummary | null>(null);
   const [dailyRevenue, setDailyRevenue] = useState<DailyRevenue[]>([]);
   const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
-  const [channels, setChannels] = useState<ChannelData[]>([]);
-  const [findings, setFindings] = useState<Finding[]>([]);
-  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [decisions, setDecisions] = useState<DecisionFeedItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Dialog states
-  const [offboardOpen, setOffboardOpen] = useState(false);
-  const [offboarding, setOffboarding] = useState(false);
-  const [offboardResult, setOffboardResult] = useState<Record<string, string> | null>(null);
-  const [selectedEmployee, setSelectedEmployee] = useState<string>("");
+  const fetchData = useCallback(async () => {
+    try {
+      const [pulseRes, feedRes] = await Promise.all([
+        fetch("/api/dashboard/pulse"),
+        fetch("/api/decision/feed"),
+      ]);
 
-  const [ticketOpen, setTicketOpen] = useState(false);
-  const [ticketSubmitting, setTicketSubmitting] = useState(false);
-  const [ticketTitle, setTicketTitle] = useState("");
-  const [ticketDesc, setTicketDesc] = useState("");
-  const [ticketPriority, setTicketPriority] = useState("NORMAL");
-
-  const [scanning, setScanning] = useState(false);
-  const [scanResult, setScanResult] = useState<{ summary: string; anomalyCount: number; details?: string; timestamp?: string; durationMs?: number } | null>(null);
-
-  // ── Fetch ─────────────────────────────────────────────────────────────────
-
-  const fetchAll = useCallback(async () => {
-    const [healthRes, pulseRes, scanRes, empRes] = await Promise.allSettled([
-      fetch("/api/health"),
-      fetch("/api/bizscan/pulse"),
-      fetch("/api/bizscan/scan"),
-      fetch("/api/employees"),
-    ]);
-
-    if (healthRes.status === "fulfilled" && healthRes.value.ok) {
-      const h = await healthRes.value.json();
-      setServices(h.services ?? []);
-      setHealthOverall(h.overall ?? "DOWN");
-    }
-
-    if (pulseRes.status === "fulfilled" && pulseRes.value.ok) {
-      const p = await pulseRes.value.json();
-      if (p.success) {
-        setPulse(p.summary);
-        setDailyRevenue(p.dailyRevenue ?? []);
-        setTopProducts(p.topProducts ?? []);
-        setChannels(p.channels ?? []);
+      if (pulseRes.ok) {
+        const d = await pulseRes.json();
+        setPulse(d.summary);
+        setDailyRevenue(d.dailyRevenue || []);
+        setTopProducts(d.topProducts || []);
       }
-    }
 
-    if (scanRes.status === "fulfilled" && scanRes.value.ok) {
-      const s = await scanRes.value.json();
-      if (s.success && s.scans?.[0]) {
-        setFindings(s.scans[0].findings?.filter((f: Finding) => f.status === "PENDING") ?? []);
+      if (feedRes.ok) {
+        const d = await feedRes.json();
+        setDecisions(d.decisions || []);
       }
+    } catch (e) {
+      console.error("Dashboard fetch error:", e);
+    } finally {
+      setLoading(false);
     }
-
-    if (empRes.status === "fulfilled" && empRes.value.ok) {
-      const e = await empRes.value.json();
-      // API trả về mảng trực tiếp, không phải { employees: [...] }
-      const list = Array.isArray(e) ? e : (e.employees ?? []);
-      setEmployees(list.filter((emp: Employee) => emp.status === "ACTIVE"));
-    }
-
-    setLoading(false);
   }, []);
 
   useEffect(() => {
-    fetchAll();
-    const interval = setInterval(fetchAll, 30000);
+    fetchData();
+    const interval = setInterval(fetchData, 120_000); // refresh every 2 min
     return () => clearInterval(interval);
-  }, [fetchAll]);
+  }, [fetchData]);
 
-  // ── Actions ────────────────────────────────────────────────────────────────
-
-  const handleOffboard = async () => {
-    if (!selectedEmployee) return;
-    setOffboarding(true);
-    setOffboardResult(null);
-    try {
-      const res = await fetch("/api/offboard", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ employeeId: selectedEmployee }),
-      });
-      const data = await res.json();
-      setOffboardResult(data.success ? data.results : { error: data.error });
-      if (data.success) await fetchAll();
-    } catch {
-      setOffboardResult({ error: "Kết nối thất bại" });
-    } finally {
-      setOffboarding(false);
-    }
-  };
-
-  const handleCreateTicket = async () => {
-    if (!ticketTitle.trim()) return;
-    setTicketSubmitting(true);
-    try {
-      const res = await fetch("/api/tickets", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: ticketTitle,
-          description: ticketDesc || ticketTitle,
-          priority: ticketPriority,
-        }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        setTicketOpen(false);
-        setTicketTitle("");
-        setTicketDesc("");
-      }
-    } catch { /* ignore */ }
-    finally { setTicketSubmitting(false); }
-  };
-
-  const handleScan = async () => {
-    setScanning(true);
-    setScanResult(null);
-    try {
-      const res = await fetch("/api/bizscan/scan", { method: "POST" });
-      const data = await res.json();
-      if (data.success) {
-        // Build detailed summary showing each check
-        const checkDetails = (data.checks ?? [])
-          .map((c: { name: string; hasAnomaly: boolean; message: string }) =>
-            `${c.hasAnomaly ? "●" : "○"} ${c.name}: ${c.message.split(".")[0]}`
-          )
-          .join("\n");
-        setScanResult({
-          summary: data.scan.summary,
-          anomalyCount: data.scan.anomalyCount,
-          details: checkDetails,
-          timestamp: new Date().toLocaleTimeString("vi-VN"),
-          durationMs: data.scan.durationMs,
-        });
-        await fetchAll();
-      }
-    } catch { /* ignore */ }
-    finally { setScanning(false); }
-  };
-
-  const maxRevenue = Math.max(...dailyRevenue.map((d) => d.revenue), 1);
-  const totalChannelRevenue = channels.reduce((sum, c) => sum + c.revenue, 0);
+  const firstName = session?.user?.name?.split(" ")[0] || "Chủ shop";
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-[60vh]">
-        <div className="text-center">
-          <div className="w-8 h-8 border-2 border-border border-t-foreground rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-muted-foreground text-sm">Đang tải...</p>
+      <div className="flex items-center justify-center h-64">
+        <div className="flex items-center gap-3 text-muted-foreground">
+          <svg className="w-5 h-5 animate-spin" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-20" />
+            <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+          </svg>
+          <span className="text-sm">Đang tải dữ liệu shop...</span>
         </div>
       </div>
     );
@@ -275,442 +145,275 @@ export default function CommandCenter() {
 
   return (
     <div className="space-y-6">
-      {/* ──────────────────────────────────────────────────────────────────── */}
-      {/* SECTION A: SERVICE HEALTH                                          */}
-      {/* ──────────────────────────────────────────────────────────────────── */}
+      {/* ── Header ────────────────────────────────────────────────────── */}
       <div>
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <span className={`w-2 h-2 rounded-full ${
-              healthOverall === "HEALTHY" ? "bg-emerald-500" : healthOverall === "DEGRADED" ? "bg-amber-500" : "bg-red-500"
-            }`} />
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              Trạng thái hạ tầng
-            </span>
-            <span className="text-[10px] text-muted-foreground">
-              — {services.filter((s) => s.status === "UP").length}/{services.length} hoạt động
-            </span>
-          </div>
-          <span className="text-[10px] text-muted-foreground/50">
-            Tự cập nhật mỗi 30s · Nguồn: Docker container ping
-          </span>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
-          {services.map((svc) => (
-            <div
-              key={svc.name}
-              className={`p-2.5 rounded-lg border transition-all ${
-                svc.status === "UP"
-                  ? "border-border/40 bg-card/30"
-                  : "border-red-500/30 bg-red-500/5"
-              }`}
-            >
-              <div className="flex items-center gap-1.5 mb-1">
-                <span
-                  className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: svc.status === "UP" ? "#22c55e" : "#ef4444" }}
-                />
-                <span className="text-xs font-medium truncate">{svc.name}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] text-muted-foreground">
-                  {LAYER_LABELS[svc.layer]}
-                </span>
-                <span className="text-[10px] text-muted-foreground tabular-nums">
-                  {svc.responseMs}ms
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
+        <h1 className="text-2xl font-bold text-foreground">
+          Chào {firstName} 👋
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Tổng quan hoạt động kinh doanh và các quyết định cần xử lý
+        </p>
       </div>
 
-      {/* ──────────────────────────────────────────────────────────────────── */}
-      {/* SECTION B: ALERTS + ACTIONS                                        */}
-      {/* ──────────────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Alerts */}
-        <Card className="lg:col-span-2 bg-card/30 border-border/40">
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-sm font-medium">Cảnh báo vận hành</CardTitle>
-                <p className="text-[10px] text-muted-foreground mt-0.5">
-                  Nguồn: BizScan quét bảng sb_orders, sb_inventory, sb_ad_daily_stats
-                </p>
-              </div>
-              {findings.length > 0 && (
-                <Badge variant="outline" className="text-[10px] bg-red-500/10 text-red-400 border-red-500/20">
-                  {findings.length} cần xử lý
-                </Badge>
+      {/* ── Decision Feed ─────────────────────────────────────────────── */}
+      <Card className="border-emerald-200/50 dark:border-emerald-800/30 shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            Quyết định cần xử lý
+            {decisions.length > 0 && (
+              <Badge variant="secondary" className="ml-auto text-xs">
+                {decisions.length} vấn đề
+              </Badge>
+            )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {decisions.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <p className="text-3xl mb-2">✅</p>
+              <p className="text-sm">Không có vấn đề cần quyết định hôm nay</p>
+              <p className="text-xs mt-1">Hệ thống quét tự động mỗi lần bạn truy cập</p>
+            </div>
+          ) : (
+            decisions.map((d, i) => (
+              <Link key={i} href={d.link}>
+                <div
+                  className={`group flex items-start gap-3 p-3 rounded-xl border transition-all cursor-pointer hover:shadow-md ${
+                    d.urgency === "HIGH"
+                      ? "border-red-200 bg-red-50/50 dark:border-red-900/40 dark:bg-red-950/20 hover:border-red-300"
+                      : d.urgency === "MEDIUM"
+                      ? "border-amber-200 bg-amber-50/50 dark:border-amber-900/40 dark:bg-amber-950/20 hover:border-amber-300"
+                      : "border-border bg-card hover:border-emerald-300"
+                  }`}
+                >
+                  <span className="text-2xl flex-shrink-0 mt-0.5">{d.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <p className="text-sm font-semibold text-foreground truncate">{d.title}</p>
+                      <Badge
+                        variant={d.urgency === "HIGH" ? "destructive" : "secondary"}
+                        className="text-[10px] px-1.5 py-0 flex-shrink-0"
+                      >
+                        {d.urgency === "HIGH" ? "Khẩn" : d.urgency === "MEDIUM" ? "Cần xử lý" : "Thông tin"}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{d.summary}</p>
+                  </div>
+                  <svg
+                    className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors flex-shrink-0 mt-1"
+                    fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                  </svg>
+                </div>
+              </Link>
+            ))
+          )}
+        </CardContent>
+      </Card>
+
+      {/* ── KPI Cards ─────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {/* Revenue */}
+        <Card className="shadow-sm">
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground mb-1">Doanh thu 30 ngày</p>
+            <p className="text-xl font-bold text-foreground">
+              {pulse ? formatVND(pulse.currentRevenue) : "—"}
+            </p>
+            <div className="flex items-center gap-1.5 mt-1">
+              {pulse && pulse.revenueChange !== 0 && (
+                <span
+                  className={`text-xs font-medium ${
+                    pulse.revenueChange > 0 ? "text-emerald-600" : "text-red-500"
+                  }`}
+                >
+                  {pulse.revenueChange > 0 ? "↑" : "↓"}{" "}
+                  {Math.abs(pulse.revenueChange).toFixed(1)}%
+                </span>
+              )}
+              <span className="text-[10px] text-muted-foreground">vs tháng trước</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Orders */}
+        <Card className="shadow-sm">
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground mb-1">Đơn hàng</p>
+            <p className="text-xl font-bold text-foreground">
+              {pulse ? pulse.currentOrders.toLocaleString() : "—"}
+            </p>
+            <div className="flex items-center gap-1.5 mt-1">
+              {pulse && (
+                <span className="text-[10px] text-muted-foreground">
+                  tháng trước: {pulse.previousOrders.toLocaleString()}
+                </span>
               )}
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Profit */}
+        <Card className="shadow-sm">
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground mb-1">Lợi nhuận</p>
+            <p className="text-xl font-bold text-foreground">
+              {pulse ? formatVND(pulse.currentProfit) : "—"}
+            </p>
+            <div className="flex items-center gap-1.5 mt-1">
+              {pulse && pulse.currentRevenue > 0 && (
+                <span className="text-xs text-muted-foreground">
+                  Biên LN: {((pulse.currentProfit / pulse.currentRevenue) * 100).toFixed(1)}%
+                </span>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Products */}
+        <Card className="shadow-sm">
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground mb-1">Sản phẩm</p>
+            <p className="text-xl font-bold text-foreground">
+              {pulse ? pulse.totalProducts : "—"}
+            </p>
+            <div className="flex items-center gap-1.5 mt-1">
+              {pulse && pulse.pendingFindings > 0 && (
+                <span className="text-xs text-amber-600">
+                  {pulse.pendingFindings} cảnh báo
+                </span>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* ── Revenue chart + Top products ──────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Revenue trend */}
+        <Card className="shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Doanh thu 7 ngày gần nhất
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            {findings.length === 0 ? (
-              <div className="text-center py-6 text-sm text-muted-foreground">
-                Không có cảnh báo. Bấm &quot;Quét vận hành&quot; để kiểm tra.
+            {dailyRevenue.length > 0 ? (
+              <div className="space-y-2">
+                {/* Spark overview */}
+                <div className="flex items-end gap-4">
+                  <SparkLine data={dailyRevenue.map((d) => d.revenue)} height={48} />
+                  <div className="text-right">
+                    <p className="text-lg font-bold">
+                      {formatVND(dailyRevenue.reduce((s, d) => s + d.revenue, 0))}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {dailyRevenue.reduce((s, d) => s + d.orders, 0)} đơn
+                    </p>
+                  </div>
+                </div>
+                {/* Bar chart */}
+                <div className="flex items-end gap-1 h-20">
+                  {dailyRevenue.map((d, i) => {
+                    const max = Math.max(...dailyRevenue.map((r) => r.revenue), 1);
+                    const h = (d.revenue / max) * 100;
+                    return (
+                      <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
+                        <div
+                          className="w-full bg-emerald-500/20 rounded-t hover:bg-emerald-500/40 transition-colors relative group"
+                          style={{ height: `${Math.max(h, 4)}%` }}
+                        >
+                          <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-foreground text-background text-[9px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                            {formatVND(d.revenue)}
+                          </div>
+                        </div>
+                        <span className="text-[9px] text-muted-foreground">
+                          {new Date(d.day).toLocaleDateString("vi", { weekday: "narrow" })}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             ) : (
-              <div className="space-y-2 max-h-[220px] overflow-y-auto">
-                {findings.slice(0, 5).map((f) => (
-                  <div
-                    key={f.id}
-                    className={`p-3 rounded-lg border text-sm ${
-                      f.severity === "CRITICAL"
-                        ? "border-red-500/20 bg-red-500/5"
-                        : "border-amber-500/20 bg-amber-500/5"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span
-                          className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                            f.severity === "CRITICAL" ? "bg-red-500" : "bg-amber-500"
-                          }`}
-                        />
-                        <span className="text-xs truncate">{f.title}</span>
-                      </div>
-                      <span className="text-[10px] text-muted-foreground flex-shrink-0 uppercase">{f.category}</span>
+              <p className="text-sm text-muted-foreground text-center py-4">Chưa có dữ liệu</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Top products */}
+        <Card className="shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Top sản phẩm bán chạy (30 ngày)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {topProducts.length > 0 ? (
+              <div className="space-y-2">
+                {topProducts.slice(0, 5).map((p, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <span className="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold flex items-center justify-center flex-shrink-0">
+                      {i + 1}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{p.name}</p>
+                      <p className="text-[10px] text-muted-foreground">{p.sku}</p>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className="text-sm font-semibold">{p.sales} bán</p>
+                      <p className="text-[10px] text-muted-foreground">{formatVND(p.revenue)}</p>
                     </div>
                   </div>
                 ))}
-                {findings.length > 5 && (
-                  <button
-                    className="text-xs text-muted-foreground hover:text-foreground w-full text-center py-1"
-                    onClick={() => window.location.href = "/bizscan"}
-                  >
-                    Xem thêm {findings.length - 5} cảnh báo →
-                  </button>
-                )}
               </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Quick Actions */}
-        <Card className="bg-card/30 border-border/40">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Thao tác nhanh</CardTitle>
-            <p className="text-[10px] text-muted-foreground">
-              Mỗi thao tác kết nối thật tới Keycloak, Mattermost, PostgreSQL
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {/* Offboard */}
-            <Dialog open={offboardOpen} onOpenChange={setOffboardOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline" className="w-full justify-start text-xs h-9 gap-2" id="btn-offboard">
-                  <span className="w-4 h-4 flex items-center justify-center">
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
-                    </svg>
-                  </span>
-                  Thu hồi quyền nhân viên
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Thu hồi quyền truy cập</DialogTitle>
-                  <DialogDescription>
-                    Chọn nhân viên → Hệ thống tự động: khóa đăng nhập SSO (Keycloak), vô hiệu tài khoản chat (Mattermost), ghi nhật ký kiểm toán (PostgreSQL)
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <Select value={selectedEmployee} onValueChange={setSelectedEmployee}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Chọn nhân viên..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {employees.map((emp) => (
-                        <SelectItem key={emp.id} value={emp.id}>
-                          {emp.firstName} {emp.lastName} — {emp.department?.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  {offboardResult && (
-                    <div className="p-3 rounded-lg bg-muted/50 text-xs space-y-1 border">
-                      <p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-wider">Kết quả thực thi:</p>
-                      {Object.entries(offboardResult).map(([key, value]) => (
-                        <div key={key} className="flex gap-2">
-                          <span className="text-muted-foreground capitalize min-w-[80px]">{key}:</span>
-                          <span>{value}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  <Button
-                    onClick={handleOffboard}
-                    disabled={!selectedEmployee || offboarding}
-                    className="w-full bg-red-600 hover:bg-red-700 text-white"
-                  >
-                    {offboarding ? "Đang xử lý..." : "Xác nhận thu hồi"}
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-
-            {/* Scan */}
-            <Button
-              variant="outline"
-              className="w-full justify-start text-xs h-9 gap-2"
-              onClick={handleScan}
-              disabled={scanning}
-              id="btn-scan"
-            >
-              <span className="w-4 h-4 flex items-center justify-center">
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-                </svg>
-              </span>
-              {scanning ? "Đang quét..." : "Quét vận hành"}
-            </Button>
-
-            {/* Ticket */}
-            <Dialog open={ticketOpen} onOpenChange={setTicketOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline" className="w-full justify-start text-xs h-9 gap-2" id="btn-ticket">
-                  <span className="w-4 h-4 flex items-center justify-center">
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z" />
-                    </svg>
-                  </span>
-                  Tạo yêu cầu hỗ trợ
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Tạo yêu cầu hỗ trợ IT</DialogTitle>
-                  <DialogDescription>
-                    Tạo ticket → Lưu vào PostgreSQL → Gửi thông báo Mattermost webhook
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-3">
-                  <Input
-                    placeholder="Tiêu đề..."
-                    value={ticketTitle}
-                    onChange={(e) => setTicketTitle(e.target.value)}
-                  />
-                  <textarea
-                    placeholder="Mô tả chi tiết..."
-                    className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    value={ticketDesc}
-                    onChange={(e) => setTicketDesc(e.target.value)}
-                  />
-                  <Select value={ticketPriority} onValueChange={setTicketPriority}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="LOW">Thấp</SelectItem>
-                      <SelectItem value="NORMAL">Bình thường</SelectItem>
-                      <SelectItem value="HIGH">Cao</SelectItem>
-                      <SelectItem value="URGENT">Khẩn cấp</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button
-                    onClick={handleCreateTicket}
-                    disabled={!ticketTitle.trim() || ticketSubmitting}
-                    className="w-full"
-                  >
-                    {ticketSubmitting ? "Đang tạo..." : "Tạo và gửi thông báo"}
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-
-            {/* Scan result */}
-            {scanResult && (
-              <div className={`p-3 rounded-lg text-xs border ${
-                scanResult.anomalyCount > 0
-                  ? "border-amber-500/20 bg-amber-500/5"
-                  : "border-emerald-500/20 bg-emerald-500/5"
-              }`}>
-                <div className="flex items-center justify-between mb-1">
-                  <p className="font-medium">{scanResult.summary}</p>
-                  {scanResult.durationMs && (
-                    <span className="text-[9px] text-muted-foreground">{scanResult.durationMs}ms</span>
-                  )}
-                </div>
-                {scanResult.details && (
-                  <pre className="text-[10px] text-muted-foreground mt-1 whitespace-pre-wrap font-mono leading-relaxed">
-                    {scanResult.details}
-                  </pre>
-                )}
-                <p className="text-[9px] text-muted-foreground mt-2 pt-1 border-t border-border/30">
-                  Quét lúc {scanResult.timestamp} · 5 checks trên bảng sb_orders, sb_inventory, sb_ad_daily_stats, sb_customers
-                </p>
-              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-4">Chưa có dữ liệu</p>
             )}
           </CardContent>
         </Card>
       </div>
 
-      {/* ──────────────────────────────────────────────────────────────────── */}
-      {/* SECTION C: BUSINESS DATA                                           */}
-      {/* ──────────────────────────────────────────────────────────────────── */}
-      {pulse && (
-        <>
-          {/* Data source banner */}
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/30 border border-border/30">
-            <span className="w-1.5 h-1.5 rounded-full bg-violet-500 flex-shrink-0" />
-            <p className="text-[10px] text-muted-foreground">
-              <strong>Nguồn dữ liệu:</strong> Bảng <code className="bg-muted px-1 rounded">sb_orders</code> ({pulse.totalOrders.toLocaleString()} đơn hàng),{" "}
-              <code className="bg-muted px-1 rounded">sb_products</code> ({pulse.totalProducts} sản phẩm),{" "}
-              <code className="bg-muted px-1 rounded">sb_customers</code> ({pulse.totalCustomers} khách hàng)
-              — Dữ liệu mẫu 6 tháng, giả lập từ seed script
+      {/* ── Quick links ───────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[
+          { href: "/decision", label: "Tư vấn quyết định", icon: "⚖️", desc: "Nhập hàng, giá, QC" },
+          { href: "/simulator", label: "Mô phỏng What-if", icon: "🔮", desc: "Thử trước khi quyết" },
+          { href: "/bizscan", label: "Quét vấn đề", icon: "🔍", desc: "Phát hiện bất thường" },
+          { href: "/knowledge-graph", label: "Bản đồ quan hệ", icon: "🗺️", desc: "SP ↔ NCC ↔ Kênh" },
+        ].map((item) => (
+          <Link key={item.href} href={item.href}>
+            <Card className="shadow-sm hover:shadow-md hover:border-emerald-300 dark:hover:border-emerald-700 transition-all cursor-pointer h-full">
+              <CardContent className="p-4 flex items-center gap-3">
+                <span className="text-2xl">{item.icon}</span>
+                <div>
+                  <p className="text-sm font-medium">{item.label}</p>
+                  <p className="text-[10px] text-muted-foreground">{item.desc}</p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
+      </div>
+
+      {/* ── Footer note ───────────────────────────────────────────────── */}
+      <div className="rounded-xl bg-muted/30 border border-border p-3">
+        <div className="flex items-start gap-2">
+          <span className="text-sm">💡</span>
+          <div>
+            <p className="text-xs text-muted-foreground">
+              <span className="font-medium text-foreground">ShopWise</span> — Trí tuệ hỗ trợ quyết định kinh doanh.
+              Dữ liệu từ <code className="text-[10px] bg-muted px-1 rounded">sb_orders</code>,{" "}
+              <code className="text-[10px] bg-muted px-1 rounded">sb_products</code>,{" "}
+              <code className="text-[10px] bg-muted px-1 rounded">sb_inventory</code>,{" "}
+              <code className="text-[10px] bg-muted px-1 rounded">sb_ad_campaigns</code>.
+              Mọi gợi ý đều ghi rõ nguồn dữ liệu và giả định.
             </p>
           </div>
-
-          {/* KPI Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <Card className="bg-card/30 border-border/40">
-              <CardContent className="pt-4 pb-3 px-4">
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Doanh thu 7 ngày</p>
-                <p className="text-xl font-bold tabular-nums">{formatVND(pulse.currentRevenue)}đ</p>
-                <p className={`text-[10px] ${pulse.revenueChange >= 0 ? "text-emerald-500" : "text-red-500"}`}>
-                  {pulse.revenueChange >= 0 ? "+" : ""}{pulse.revenueChange}% so với tuần trước
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="bg-card/30 border-border/40">
-              <CardContent className="pt-4 pb-3 px-4">
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Đơn hàng (7 ngày)</p>
-                <p className="text-xl font-bold tabular-nums">{pulse.currentOrders}</p>
-                <p className="text-[10px] text-muted-foreground">Tổng cộng: {pulse.totalOrders.toLocaleString()}</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-card/30 border-border/40">
-              <CardContent className="pt-4 pb-3 px-4">
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Sản phẩm đang bán</p>
-                <p className="text-xl font-bold tabular-nums">{pulse.totalProducts}</p>
-                <p className="text-[10px] text-muted-foreground">{pulse.totalCustomers} khách hàng</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-card/30 border-border/40">
-              <CardContent className="pt-4 pb-3 px-4">
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Lợi nhuận (7 ngày)</p>
-                <p className="text-xl font-bold tabular-nums">{formatVND(pulse.currentProfit)}đ</p>
-                <p className="text-[10px] text-muted-foreground">
-                  Tính từ: sellPrice - costPrice
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Revenue Chart + Channels */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <Card className="lg:col-span-2 bg-card/30 border-border/40">
-              <CardHeader className="pb-2">
-                <div>
-                  <CardTitle className="text-sm font-medium">Doanh thu theo ngày</CardTitle>
-                  <p className="text-[10px] text-muted-foreground">
-                    Truy vấn: SUM(totalAmount) FROM sb_orders WHERE status=COMPLETED GROUP BY DATE(orderDate)
-                  </p>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {dailyRevenue.length === 0 ? (
-                  <p className="text-xs text-muted-foreground text-center py-8">Chưa có dữ liệu trong 7 ngày gần</p>
-                ) : (
-                  <div className="flex items-end gap-2" style={{ height: "140px" }}>
-                    {dailyRevenue.map((day) => {
-                      const barHeight = Math.max(Math.round((day.revenue / maxRevenue) * 120), 6);
-                      const dateLabel = new Date(day.day).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" });
-                      return (
-                        <div key={day.day} className="flex-1 flex flex-col items-center justify-end h-full">
-                          <span className="text-[9px] text-muted-foreground tabular-nums mb-1">
-                            {formatVND(day.revenue)}
-                          </span>
-                          <div
-                            className="w-full rounded-t"
-                            style={{
-                              height: `${barHeight}px`,
-                              backgroundColor: "rgb(124, 58, 237)",
-                              opacity: 0.75,
-                            }}
-                            title={`${dateLabel}: ${new Intl.NumberFormat("vi-VN").format(day.revenue)}đ / ${day.orders} đơn`}
-                          />
-                          <span className="text-[9px] text-muted-foreground mt-1">{dateLabel}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card className="bg-card/30 border-border/40">
-              <CardHeader className="pb-2">
-                <div>
-                  <CardTitle className="text-sm font-medium">Kênh bán hàng</CardTitle>
-                  <p className="text-[10px] text-muted-foreground">
-                    Trường &quot;channel&quot; trong sb_orders
-                  </p>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {channels.map((ch) => {
-                  const pct = totalChannelRevenue > 0 ? (ch.revenue / totalChannelRevenue) * 100 : 0;
-                  return (
-                    <div key={ch.channel}>
-                      <div className="flex items-center justify-between text-xs mb-1">
-                        <span className="capitalize">{ch.channel}</span>
-                        <span className="text-muted-foreground tabular-nums text-[10px]">
-                          {ch.orders} đơn · {formatVND(ch.revenue)}đ
-                        </span>
-                      </div>
-                      <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-violet-500/70 rounded-full transition-all"
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Top Products */}
-          {topProducts.length > 0 && (
-            <Card className="bg-card/30 border-border/40">
-              <CardHeader className="pb-2">
-                <div>
-                  <CardTitle className="text-sm font-medium">Sản phẩm bán chạy (7 ngày)</CardTitle>
-                  <p className="text-[10px] text-muted-foreground">
-                    Truy vấn: COUNT(sb_order_items) JOIN sb_products GROUP BY product ORDER BY sales DESC LIMIT 5
-                  </p>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-                  {topProducts.map((p, i) => (
-                    <div
-                      key={p.sku}
-                      className="p-3 rounded-lg border border-border/30 bg-muted/10 hover:bg-muted/20 transition-colors"
-                    >
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-bold text-muted-foreground">#{i + 1}</span>
-                        <span className="text-[10px] text-muted-foreground font-mono">{p.sku}</span>
-                      </div>
-                      <p className="text-xs font-medium truncate">{p.name}</p>
-                      <p className="text-[10px] text-muted-foreground mt-1">
-                        {p.sales} bán · {formatVND(p.revenue)}đ
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </>
-      )}
+        </div>
+      </div>
     </div>
   );
 }
