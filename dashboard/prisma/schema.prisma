@@ -212,6 +212,7 @@ model SbProduct {
 
   inventory  SbInventory?
   orderItems SbOrderItem[]
+  supplierProducts SbSupplierProduct[]
 
   @@index([category])
   @@map("sb_products")
@@ -400,4 +401,63 @@ model DxTicket {
   @@index([status])
   @@index([priority])
   @@map("dx_tickets")
+}
+
+// ── ShopWise: Decision Journal ────────────────────────────────────────────────
+
+model SbDecision {
+  id            String   @id @default(cuid())
+  type          String   // inventory | pricing | adspend | supplier
+  title         String   // "Nhập gấp 11 SP sắp hết hàng"
+  chosenOption  String?  // "option_conservative" or label
+  reason        String?  // User-entered reason
+  predictedImpact String? // "Doanh thu tăng 17.9tr"
+  actualImpact  String?  // filled after tracking period
+  status        String   @default("PENDING") // PENDING | DONE | CANCELLED
+  feedbackDue   DateTime? // when to check outcome (e.g. +7 days)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([type])
+  @@index([status])
+  @@index([createdAt])
+  @@map("sb_decisions")
+}
+
+// ── ShopWise: Supplier Matching ───────────────────────────────────────────────
+
+model SbSupplier {
+  id          String   @id @default(cuid())
+  name        String
+  province    String   // Tỉnh/thành phố
+  district    String?
+  lat         Float?   // Latitude
+  lng         Float?   // Longitude
+  rating      Float    @default(4.0)  // 1-5
+  leadTimeDays Int     @default(3)
+  minOrder    Float    @default(0)
+  phone       String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  products    SbSupplierProduct[]
+
+  @@index([province])
+  @@index([isActive])
+  @@map("sb_suppliers")
+}
+
+model SbSupplierProduct {
+  id           String     @id @default(cuid())
+  supplierId   String
+  supplier     SbSupplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  productId    String
+  product      SbProduct  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  unitPrice    Float      // Giá nhập từ NCC
+  shippingCost Float      @default(0)
+  moq          Int        @default(1) // Min order quantity
+
+  @@unique([supplierId, productId])
+  @@index([productId])
+  @@map("sb_supplier_products")
 }

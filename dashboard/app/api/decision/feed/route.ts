@@ -70,15 +70,20 @@ export async function GET() {
 
     // ── 2. Pricing: products priced far from market ────────────────────
     const trends = await prisma.sbMarketTrend.findMany({
-      where: { source: "google_shopping" },
-      include: { product: true },
+      where: { source: "google_shopping", avgPrice: { not: null } },
     });
 
+    // Match trends to products by keyword overlap
     let overpriced = 0;
     for (const t of trends) {
-      if (!t.product || !t.avgMarketPrice) continue;
-      const diff = (t.product.sellPrice - t.avgMarketPrice) / t.avgMarketPrice;
-      if (diff > 0.15) overpriced++;
+      if (!t.avgPrice) continue;
+      const matchedProduct = products.find(
+        (p) => t.keyword.toLowerCase().includes(p.name.toLowerCase().split(" ")[0])
+      );
+      if (matchedProduct) {
+        const diff = (matchedProduct.sellPrice - t.avgPrice) / t.avgPrice;
+        if (diff > 0.15) overpriced++;
+      }
     }
 
     if (overpriced > 0) {
