@@ -488,6 +488,62 @@ async function seedMarketTrends() {
 
 // ── Main ───────────────────────────────────────────────────────────────────────
 
+async function seedSuppliers() {
+  console.log("🏭 Seeding suppliers...");
+
+  // Delete existing
+  await prisma.sbSupplierProduct.deleteMany();
+  await prisma.sbSupplier.deleteMany();
+
+  const suppliers = [
+    { name: "Xưởng Tân Bình", province: "TP.HCM", district: "Tân Bình", lat: 10.8012, lng: 106.6528, rating: 4.8, leadTimeDays: 1, minOrder: 500000, phone: "0901234567" },
+    { name: "Công ty May Bình Dương", province: "Bình Dương", district: "Thuận An", lat: 10.9238, lng: 106.6526, rating: 4.5, leadTimeDays: 2, minOrder: 1000000, phone: "0912345678" },
+    { name: "NCC Đồng Nai Fabric", province: "Đồng Nai", district: "Biên Hòa", lat: 10.9449, lng: 106.8315, rating: 4.2, leadTimeDays: 3, minOrder: 800000, phone: "0923456789" },
+    { name: "Xưởng Hà Nội Textile", province: "Hà Nội", district: "Hoàng Mai", lat: 20.9816, lng: 105.8536, rating: 4.6, leadTimeDays: 5, minOrder: 2000000, phone: "0934567890" },
+    { name: "NCC Đà Nẵng Fashion", province: "Đà Nẵng", district: "Hải Châu", lat: 16.0544, lng: 108.2022, rating: 4.0, leadTimeDays: 4, minOrder: 1500000, phone: "0945678901" },
+    { name: "Xưởng Cần Thơ", province: "Cần Thơ", district: "Ninh Kiều", lat: 10.0341, lng: 105.7875, rating: 3.8, leadTimeDays: 3, minOrder: 600000, phone: "0956789012" },
+  ];
+
+  const createdSuppliers = [];
+  for (const s of suppliers) {
+    const created = await prisma.sbSupplier.create({ data: s });
+    createdSuppliers.push(created);
+  }
+
+  // Link suppliers to products
+  const products = await prisma.sbProduct.findMany({ where: { isActive: true } });
+
+  for (const product of products) {
+    // Each product gets 2-4 random suppliers
+    const numSuppliers = randomInt(2, Math.min(4, createdSuppliers.length));
+    const shuffled = [...createdSuppliers].sort(() => Math.random() - 0.5).slice(0, numSuppliers);
+
+    for (const supplier of shuffled) {
+      // Vary price: closer suppliers tend to be slightly more expensive (higher quality/faster)
+      const baseCost = product.costPrice;
+      const priceVariation = randomFloat(0.7, 1.3);
+      const unitPrice = Math.round(baseCost * priceVariation);
+
+      // Shipping cost depends on distance
+      const isLocal = supplier.province === "TP.HCM";
+      const isFar = supplier.province === "Hà Nội" || supplier.province === "Đà Nẵng";
+      const shippingCost = isLocal ? randomInt(10000, 30000) : isFar ? randomInt(80000, 200000) : randomInt(30000, 80000);
+
+      await prisma.sbSupplierProduct.create({
+        data: {
+          supplierId: supplier.id,
+          productId: product.id,
+          unitPrice,
+          shippingCost,
+          moq: randomInt(10, 100),
+        },
+      });
+    }
+  }
+
+  console.log(`   ✅ Created ${createdSuppliers.length} suppliers, linked to ${products.length} products`);
+}
+
 async function main() {
   console.log("\n🔍 BizScan — Seed Script");
   console.log("========================\n");
@@ -536,6 +592,9 @@ async function main() {
   // 6. Market Trends
   await seedMarketTrends();
 
+  // 7. Suppliers
+  await seedSuppliers();
+
   // Summary
   const counts = {
     products: await prisma.sbProduct.count(),
@@ -546,6 +605,8 @@ async function main() {
     campaigns: await prisma.sbAdCampaign.count(),
     adStats: await prisma.sbAdDailyStat.count(),
     trends: await prisma.sbMarketTrend.count(),
+    suppliers: await prisma.sbSupplier.count(),
+    supplierProducts: await prisma.sbSupplierProduct.count(),
     vipCustomers: await prisma.sbCustomer.count({ where: { tier: { in: ["VIP", "SUPER_VIP"] } } }),
     completedOrders: await prisma.sbOrder.count({ where: { status: "COMPLETED" } }),
   };
@@ -558,6 +619,7 @@ async function main() {
   console.log(`   📦 ${counts.inventory} inventory records`);
   console.log(`   📊 ${counts.campaigns} ad campaigns (${counts.adStats} daily stats)`);
   console.log(`   🌐 ${counts.trends} market trends`);
+  console.log(`   🏭 ${counts.suppliers} suppliers (${counts.supplierProducts} product links)`);
   console.log("========================\n");
 }
 
