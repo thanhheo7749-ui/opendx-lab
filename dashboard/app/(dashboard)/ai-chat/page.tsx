@@ -61,11 +61,11 @@ const INTENT_BADGES: Record<string, { icon: typeof Database; label: string; colo
 // Quick suggestion questions (covers all intent types)
 // ---------------------------------------------------------------------------
 const SUGGESTIONS = [
-  "Có bao nhiêu nhân viên đang hoạt động?",
-  "Nhân sự theo từng phòng ban?",
-  "Quy trình onboarding nhân viên mới?",
+  "Doanh thu hôm nay bao nhiêu?",
+  "Top 5 sản phẩm bán chạy nhất?",
+  "Chiến dịch quảng cáo nào hiệu quả nhất?",
   "Hệ thống có dịch vụ nào bị lỗi không?",
-  "Chính sách nghỉ phép là gì?",
+  "Tồn kho sản phẩm nào sắp hết?",
   "Chào bạn, bạn có thể giúp gì?",
 ];
 
@@ -282,8 +282,8 @@ export default function AIChatPage() {
                   DX-OS Agent
                 </h2>
                 <p className="text-muted-foreground max-w-md text-sm mb-8">
-                  Trợ lý AI thông minh — tra cứu dữ liệu nhân sự, kiểm tra hệ
-                  thống, kích hoạt quy trình tự động hóa.
+                  Trợ lý AI thông minh — tra cứu dữ liệu kinh doanh, phân tích
+                  doanh thu, tồn kho, quảng cáo và kiểm tra hệ thống.
                 </p>
 
                 {/* Quick suggestions grid */}

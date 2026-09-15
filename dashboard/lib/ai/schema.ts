@@ -8,8 +8,8 @@
  * so it can generate correct SQL queries against our PostgreSQL database.
  */
 export const DB_SCHEMA_DESCRIPTION = `
-You have access to a PostgreSQL database for an employee management system.
-The database name is "dashboard_db". Here are the tables and their columns:
+You have access to a PostgreSQL database for ShopWise, a decision intelligence platform for shop owners.
+The database name is "dashboard_db". It contains business data (products, orders, customers, inventory, ad campaigns, suppliers) and organizational data (employees, departments). Here are the tables and their columns:
 
 ## Table: departments
 | Column      | Type     | Notes                        |
