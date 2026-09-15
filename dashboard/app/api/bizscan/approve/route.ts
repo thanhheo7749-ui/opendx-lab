@@ -7,8 +7,12 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireRole } from "@/lib/api-auth";
 
 export async function POST(req: NextRequest) {
+  const authResult = await requireRole("admin");
+  if (!authResult.ok) return authResult.response;
+
   try {
     const body = await req.json();
     const { findingId, action } = body as {

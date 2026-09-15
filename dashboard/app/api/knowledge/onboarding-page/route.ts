@@ -5,8 +5,12 @@
 
 import { NextResponse } from "next/server";
 import { buildOnboardingPage } from "@/lib/wiki/onboarding-page";
+import { requireAuth } from "@/lib/api-auth";
 
 export async function POST(request: Request) {
+  const authResult = await requireAuth();
+  if (!authResult.ok) return authResult.response;
+
   try {
     const { fullName, department, position } = await request.json();
 

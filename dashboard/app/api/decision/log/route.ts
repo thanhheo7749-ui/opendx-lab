@@ -6,9 +6,13 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAuth } from "@/lib/api-auth";
 
 // GET — List all decisions, optionally filtered by type/status
 export async function GET(req: NextRequest) {
+  const authResult = await requireAuth();
+  if (!authResult.ok) return authResult.response;
+
   try {
     const { searchParams } = new URL(req.url);
     const type = searchParams.get("type");
@@ -33,6 +37,9 @@ export async function GET(req: NextRequest) {
 
 // POST — Record a new decision
 export async function POST(req: NextRequest) {
+  const authResult = await requireAuth();
+  if (!authResult.ok) return authResult.response;
+
   try {
     const body = await req.json();
     const { type, title, chosenOption, reason, predictedImpact } = body;

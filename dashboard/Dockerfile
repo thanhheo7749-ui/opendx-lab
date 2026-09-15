@@ -39,4 +39,7 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["sh", "-c", "npx prisma migrate deploy && node server.js"]
+# Migration should be run separately (CI/CD pipeline or init container)
+# to avoid race conditions when scaling to multiple replicas.
+# See: docker compose run --rm dashboard npx prisma migrate deploy
+CMD ["node", "server.js"]

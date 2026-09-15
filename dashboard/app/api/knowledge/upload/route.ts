@@ -6,8 +6,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { extractText, validateFile } from "@/lib/knowledge/extractor";
 import { ingestDocument } from "@/lib/knowledge/graph-builder";
+import { requireRole } from "@/lib/api-auth";
 
 export async function POST(request: NextRequest) {
+  const authResult = await requireRole("admin");
+  if (!authResult.ok) return authResult.response;
+
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File | null;

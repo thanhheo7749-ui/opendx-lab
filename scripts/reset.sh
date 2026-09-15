@@ -7,6 +7,9 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # ==============================================================================
 
+# Platform: Linux/macOS (requires: bash, docker)
+# Windows users: Use WSL2 or Git Bash, or run 'just reset' from project root.
+
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

@@ -36,6 +36,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Users, Plus, Search, Pencil, RefreshCw } from "lucide-react";
+import { toast } from "@/lib/toast";
+import type { DictionaryKey } from "@/lib/i18n-dictionaries";
 
 // ---------------------------------------------------------------------------
 // Position suggestions per department code
@@ -224,6 +226,7 @@ export default function EmployeesPage() {
       if (departments.length === 0) setDepartments(depts);
     } catch (err) {
       console.error("Failed to fetch employees:", err);
+      toast("error", "Không thể tải danh sách nhân viên");
     } finally {
       setLoading(false);
     }
@@ -264,6 +267,7 @@ export default function EmployeesPage() {
       }
     } catch (err) {
       console.error("Failed to create:", err);
+      toast("error", "Không thể tạo nhân viên");
     }
   };
 
@@ -297,6 +301,7 @@ export default function EmployeesPage() {
       }
     } catch (err) {
       console.error("Failed to update:", err);
+      toast("error", "Không thể cập nhật thông tin nhân viên");
     }
   };
 
@@ -462,7 +467,7 @@ export default function EmployeesPage() {
                       <TableCell className="text-muted-foreground">{emp.position}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className={statusInfo.color}>
-                          {t(statusInfo.label as any)}
+                          {t(statusInfo.label as DictionaryKey)}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-muted-foreground">

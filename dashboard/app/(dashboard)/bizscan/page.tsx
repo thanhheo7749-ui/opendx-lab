@@ -9,6 +9,7 @@ import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "@/lib/toast";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -141,6 +142,7 @@ export default function BizScanPage() {
       }
     } catch (e) {
       console.error("Failed to fetch scans:", e);
+      toast("error", "Không thể tải danh sách scan");
     }
   }, []);
 
@@ -153,6 +155,7 @@ export default function BizScanPage() {
       }
     } catch (e) {
       console.error("Failed to fetch market:", e);
+      toast("error", "Không thể tải dữ liệu thị trường");
     }
   }, []);
 
@@ -174,6 +177,7 @@ export default function BizScanPage() {
       }
     } catch (e) {
       console.error("Scan failed:", e);
+      toast("error", "Lỗi khi quét");
     } finally {
       setScanning(false);
     }
@@ -191,6 +195,7 @@ export default function BizScanPage() {
       alert("Bất thường đã tạo. Bấm 'Quét ngay' để phát hiện.");
     } catch (e) {
       console.error("Inject failed:", e);
+      toast("error", "Không thể tạo bất thường");
     } finally {
       setInjecting(false);
     }
@@ -206,6 +211,7 @@ export default function BizScanPage() {
       await fetchScans();
     } catch (e) {
       console.error("Approve failed:", e);
+      toast("error", "Lỗi khi duyệt");
     }
   };
 
@@ -214,6 +220,7 @@ export default function BizScanPage() {
       await fetch("/api/bizscan/simulator?action=tick", { method: "POST" });
     } catch (e) {
       console.error("Tick failed:", e);
+      toast("error", "Lỗi khi tạo dữ liệu mẫu");
     }
   };
 

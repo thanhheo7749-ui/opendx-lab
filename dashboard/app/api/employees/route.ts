@@ -5,13 +5,18 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAuth, requireRole } from "@/lib/api-auth";
 import { triggerOnboarding } from "@/lib/activepieces";
+import { createEmployeeSchema } from "@/lib/validations/employee";
 import {
   createWorkflowExecutionRecord,
   updateWorkflowStepStatus,
 } from "@/lib/workflows/service";
 
 export async function GET(request: NextRequest) {
+  const authResult = await requireAuth();
+  if (!authResult.ok) return authResult.response;
+
   const { searchParams } = new URL(request.url);
   const search = searchParams.get("search") ?? "";
   const department = searchParams.get("department") ?? "";
@@ -46,15 +51,18 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { firstName, lastName, email, position, departmentId } = body;
+    const authResult = await requireRole("admin");
+    if (!authResult.ok) return authResult.response;
 
-    if (!firstName || !lastName || !email || !position || !departmentId) {
+    const body = await request.json();
+    const parseResult = createEmployeeSchema.safeParse(body);
+    if (!parseResult.success) {
       return NextResponse.json(
-        { error: "Thiếu thông tin bắt buộc" },
+        { error: "Dữ liệu không hợp lệ", details: parseResult.error.flatten().fieldErrors },
         { status: 400 }
       );
     }
+    const { firstName, lastName, email, position, departmentId } = parseResult.data;
 
     // Duplicate email check
     const existingEmployee = await prisma.employee.findUnique({

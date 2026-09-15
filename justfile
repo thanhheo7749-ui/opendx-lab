@@ -17,6 +17,8 @@ default:
 setup:
     @echo "⚙️  Setting up OpenDX-Lab environment..."
     @{{ copy_env }}
+    @echo "⚠️  IMPORTANT: Default passwords from .env.example are NOT secure for production!"
+    @echo "   Run 'bash scripts/setup.sh' for auto-generated passwords, or edit .env manually."
     @echo "🐳 Starting Docker services (Keycloak, Mattermost, Wiki.js, n8n, Metabase, Ollama, Postgres, Dashboard)..."
     docker compose up -d
     @echo "🤖 Pulling Qwen 2.5 3B LLM model for AI Chat..."
@@ -43,8 +45,8 @@ logs service="":
     docker compose logs -f {{ service }}
 
 # Full rebuild: teardown all volumes, recreate containers, and pull LLM model (Full Reset)
+[confirm("⚠️  This will DESTROY all databases and recreate containers. Continue?")]
 reset:
-    @echo "⚠️  WARNING: This will destroy all current databases and recreate containers!"
     docker compose down -v
     docker compose up -d --build
     @echo "🤖 Re-pulling Qwen 2.5 3B LLM model..."

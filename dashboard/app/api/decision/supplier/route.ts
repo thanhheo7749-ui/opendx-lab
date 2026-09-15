@@ -6,10 +6,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { compareSuppliers } from "@/lib/decision/supplier";
 import { prisma } from "@/lib/prisma";
+import { requireAuth } from "@/lib/api-auth";
 
 // GET /api/decision/supplier?productId=xxx&qty=100&province=TP.HCM
 // If no productId, returns list of products that have suppliers
 export async function GET(req: NextRequest) {
+  const authResult = await requireAuth();
+  if (!authResult.ok) return authResult.response;
+
   try {
     const { searchParams } = new URL(req.url);
     const productId = searchParams.get("productId");

@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAuth } from "@/lib/api-auth";
 
 function daysAgo(n: number): Date {
   const d = new Date();
@@ -16,6 +17,9 @@ const formatVND = (n: number) =>
   new Intl.NumberFormat("vi-VN").format(Math.round(n));
 
 export async function POST(req: NextRequest) {
+  const authResult = await requireAuth();
+  if (!authResult.ok) return authResult.response;
+
   try {
     const body = await req.json();
     const { scenario, params } = body;

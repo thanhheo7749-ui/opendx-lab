@@ -4,12 +4,16 @@
 // ==============================================================================
 
 import { NextResponse } from "next/server";
+import { requireAuth } from "@/lib/api-auth";
 import jwt from "jsonwebtoken";
 
 const METABASE_SECRET_KEY = process.env.METABASE_SECRET_KEY || "";
 const METABASE_SITE_URL = process.env.METABASE_SITE_URL || "http://localhost:3300";
 
 export async function GET(request: Request) {
+  const authResult = await requireAuth();
+  if (!authResult.ok) return authResult.response;
+
   const { searchParams } = new URL(request.url);
   const dashboardId = parseInt(searchParams.get("dashboard") || "1", 10);
 

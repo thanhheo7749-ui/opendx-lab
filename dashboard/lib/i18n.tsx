@@ -10,10 +10,26 @@ import {
   useContext,
   useState,
   useCallback,
-  useEffect,
   type ReactNode,
 } from "react";
 import { dictionaries, type Locale, type DictionaryKey } from "./i18n-dictionaries";
+
+// ---------------------------------------------------------------------------
+// Cookie helpers
+// ---------------------------------------------------------------------------
+const COOKIE_KEY = "opendx-locale";
+const COOKIE_MAX_AGE = 365 * 24 * 60 * 60; // 1 year
+
+function getLocaleCookie(): Locale {
+  if (typeof document === "undefined") return "vi";
+  const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${COOKIE_KEY}=([^;]*)`));
+  const value = match?.[1];
+  return value === "en" ? "en" : "vi";
+}
+
+function setLocaleCookie(locale: Locale) {
+  document.cookie = `${COOKIE_KEY}=${locale};path=/;max-age=${COOKIE_MAX_AGE};SameSite=Lax`;
+}
 
 // ---------------------------------------------------------------------------
 // Context
@@ -29,22 +45,21 @@ const I18nContext = createContext<I18nContextValue | null>(null);
 // ---------------------------------------------------------------------------
 // Provider
 // ---------------------------------------------------------------------------
-const STORAGE_KEY = "opendx-locale";
 
-export function I18nProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>("vi");
+interface I18nProviderProps {
+  children: ReactNode;
+  initialLocale?: Locale;
+}
 
-  // Hydrate from localStorage
-  useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY) as Locale | null;
-    if (stored && (stored === "vi" || stored === "en")) {
-      setLocaleState(stored);
-    }
-  }, []);
+export function I18nProvider({ children, initialLocale }: I18nProviderProps) {
+  // Initialize from: prop (SSR) > cookie (client) > default "vi"
+  const [locale, setLocaleState] = useState<Locale>(
+    () => initialLocale ?? getLocaleCookie()
+  );
 
   const setLocale = useCallback((newLocale: Locale) => {
     setLocaleState(newLocale);
-    localStorage.setItem(STORAGE_KEY, newLocale);
+    setLocaleCookie(newLocale);
     document.documentElement.lang = newLocale;
   }, []);
 

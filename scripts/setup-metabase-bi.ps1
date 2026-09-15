@@ -3,6 +3,9 @@
 # Creates admin user, connects to dashboard_db, creates business dashboards
 # ==============================================================================
 
+# Platform: Windows (PowerShell 5.1+) or PowerShell Core (cross-platform)
+# Linux/macOS: Use 'pwsh' (PowerShell Core) to run this script.
+
 $METABASE = "http://localhost:3300"
 
 # ── Step 1: Get setup token ──

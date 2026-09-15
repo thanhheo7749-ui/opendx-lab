@@ -14,6 +14,7 @@
 // ==============================================================================
 
 import { NextRequest } from "next/server";
+import { requireAuth } from "@/lib/api-auth";
 import { chatFast, chat, chatStream } from "@/lib/ai/ollama";
 import {
   INTENT_CLASSIFICATION_PROMPT,
@@ -85,6 +86,9 @@ function classifyByKeywords(q: string): IntentType | null {
 export async function POST(request: NextRequest) {
   // Trigger warm-up on first request (non-blocking)
   ensureWarmup();
+
+  const authResult = await requireAuth();
+  if (!authResult.ok) return authResult.response;
 
   try {
     const { question } = await request.json();
@@ -162,9 +166,9 @@ export async function POST(request: NextRequest) {
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
-    console.error("AI Chat error:", message);
+    console.error("[ai/chat] Unhandled error:", message);
     return streamText(
-      `❌ Đã xảy ra lỗi: ${message}\n\nHãy thử lại sau.`,
+      `❌ Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau.`,
       "DB_QUERY"
     );
   }
@@ -298,7 +302,8 @@ async function handleHealthCheck(question: string, intent: IntentType): Promise<
         controller.close();
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Unknown error";
-        controller.enqueue(encoder.encode(`\n\n❌ Lỗi health check: ${msg}`));
+        console.error("[ai/chat] Health check error:", msg);
+        controller.enqueue(encoder.encode(`\n\n❌ Đã xảy ra lỗi khi kiểm tra hệ thống. Vui lòng thử lại sau.`));
         controller.close();
       }
     },
@@ -392,7 +397,8 @@ Output JSON only:`;
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Unknown error";
-      details = `Không thể kết nối đến Activepieces.\n\nLỗi: ${msg}`;
+      details = `Không thể kết nối đến hệ thống tự động hóa. Vui lòng thử lại sau.`;
+      console.error("[ai/chat] Activepieces webhook error:", msg);
     }
   }
 
@@ -479,7 +485,8 @@ async function handleKnowledgeQuery(question: string, intent: IntentType): Promi
         controller.close();
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Unknown error";
-        controller.enqueue(encoder.encode(`\n\n❌ Lỗi Knowledge RAG: ${msg}`));
+        console.error("[ai/chat] Knowledge RAG error:", msg);
+        controller.enqueue(encoder.encode(`\n\n❌ Đã xảy ra lỗi khi tìm kiếm tri thức. Vui lòng thử lại sau.`));
         controller.close();
       }
     },
@@ -515,9 +522,10 @@ async function handleDbQuery(question: string, intent: IntentType): Promise<Resp
           ]);
         } catch (err) {
           const msg = err instanceof Error ? err.message : "Unknown error";
+          console.error("[ai/chat] Ollama connection error:", msg);
           controller.enqueue(
             encoder.encode(
-              `[STEP:answering]❌ Không thể kết nối với AI (Ollama). Hãy kiểm tra dịch vụ Ollama có đang chạy không.\n\nLỗi: ${msg}`
+              `[STEP:answering]❌ Không thể kết nối với AI. Hãy kiểm tra dịch vụ AI có đang chạy không.`
             )
           );
           controller.close();
@@ -579,7 +587,8 @@ async function handleDbQuery(question: string, intent: IntentType): Promise<Resp
         controller.close();
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Unknown error";
-        controller.enqueue(encoder.encode(`\n\n❌ Lỗi: ${msg}`));
+        console.error("[ai/chat] DB query error:", msg);
+        controller.enqueue(encoder.encode(`\n\n❌ Đã xảy ra lỗi khi truy vấn dữ liệu. Vui lòng thử lại sau.`));
         controller.close();
       }
     },

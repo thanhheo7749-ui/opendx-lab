@@ -5,8 +5,12 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { getDecisionAdvice, getAllDecisions, type DecisionType } from "@/lib/decision/advisor";
+import { requireAuth } from "@/lib/api-auth";
 
 export async function GET(req: NextRequest) {
+  const authResult = await requireAuth();
+  if (!authResult.ok) return authResult.response;
+
   try {
     const type = req.nextUrl.searchParams.get("type") as DecisionType | null;
 

@@ -8,6 +8,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAuth } from "@/lib/api-auth";
 
 const MATTERMOST_WEBHOOK_URL =
   process.env.MATTERMOST_WEBHOOK_URL ?? "http://mattermost:8065/hooks/1tweywjun7dk9kph3qyyq4odjh";
@@ -22,6 +23,9 @@ const PRIORITY_EMOJI: Record<string, string> = {
 // ── POST: Create ticket ─────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
+  const authResult = await requireAuth();
+  if (!authResult.ok) return authResult.response;
+
   try {
     const body = await req.json();
     const { title, description, priority, category, createdBy } = body as {

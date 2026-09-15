@@ -24,6 +24,7 @@ import {
   Bot,
   Database,
 } from "lucide-react";
+import { toast } from "@/lib/toast";
 
 interface ServiceHealth {
   name: string;
@@ -65,6 +66,7 @@ export default function ServicesPage() {
       setLastRefresh(new Date());
     } catch (err) {
       console.error("Failed to fetch health:", err);
+      toast("error", "Không thể tải trạng thái dịch vụ");
     } finally {
       setLoading(false);
     }

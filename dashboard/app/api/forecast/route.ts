@@ -4,9 +4,13 @@
 // ==============================================================================
 
 import { NextResponse } from "next/server";
+import { requireAuth } from "@/lib/api-auth";
 import { forecastRevenue, getStockoutAlerts } from "@/lib/decision/forecast";
 
 export async function GET() {
+  const authResult = await requireAuth();
+  if (!authResult.ok) return authResult.response;
+
   try {
     const [revenue, stockouts] = await Promise.all([
       forecastRevenue(),

@@ -2,6 +2,9 @@
 // OpenDX-Lab Dashboard - Mattermost Integration
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
+// NOTE: External API calls in this module do not retry on failure.
+// TODO: Add exponential backoff (p-retry) for production resilience.
+//
 // Provides:
 //   - notifyStatusChange()  → Send status change notification via Incoming Webhook
 //   - deactivateUser(email) → Deactivate a Mattermost user (offboarding)
@@ -14,7 +17,8 @@ const MATTERMOST_WEBHOOK_URL =
 
 // ── Admin Token Management ──────────────────────────────────────────────────
 
-let cachedAdminToken: string | null = null;
+let cachedAdminToken: { token: string; expiresAt: number } | null = null;
+let pendingTokenRequest: Promise<string> | null = null;
 
 /**
  * Get admin session token via login.
@@ -22,13 +26,28 @@ let cachedAdminToken: string | null = null;
  * For now, we'll use the bot's personal access token approach.
  */
 async function getAdminToken(): Promise<string> {
-  if (cachedAdminToken) return cachedAdminToken;
+  // Reuse valid cached token (with 60s buffer)
+  if (cachedAdminToken && Date.now() < cachedAdminToken.expiresAt - 60_000) {
+    return cachedAdminToken.token;
+  }
 
+  // Prevent thundering herd: reuse in-flight request
+  if (pendingTokenRequest) return pendingTokenRequest;
+
+  pendingTokenRequest = fetchAdminToken().finally(() => {
+    pendingTokenRequest = null;
+  });
+
+  return pendingTokenRequest;
+}
+
+async function fetchAdminToken(): Promise<string> {
   // Try logging in with local admin (non-SSO)
   // If SSO is enabled, this may fail — in that case, use MATTERMOST_ADMIN_TOKEN env var
   const envToken = process.env.MATTERMOST_ADMIN_TOKEN;
   if (envToken) {
-    cachedAdminToken = envToken;
+    // Personal access tokens don't expire in normal usage, set 24h cache
+    cachedAdminToken = { token: envToken, expiresAt: Date.now() + 86_400_000 };
     return envToken;
   }
 
@@ -49,7 +68,8 @@ async function getAdminToken(): Promise<string> {
   const token = res.headers.get("token");
   if (!token) throw new Error("No token in Mattermost login response");
 
-  cachedAdminToken = token;
+  // Mattermost session tokens last ~24h by default, cache for 12h
+  cachedAdminToken = { token, expiresAt: Date.now() + 43_200_000 };
   return token;
 }
 

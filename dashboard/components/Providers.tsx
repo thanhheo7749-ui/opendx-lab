@@ -8,8 +8,9 @@
 import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "next-themes";
 import { I18nProvider } from "@/lib/i18n";
+import { ToastContainer } from "@/components/ui/toast-container";
 
-export function Providers({ children }: { children: React.ReactNode }) {
+export function Providers({ children, initialLocale }: { children: React.ReactNode, initialLocale?: "vi" | "en" }) {
   return (
     <SessionProvider>
       <ThemeProvider
@@ -18,7 +19,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
         enableSystem
         disableTransitionOnChange
       >
-        <I18nProvider>
+        <I18nProvider initialLocale={initialLocale}>
+          <ToastContainer />
           {children}
         </I18nProvider>
       </ThemeProvider>

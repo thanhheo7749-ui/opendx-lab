@@ -5,10 +5,14 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { checkDecisionOutcome, getDecisionStats } from "@/lib/decision/feedback";
+import { requireAuth } from "@/lib/api-auth";
 
 // GET /api/decision/feedback — stats overview
 // GET /api/decision/feedback?id=xxx — check specific decision
 export async function GET(req: NextRequest) {
+  const authResult = await requireAuth();
+  if (!authResult.ok) return authResult.response;
+
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");

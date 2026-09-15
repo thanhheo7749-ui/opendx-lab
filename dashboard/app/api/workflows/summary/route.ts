@@ -5,8 +5,12 @@
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAuth } from "@/lib/api-auth";
 
 export async function GET() {
+  const authResult = await requireAuth();
+  if (!authResult.ok) return authResult.response;
+
   const [pending, failed, completed, waitingApproval, running, needsRetry] =
     await Promise.all([
       prisma.workflowExecution.count({ where: { status: "PENDING" } }),

@@ -7,6 +7,10 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # ==============================================================================
 
+# Platform: Linux/macOS (requires: bash, docker, curl, openssl)
+# Windows users: Use WSL2 or Git Bash to run this script.
+# Alternative: Run 'just setup' from the project root (cross-platform via justfile).
+
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -21,9 +25,30 @@ echo ""
 
 # ── Step 1: Environment file ──────────────────────────────────────
 if [ ! -f .env ]; then
-  echo "📋 Copying .env.example → .env ..."
+  echo "📋 Creating .env with auto-generated secrets ..."
   cp .env.example .env
-  echo "   ✅ .env created. Review and adjust secrets before production use."
+
+  # Auto-generate secure random passwords
+  if command -v openssl &> /dev/null; then
+    GENERATED_PG_PASS=$(openssl rand -hex 16)
+    GENERATED_KC_PASS=$(openssl rand -hex 16)
+    GENERATED_NEXTAUTH_SECRET=$(openssl rand -base64 32)
+    GENERATED_AP_ENCRYPTION=$(openssl rand -hex 16)
+    GENERATED_AP_JWT=$(openssl rand -hex 32)
+
+    # Replace default passwords with generated ones
+    sed -i "s/secure_postgres_pass_123/$GENERATED_PG_PASS/g" .env
+    sed -i "s/admin123/$GENERATED_KC_PASS/g" .env
+    sed -i "s/NEXTAUTH_SECRET=.*/NEXTAUTH_SECRET=$GENERATED_NEXTAUTH_SECRET/" .env
+    sed -i "s/AP_ENCRYPTION_KEY=.*/AP_ENCRYPTION_KEY=$GENERATED_AP_ENCRYPTION/" .env
+    sed -i "s/AP_JWT_SECRET=.*/AP_JWT_SECRET=$GENERATED_AP_JWT/" .env
+
+    echo "   ✅ .env created with auto-generated secure passwords."
+    echo "   🔐 PostgreSQL password: ${GENERATED_PG_PASS:0:4}...*** (saved in .env)"
+  else
+    echo "   ⚠️  openssl not found. Using default passwords from .env.example."
+    echo "   ⚠️  IMPORTANT: Change all passwords in .env before production use!"
+  fi
 else
   echo "📋 .env already exists, skipping copy."
 fi

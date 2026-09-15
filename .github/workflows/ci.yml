@@ -42,12 +42,17 @@ jobs:
 
       - name: Install Dependencies
         if: steps.check.outputs.exists == 'true'
-        run: npm install
+        run: npm ci
         working-directory: dashboard
 
       - name: Generate Prisma Client
         if: steps.check.outputs.exists == 'true'
         run: npx prisma generate
+        working-directory: dashboard
+
+      - name: TypeScript Type Check
+        if: steps.check.outputs.exists == 'true'
+        run: npx tsc --noEmit
         working-directory: dashboard
 
       - name: Run Linter

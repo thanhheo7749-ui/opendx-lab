@@ -8,8 +8,11 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { simulateTick, injectAnomaly, AnomalyType } from "@/lib/bizscan/simulator";
+import { requireAuth } from "@/lib/api-auth";
 
 export async function POST(req: NextRequest) {
+  const authResult = await requireAuth();
+  if (!authResult.ok) return authResult.response;
   const action = req.nextUrl.searchParams.get("action") ?? "tick";
 
   try {

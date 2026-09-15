@@ -2,6 +2,9 @@
 // OpenDX-Lab Dashboard - Keycloak Admin API Client
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
+// NOTE: External API calls in this module do not retry on failure.
+// TODO: Add exponential backoff (p-retry) for production resilience.
+//
 // Provides admin operations for user lifecycle management:
 //   - disableUser(email)  → Set enabled=false (offboarding)
 //   - enableUser(email)   → Set enabled=true (re-activation)
@@ -16,16 +19,28 @@ const KEYCLOAK_REALM = "opendx";
 
 // Cache admin token to avoid repeated auth calls
 let cachedToken: { token: string; expiresAt: number } | null = null;
+let pendingTokenRequest: Promise<string> | null = null;
 
 /**
  * Get an admin access token from Keycloak master realm.
  */
 async function getAdminToken(): Promise<string> {
-  // Reuse token if not expired (with 30s buffer)
-  if (cachedToken && Date.now() < cachedToken.expiresAt - 30000) {
+  // Reuse valid cached token (with 30s buffer)
+  if (cachedToken && Date.now() < cachedToken.expiresAt - 30_000) {
     return cachedToken.token;
   }
 
+  // Prevent thundering herd: reuse in-flight request
+  if (pendingTokenRequest) return pendingTokenRequest;
+
+  pendingTokenRequest = fetchAdminToken().finally(() => {
+    pendingTokenRequest = null;
+  });
+
+  return pendingTokenRequest;
+}
+
+async function fetchAdminToken(): Promise<string> {
   const res = await fetch(
     `${KEYCLOAK_URL}/realms/master/protocol/openid-connect/token`,
     {

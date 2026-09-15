@@ -19,15 +19,21 @@ export const metadata: Metadata = {
   description: "Hỗ trợ chủ shop ra quyết định nhập hàng, định giá, quảng cáo, nhà cung cấp — dựa trên dữ liệu thực tế",
 };
 
-export default function RootLayout({
+import { cookies } from "next/headers";
+import type { Locale } from "@/lib/i18n-dictionaries";
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const locale = cookieStore.get("opendx-locale")?.value === "en" ? "en" : "vi";
+
   return (
-    <html lang="vi" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased bg-background text-foreground`}>
-        <Providers>
+        <Providers initialLocale={locale as Locale}>
           <TooltipProvider>
             {children}
           </TooltipProvider>

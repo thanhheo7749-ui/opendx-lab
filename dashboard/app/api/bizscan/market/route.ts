@@ -7,6 +7,7 @@
 // ==============================================================================
 
 import { NextResponse } from "next/server";
+import { requireAuth } from "@/lib/api-auth";
 import {
   fetchMarketTrends,
   compareWithMarket,
@@ -14,6 +15,9 @@ import {
 } from "@/lib/bizscan/market-intel";
 
 export async function POST() {
+  const authResult = await requireAuth();
+  if (!authResult.ok) return authResult.response;
+
   try {
     console.log("[BizScan] Fetching market trends...");
     const trends = await fetchMarketTrends();
@@ -38,6 +42,9 @@ export async function POST() {
 }
 
 export async function GET() {
+  const authResult = await requireAuth();
+  if (!authResult.ok) return authResult.response;
+
   try {
     const [summary, comparisons] = await Promise.all([
       getMarketSummary(),

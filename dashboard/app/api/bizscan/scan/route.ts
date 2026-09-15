@@ -9,8 +9,12 @@
 import { NextResponse } from "next/server";
 import { runFullScan } from "@/lib/bizscan/scanner";
 import { prisma } from "@/lib/prisma";
+import { requireAuth } from "@/lib/api-auth";
 
 export async function POST() {
+  const authResult = await requireAuth();
+  if (!authResult.ok) return authResult.response;
+
   try {
     console.log("[BizScan] Manual scan triggered...");
     const result = await runFullScan("MANUAL");
@@ -47,6 +51,9 @@ export async function POST() {
 }
 
 export async function GET() {
+  const authResult = await requireAuth();
+  if (!authResult.ok) return authResult.response;
+
   try {
     // Get the 10 most recent scans with their findings
     const scans = await prisma.sbScanResult.findMany({

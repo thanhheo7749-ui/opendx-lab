@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAuth } from "@/lib/api-auth";
 
 /**
  * GET /api/knowledge/graph
@@ -17,6 +18,9 @@ import { prisma } from "@/lib/prisma";
  *   minWeight: minimum edge weight to include (default: 0.0)
  */
 export async function GET(request: NextRequest) {
+  const authResult = await requireAuth();
+  if (!authResult.ok) return authResult.response;
+
   try {
     const { searchParams } = new URL(request.url);
     const typesParam = searchParams.get("types");

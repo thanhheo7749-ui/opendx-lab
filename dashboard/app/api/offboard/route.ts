@@ -7,11 +7,15 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireRole } from "@/lib/api-auth";
 import { disableUser as disableKeycloak } from "@/lib/keycloak-admin";
 import { deactivateUser as deactivateMattermost, notifyStatusChange } from "@/lib/mattermost";
 
 export async function POST(req: NextRequest) {
   try {
+    const authResult = await requireRole("admin");
+    if (!authResult.ok) return authResult.response;
+
     const body = await req.json();
     const { employeeId } = body as { employeeId: string };
 

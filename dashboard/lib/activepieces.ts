@@ -1,6 +1,9 @@
 // ==============================================================================
 // OpenDX-Lab Dashboard - Activepieces Webhook Helper
 // SPDX-License-Identifier: GPL-3.0-or-later
+//
+// NOTE: External API calls in this module do not retry on failure.
+// TODO: Add exponential backoff (p-retry) for production resilience.
 // ==============================================================================
 
 // ── Webhook Payload Builder ─────────────────────────────────────────────────

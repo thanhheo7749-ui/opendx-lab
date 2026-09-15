@@ -5,8 +5,12 @@
 
 import { NextResponse } from "next/server";
 import { syncFromWikiJs } from "@/lib/knowledge/wikijs-sync";
+import { requireRole } from "@/lib/api-auth";
 
 export async function POST() {
+  const authResult = await requireRole("admin");
+  if (!authResult.ok) return authResult.response;
+
   try {
     const result = await syncFromWikiJs();
 

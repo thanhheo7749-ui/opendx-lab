@@ -5,12 +5,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // ==============================================================================
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { toast } from "@/lib/toast";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -116,6 +117,7 @@ export default function HomePage() {
       }
     } catch (e) {
       console.error("Dashboard fetch error:", e);
+      toast("error", "Không thể tải dữ liệu dashboard");
     } finally {
       setLoading(false);
     }
@@ -128,6 +130,9 @@ export default function HomePage() {
   }, [fetchData]);
 
   const firstName = session?.user?.name?.split(" ")[0] || "Chủ shop";
+
+  const totalRevenue = useMemo(() => dailyRevenue.reduce((s, d) => s + d.revenue, 0), [dailyRevenue]);
+  const totalOrders = useMemo(() => dailyRevenue.reduce((s, d) => s + d.orders, 0), [dailyRevenue]);
 
   if (loading) {
     return (
@@ -305,10 +310,10 @@ export default function HomePage() {
                   <SparkLine data={dailyRevenue.map((d) => d.revenue)} height={48} />
                   <div className="text-right">
                     <p className="text-lg font-bold">
-                      {formatVND(dailyRevenue.reduce((s, d) => s + d.revenue, 0))}
+                      {formatVND(totalRevenue)}
                     </p>
                     <p className="text-[10px] text-muted-foreground">
-                      {dailyRevenue.reduce((s, d) => s + d.orders, 0)} đơn
+                      {totalOrders} đơn
                     </p>
                   </div>
                 </div>

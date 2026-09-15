@@ -8,6 +8,7 @@
 
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
+import { requireRole } from "@/lib/api-auth";
 
 const prisma = new PrismaClient();
 
@@ -150,6 +151,9 @@ const CHUNKS: Record<string, string[]> = {
 // ── Handler ──────────────────────────────────────────────────────────────────
 
 export async function POST() {
+  const authResult = await requireRole("admin");
+  if (!authResult.ok) return authResult.response;
+
   try {
     // Check if data already exists
     const existing = await prisma.kgNode.count();

@@ -209,9 +209,10 @@ model SbProduct {
   imageUrl  String?
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  inventory  SbInventory?
-  orderItems SbOrderItem[]
+  inventory        SbInventory?
+  orderItems       SbOrderItem[]
   supplierProducts SbSupplierProduct[]
 
   @@index([category])
@@ -230,6 +231,7 @@ model SbCustomer {
   lastPurchase  DateTime?
   tier          String    @default("NORMAL") // NORMAL, VIP, SUPER_VIP
   createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   orders SbOrder[]
 
@@ -248,8 +250,10 @@ model SbOrder {
   discount    Float    @default(0)
   profit      Float    @default(0)
   orderDate   DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  customer SbCustomer  @relation(fields: [customerId], references: [id])
+  customer SbCustomer    @relation(fields: [customerId], references: [id])
   items    SbOrderItem[]
 
   @@index([orderDate])
@@ -277,6 +281,8 @@ model SbInventory {
   quantity      Int
   lastRestockAt DateTime?
   daysInStock   Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   product SbProduct @relation(fields: [productId], references: [id])
 
@@ -292,6 +298,7 @@ model SbAdCampaign {
   startDate   DateTime
   endDate     DateTime?
   createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   dailyStats SbAdDailyStat[]
 
@@ -323,14 +330,16 @@ model SbAdDailyStat {
 // =============================================================================
 
 model SbScanResult {
-  id          String        @id @default(cuid())
-  status      String        @default("COMPLETED") // RUNNING, COMPLETED, FAILED
-  scanType    String        @default("SCHEDULED") // SCHEDULED, MANUAL
+  id          String    @id @default(cuid())
+  status      String    @default("COMPLETED") // RUNNING, COMPLETED, FAILED
+  scanType    String    @default("SCHEDULED") // SCHEDULED, MANUAL
   summary     String?
-  tokensUsed  Int           @default(0)
+  tokensUsed  Int       @default(0)
   durationMs  Int?
-  startedAt   DateTime      @default(now())
+  startedAt   DateTime  @default(now())
   completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   findings SbScanFinding[]
 
@@ -377,6 +386,8 @@ model SbMarketTrend {
   competitorCount Int? // Số shop bán SP tương tự
   snapshot        Json     @default("{}") // Raw data
   fetchedAt       DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@index([keyword])
   @@index([fetchedAt])
@@ -386,16 +397,16 @@ model SbMarketTrend {
 // ── DX-Ticket: Internal Service Desk ─────────────────────────────────────────
 
 model DxTicket {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   title       String
   description String
-  priority    String   @default("NORMAL") // LOW, NORMAL, HIGH, URGENT
-  status      String   @default("OPEN")   // OPEN, IN_PROGRESS, RESOLVED, CLOSED
-  category    String   @default("IT")     // IT, HR, GENERAL
-  createdBy   String?  // employee name or email
-  assignedTo  String?  // IT person name
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  priority    String    @default("NORMAL") // LOW, NORMAL, HIGH, URGENT
+  status      String    @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED, CLOSED
+  category    String    @default("IT") // IT, HR, GENERAL
+  createdBy   String? // employee name or email
+  assignedTo  String? // IT person name
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
   resolvedAt  DateTime?
 
   @@index([status])
@@ -406,17 +417,17 @@ model DxTicket {
 // ── ShopWise: Decision Journal ────────────────────────────────────────────────
 
 model SbDecision {
-  id            String   @id @default(cuid())
-  type          String   // inventory | pricing | adspend | supplier
-  title         String   // "Nhập gấp 11 SP sắp hết hàng"
-  chosenOption  String?  // "option_conservative" or label
-  reason        String?  // User-entered reason
+  id              String    @id @default(cuid())
+  type            String // inventory | pricing | adspend | supplier
+  title           String // "Nhập gấp 11 SP sắp hết hàng"
+  chosenOption    String? // "option_conservative" or label
+  reason          String? // User-entered reason
   predictedImpact String? // "Doanh thu tăng 17.9tr"
-  actualImpact  String?  // filled after tracking period
-  status        String   @default("PENDING") // PENDING | DONE | CANCELLED
-  feedbackDue   DateTime? // when to check outcome (e.g. +7 days)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  actualImpact    String? // filled after tracking period
+  status          String    @default("PENDING") // PENDING | DONE | CANCELLED
+  feedbackDue     DateTime? // when to check outcome (e.g. +7 days)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   @@index([type])
   @@index([status])
@@ -427,20 +438,20 @@ model SbDecision {
 // ── ShopWise: Supplier Matching ───────────────────────────────────────────────
 
 model SbSupplier {
-  id          String   @id @default(cuid())
-  name        String
-  province    String   // Tỉnh/thành phố
-  district    String?
-  lat         Float?   // Latitude
-  lng         Float?   // Longitude
-  rating      Float    @default(4.0)  // 1-5
-  leadTimeDays Int     @default(3)
-  minOrder    Float    @default(0)
-  phone       String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  products    SbSupplierProduct[]
+  id           String              @id @default(cuid())
+  name         String
+  province     String // Tỉnh/thành phố
+  district     String?
+  lat          Float? // Latitude
+  lng          Float? // Longitude
+  rating       Float               @default(4.0) // 1-5
+  leadTimeDays Int                 @default(3)
+  minOrder     Float               @default(0)
+  phone        String?
+  isActive     Boolean             @default(true)
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  products     SbSupplierProduct[]
 
   @@index([province])
   @@index([isActive])
@@ -453,9 +464,11 @@ model SbSupplierProduct {
   supplier     SbSupplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
   productId    String
   product      SbProduct  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  unitPrice    Float      // Giá nhập từ NCC
+  unitPrice    Float // Giá nhập từ NCC
   shippingCost Float      @default(0)
   moq          Int        @default(1) // Min order quantity
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 
   @@unique([supplierId, productId])
   @@index([productId])

@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { GraphCanvas, type GraphNode, type GraphLink, type GraphData } from "@/components/knowledge/GraphCanvas";
 import { NodeDetailPanel } from "@/components/knowledge/NodeDetailPanel";
+import { toast } from "@/lib/toast";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -110,6 +111,7 @@ export default function KnowledgeGraphPage() {
     } catch (err) {
       setMessage({ type: "error", text: "Không thể tải dữ liệu đồ thị." });
       console.error(err);
+      toast("error", "Không thể tải dữ liệu đồ thị");
     } finally {
       setLoading(false);
     }
