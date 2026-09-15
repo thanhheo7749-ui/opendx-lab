@@ -544,6 +544,137 @@ async function seedSuppliers() {
   console.log(`   ✅ Created ${createdSuppliers.length} suppliers, linked to ${products.length} products`);
 }
 
+async function seedDecisions() {
+  console.log("📋 Seeding decisions...");
+
+  // Delete existing decisions
+  await prisma.sbDecision.deleteMany();
+
+  const now = new Date();
+  const decisions = [
+    // DONE — inventory decisions
+    {
+      type: "inventory",
+      title: "Nhập gấp 11 SP sắp hết hàng",
+      chosenOption: "Nhập từ Xưởng Tân Bình — giao nhanh 1 ngày",
+      reason: "11 SKU tồn kho < 5 cái, đang bán 3-5 cái/ngày. Nếu không nhập sẽ mất doanh thu.",
+      predictedImpact: "Doanh thu tăng 17.9tr/tuần",
+      actualImpact: "Doanh thu tăng 15.2tr/tuần",
+      status: "DONE",
+      feedbackDue: addDays(now, -10),
+      createdAt: addDays(now, -17),
+    },
+    {
+      type: "inventory",
+      title: "Xả hàng tồn kho > 45 ngày — giảm giá 25%",
+      chosenOption: "Giảm 25% toàn bộ SP tồn > 45 ngày",
+      reason: "8 SP tồn kho lâu, đọng vốn ~12 triệu. Giảm giá để thu hồi vốn nhanh.",
+      predictedImpact: "Thu hồi 9tr vốn đọng",
+      actualImpact: "Thu hồi 10.5tr vốn đọng",
+      status: "DONE",
+      feedbackDue: addDays(now, -5),
+      createdAt: addDays(now, -12),
+    },
+    {
+      type: "inventory",
+      title: "Nhập thêm Váy hoa vintage — trend tăng 120%",
+      chosenOption: "Nhập 200 cái từ NCC Đà Nẵng Fashion",
+      reason: "Trend score 92/100, đang hết hàng. Đối thủ cũng đang push SP này.",
+      predictedImpact: "Doanh thu tăng 28tr/tháng",
+      actualImpact: null,
+      status: "PENDING",
+      feedbackDue: addDays(now, 7),
+      createdAt: addDays(now, -3),
+    },
+    // DONE — pricing decisions
+    {
+      type: "pricing",
+      title: "Tăng giá Áo blazer oversized +50k",
+      chosenOption: "Tăng từ 500k lên 550k",
+      reason: "Demand cao, ít cạnh tranh. Margin tăng từ 60% → 64%.",
+      predictedImpact: "Lợi nhuận tăng 3.5tr/tháng",
+      actualImpact: "Lợi nhuận tăng 4.1tr/tháng",
+      status: "DONE",
+      feedbackDue: addDays(now, -14),
+      createdAt: addDays(now, -28),
+    },
+    {
+      type: "pricing",
+      title: "Flash sale cuối tuần — giảm 15% toàn bộ Quần",
+      chosenOption: "Giảm 15% từ T6-CN",
+      reason: "Doanh thu quần giảm 3 tuần liên tiếp. Cần kích cầu.",
+      predictedImpact: "Tăng 45 đơn/tuần",
+      actualImpact: "Tăng 52 đơn/tuần",
+      status: "DONE",
+      feedbackDue: addDays(now, -7),
+      createdAt: addDays(now, -14),
+    },
+    // PENDING — adspend decisions
+    {
+      type: "adspend",
+      title: "Dừng 3 campaign quảng cáo ROAS < 1.0",
+      chosenOption: "Dừng FB Brand Awareness, FB Phụ kiện, GG Display Retarget",
+      reason: "3 campaign đang đốt 4.5tr/ngày nhưng chỉ thu 1.2tr doanh thu. ROAS = 0.27.",
+      predictedImpact: "Tiết kiệm 12tr/tháng",
+      actualImpact: "Tiết kiệm 13.8tr/tháng",
+      status: "DONE",
+      feedbackDue: addDays(now, -3),
+      createdAt: addDays(now, -10),
+    },
+    {
+      type: "adspend",
+      title: "Scale TikTok Đầm babydoll — tăng budget 2x",
+      chosenOption: "Tăng budget từ 400k/ngày lên 800k/ngày",
+      reason: "ROAS hiện tại = 4.2, trend tăng. Có thể scale thêm.",
+      predictedImpact: "Tăng 120 đơn/tháng từ TikTok",
+      actualImpact: null,
+      status: "PENDING",
+      feedbackDue: addDays(now, 14),
+      createdAt: addDays(now, -2),
+    },
+    {
+      type: "adspend",
+      title: "Chuyển budget Google sang TikTok",
+      chosenOption: "Giảm GG 50%, chuyển sang TT",
+      reason: "Google ROAS trung bình 1.8, TikTok ROAS 3.5. Hiệu quả TikTok gấp đôi.",
+      predictedImpact: "ROAS tổng tăng từ 2.1 lên 2.8",
+      actualImpact: null,
+      status: "PENDING",
+      feedbackDue: addDays(now, 10),
+      createdAt: addDays(now, -1),
+    },
+    // supplier decisions
+    {
+      type: "supplier",
+      title: "Chọn NCC mới cho dòng Set đồ linen",
+      chosenOption: "Xưởng Hà Nội Textile — chất lượng tốt nhất",
+      reason: "Giá cao hơn 15% nhưng chất lượng 4.6/5, ít lỗi hàng. Khách VIP feedback tốt.",
+      predictedImpact: "Giảm 80% tỷ lệ đổi/trả hàng",
+      actualImpact: "Giảm 92% tỷ lệ đổi/trả hàng",
+      status: "DONE",
+      feedbackDue: addDays(now, -20),
+      createdAt: addDays(now, -30),
+    },
+    {
+      type: "supplier",
+      title: "Đàm phán giảm giá sỉ với Xưởng Tân Bình",
+      chosenOption: "Cam kết nhập 500 cái/tháng để giảm 10% giá gốc",
+      reason: "Đang nhập trung bình 350 cái/tháng. Tăng lên 500 để được giá tốt hơn.",
+      predictedImpact: "Tiết kiệm 8.5tr/tháng chi phí nhập",
+      actualImpact: null,
+      status: "PENDING",
+      feedbackDue: addDays(now, 21),
+      createdAt: addDays(now, -5),
+    },
+  ];
+
+  for (const d of decisions) {
+    await prisma.sbDecision.create({ data: d });
+  }
+
+  console.log(`   ✅ Created ${decisions.length} decisions`);
+}
+
 async function main() {
   console.log("\n🔍 BizScan — Seed Script");
   console.log("========================\n");
@@ -552,6 +683,7 @@ async function main() {
   const existingProducts = await prisma.sbProduct.count();
   if (existingProducts > 0) {
     console.log("⚠️  BizScan data already exists. Clearing...");
+    await prisma.sbDecision.deleteMany();
     await prisma.sbMarketTrend.deleteMany();
     await prisma.sbScanFinding.deleteMany();
     await prisma.sbScanResult.deleteMany();
@@ -595,6 +727,9 @@ async function main() {
   // 7. Suppliers
   await seedSuppliers();
 
+  // 8. Decisions
+  await seedDecisions();
+
   // Summary
   const counts = {
     products: await prisma.sbProduct.count(),
@@ -607,6 +742,7 @@ async function main() {
     trends: await prisma.sbMarketTrend.count(),
     suppliers: await prisma.sbSupplier.count(),
     supplierProducts: await prisma.sbSupplierProduct.count(),
+    decisions: await prisma.sbDecision.count(),
     vipCustomers: await prisma.sbCustomer.count({ where: { tier: { in: ["VIP", "SUPER_VIP"] } } }),
     completedOrders: await prisma.sbOrder.count({ where: { status: "COMPLETED" } }),
   };
@@ -620,6 +756,7 @@ async function main() {
   console.log(`   📊 ${counts.campaigns} ad campaigns (${counts.adStats} daily stats)`);
   console.log(`   🌐 ${counts.trends} market trends`);
   console.log(`   🏭 ${counts.suppliers} suppliers (${counts.supplierProducts} product links)`);
+  console.log(`   📋 ${counts.decisions} decisions`);
   console.log("========================\n");
 }
 

@@ -42,13 +42,27 @@ function formatDate(s: string) {
 export default function JournalPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const fetchStats = () => {
+    setLoading(true);
+    setErrorMsg(null);
+    fetch("/api/decision/feedback")
+      .then(async (r) => {
+        const data = await r.json();
+        if (!r.ok || data.error) throw new Error(data.error || `HTTP ${r.status}`);
+        return data;
+      })
+      .then(setStats)
+      .catch((err) => {
+        console.error("Journal fetch error:", err);
+        setErrorMsg(err.message || "Không thể tải nhật ký.");
+      })
+      .finally(() => setLoading(false));
+  };
 
   useEffect(() => {
-    fetch("/api/decision/feedback")
-      .then(r => r.json())
-      .then(setStats)
-      .catch(console.error)
-      .finally(() => setLoading(false));
+    fetchStats();
   }, []);
 
   if (loading) {
@@ -77,6 +91,16 @@ export default function JournalPage() {
         </Link>
       </div>
 
+      {errorMsg && (
+        <Card className="border-red-200 bg-red-50/50 dark:bg-red-950/20 dark:border-red-800/40">
+          <CardContent className="p-4 text-center space-y-2">
+            <p className="text-sm font-medium text-red-600 dark:text-red-400">{errorMsg}</p>
+            <p className="text-xs text-muted-foreground">Vui lòng kiểm tra phiên đăng nhập của bạn.</p>
+            <Button variant="outline" size="sm" onClick={fetchStats} className="text-xs">Thử lại</Button>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Stats cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <Card className="shadow-sm">
@@ -99,7 +123,7 @@ export default function JournalPage() {
         </Card>
         <Card className="shadow-sm">
           <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-violet-600">{stats?.accuracy !== null ? `${stats.accuracy}%` : "—"}</p>
+            <p className="text-2xl font-bold text-violet-600">{stats && stats.accuracy !== null ? `${stats.accuracy}%` : "—"}</p>
             <p className="text-xs text-muted-foreground">Độ chính xác</p>
           </CardContent>
         </Card>

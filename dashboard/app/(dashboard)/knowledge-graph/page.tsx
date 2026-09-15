@@ -36,13 +36,12 @@ interface GraphStats {
 // ── Node Type Filter Config ──────────────────────────────────────────────────
 
 const NODE_TYPE_CONFIG: Record<string, { label: string; color: string }> = {
-  DOCUMENT: { label: "Tài liệu", color: "#6366f1" },
-  DEPARTMENT: { label: "Phòng ban", color: "#06b6d4" },
-  PROCESS: { label: "Quy trình", color: "#22c55e" },
-  POLICY: { label: "Chính sách", color: "#f59e0b" },
-  SERVICE: { label: "Dịch vụ", color: "#ec4899" },
-  TOPIC: { label: "Chủ đề", color: "#8b5cf6" },
-  ROLE: { label: "Vai trò", color: "#f97316" },
+  CATEGORY: { label: "Danh mục", color: "#06b6d4" },
+  CHANNEL: { label: "Kênh bán", color: "#22c55e" },
+  SUPPLIER: { label: "Nhà cung cấp", color: "#f59e0b" },
+  PRODUCT: { label: "Sản phẩm", color: "#6366f1" },
+  SEGMENT: { label: "Phân khúc KH", color: "#ec4899" },
+  STRATEGY: { label: "Chiến lược", color: "#f97316" },
 };
 
 // ── Main Page ────────────────────────────────────────────────────────────────
@@ -454,16 +453,34 @@ export default function KnowledgeGraphPage() {
                   </p>
                 </div>
               ) : (
-                <GraphCanvas
-                  graphData={filteredData}
-                  selectedNodeId={selectedNode?.id}
-                  hoveredNodeId={hoveredNodeId}
-                  onNodeClick={(node) => setSelectedNode(node)}
-                  onNodeHover={(node) => setHoveredNodeId(node?.id || null)}
-                  onBackgroundClick={() => setSelectedNode(null)}
-                  width={selectedNode ? Math.max(dimensions.width - 320, 400) : dimensions.width}
-                  height={dimensions.height}
-                />
+                <>
+                  <GraphCanvas
+                    graphData={filteredData}
+                    selectedNodeId={selectedNode?.id}
+                    hoveredNodeId={hoveredNodeId}
+                    onNodeClick={(node) => setSelectedNode(node)}
+                    onNodeHover={(node) => setHoveredNodeId(node?.id || null)}
+                    onBackgroundClick={() => setSelectedNode(null)}
+                    width={selectedNode ? Math.max(dimensions.width - 320, 400) : dimensions.width}
+                    height={dimensions.height}
+                  />
+
+                  {/* Floating Legend */}
+                  <div className="absolute bottom-4 left-4 bg-slate-900/90 backdrop-blur-md border border-slate-700/60 rounded-xl px-3.5 py-2.5 shadow-2xl z-10 pointer-events-auto">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Loại thực thể RAG</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1.5 text-xs text-slate-200">
+                      {Object.entries(NODE_TYPE_CONFIG).map(([type, config]) => (
+                        <div key={type} className="flex items-center gap-2">
+                          <span
+                            className="w-2.5 h-2.5 rounded-full ring-2 ring-white/20 shadow-sm flex-shrink-0"
+                            style={{ backgroundColor: config.color }}
+                          />
+                          <span className="text-[11px] font-medium">{config.label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
               )}
             </div>
           </div>

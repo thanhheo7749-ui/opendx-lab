@@ -38,6 +38,7 @@ export default function SupplierPage() {
   const [comparison, setComparison] = useState<Comparison | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingProducts, setLoadingProducts] = useState(true);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/decision/supplier")
@@ -50,12 +51,21 @@ export default function SupplierPage() {
   const handleCompare = async () => {
     if (!selectedProduct) return;
     setLoading(true);
+    setErrorMsg(null);
     try {
       const res = await fetch(`/api/decision/supplier?productId=${selectedProduct}&qty=${quantity}&province=${encodeURIComponent(province)}`);
       const data = await res.json();
+      if (!res.ok || data.error) {
+        throw new Error(data.error || `HTTP ${res.status}`);
+      }
       setComparison(data);
-    } catch (e) { console.error(e); }
-    finally { setLoading(false); }
+    } catch (e: unknown) {
+      console.error(e);
+      const msg = e instanceof Error ? e.message : "Không thể so sánh NCC";
+      setErrorMsg(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -95,8 +105,17 @@ export default function SupplierPage() {
 
       {loadingProducts && <p className="text-sm text-muted-foreground text-center py-4">Đang tải danh sách SP...</p>}
 
+      {errorMsg && (
+        <Card className="border-red-200 bg-red-50/50 dark:bg-red-950/20 dark:border-red-800/40">
+          <CardContent className="p-4 text-center space-y-1">
+            <p className="text-sm font-medium text-red-600 dark:text-red-400">{errorMsg}</p>
+            <p className="text-xs text-muted-foreground">Vui lòng thử lại hoặc chọn sản phẩm khác.</p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Results */}
-      {comparison && (
+      {comparison && Array.isArray(comparison.suppliers) && (
         <div className="space-y-4">
           {/* Context */}
           <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground px-1">

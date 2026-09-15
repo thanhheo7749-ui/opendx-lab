@@ -61,28 +61,40 @@ interface GraphCanvasProps {
 
 // ── Node Colors by Type ──────────────────────────────────────────────────────
 
-const NODE_COLORS: Record<string, string> = {
-  DOCUMENT: "#6366f1",   // Indigo
-  DEPARTMENT: "#06b6d4", // Cyan
-  PROCESS: "#22c55e",    // Green
-  POLICY: "#f59e0b",     // Amber
-  SERVICE: "#ec4899",    // Pink
-  TOPIC: "#8b5cf6",      // Violet
-  ROLE: "#f97316",       // Orange
+export const NODE_COLORS: Record<string, string> = {
+  // E-commerce types
+  CATEGORY: "#06b6d4",   // Cyan / Danh mục
+  CHANNEL: "#22c55e",    // Emerald Green / Kênh bán
+  SUPPLIER: "#f59e0b",   // Amber / Nhà cung cấp
+  PRODUCT: "#6366f1",    // Indigo Blue / Sản phẩm
+  SEGMENT: "#ec4899",    // Pink / Phân khúc KH
+  STRATEGY: "#f97316",   // Orange / Chiến lược
+  // Legacy / Docs types
+  DOCUMENT: "#818cf8",
+  DEPARTMENT: "#06b6d4",
+  PROCESS: "#22c55e",
+  POLICY: "#f59e0b",
+  SERVICE: "#ec4899",
+  TOPIC: "#a855f7",
+  ROLE: "#f97316",
 };
 
-const EDGE_COLORS: Record<string, string> = {
+export const EDGE_COLORS: Record<string, string> = {
+  SUPPLIED_BY: "#f59e0b", // Amber
+  PREFERS: "#ec4899",     // Pink
+  SELLS: "#22c55e",       // Green
+  SUPPLIES: "#f59e0b",    // Amber
+  BELONGS_TO: "#06b6d4",  // Cyan
+  GOVERNS: "#f97316",     // Orange
+  RELATES_TO: "#38bdf8",  // Sky blue
   MENTIONS: "#94a3b8",
-  RELATES_TO: "#6366f1",
-  GOVERNS: "#f59e0b",
   OWNED_BY: "#06b6d4",
-  TAGGED_WITH: "#8b5cf6",
+  TAGGED_WITH: "#a855f7",
   DEPENDS_ON: "#ec4899",
   PART_OF: "#22c55e",
-  BELONGS_TO: "#64748b",
 };
 
-const DEFAULT_COLOR = "#64748b";
+const DEFAULT_COLOR = "#818cf8";
 
 // ── Component ────────────────────────────────────────────────────────────────
 
@@ -99,17 +111,17 @@ export function GraphCanvas({
   /* eslint-disable @typescript-eslint/no-explicit-any */
   const fgRef = useRef<any>(null);
 
-  // Zoom to fit on data change
+  // Zoom to fit on data change with wider spacing
   useEffect(() => {
     if (fgRef.current && graphData.nodes.length > 0) {
-      // Configure forces for ~5cm node spacing
-      fgRef.current.d3Force("charge")?.strength(-800);
-      fgRef.current.d3Force("link")?.distance(250);
-      fgRef.current.d3Force("center")?.strength(0.02);
+      // Configure stronger repulsion and longer link distance for airy, spacious layout
+      fgRef.current.d3Force("charge")?.strength(-2800).distanceMax(2500);
+      fgRef.current.d3Force("link")?.distance(320);
+      fgRef.current.d3Force("center")?.strength(0.005);
 
       setTimeout(() => {
-        fgRef.current?.zoomToFit(400, 60);
-      }, 800);
+        fgRef.current?.zoomToFit(500, 100);
+      }, 900);
     }
   }, [graphData]);
 
@@ -131,11 +143,10 @@ export function GraphCanvas({
   const nodeCanvasObject = useCallback(
     (node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
       const rawLabel = node.name || "";
-      // Truncate long labels to prevent overlap
-      const maxChars = 20;
+      const maxChars = 22;
       const label = rawLabel.length > maxChars ? rawLabel.substring(0, maxChars) + "…" : rawLabel;
-      const fontSize = Math.max(10 / globalScale, 2);
-      const nodeSize = Math.sqrt(node.val || 1) * 3 + 4;
+      const fontSize = Math.max(11 / globalScale, 3.5);
+      const nodeSize = Math.max(Math.sqrt(node.val || 1) * 3.8 + 6, 8.5);
       const isSelected = node.id === selectedNodeId;
       const isHovered = node.id === hoveredNodeId;
       const isHighlighted =
@@ -144,55 +155,70 @@ export function GraphCanvas({
         (hoveredNodeId ? getNeighborIds(hoveredNodeId).has(node.id) : false);
 
       const color = NODE_COLORS[node.type] || DEFAULT_COLOR;
-      const alpha = hoveredNodeId && !isHighlighted ? 0.15 : 1;
+      const alpha = hoveredNodeId && !isHighlighted ? 0.2 : 1;
 
-      // Draw node circle
+      // 1. Soft glowing outer aura
+      ctx.beginPath();
+      ctx.arc(node.x!, node.y!, nodeSize + 4 / globalScale, 0, 2 * Math.PI);
+      ctx.fillStyle = `${color}${Math.round(alpha * 55).toString(16).padStart(2, "0")}`;
+      ctx.fill();
+
+      // 2. Main node circle
       ctx.beginPath();
       ctx.arc(node.x!, node.y!, nodeSize, 0, 2 * Math.PI, false);
       ctx.fillStyle = `${color}${Math.round(alpha * 255).toString(16).padStart(2, "0")}`;
       ctx.fill();
 
-      // Selection/hover ring
-      if (isSelected || isHovered) {
-        ctx.strokeStyle = isSelected ? "#ffffff" : color;
-        ctx.lineWidth = isSelected ? 3 / globalScale : 2 / globalScale;
-        ctx.stroke();
+      // 3. Crisp white border
+      ctx.strokeStyle = isSelected ? "#ffffff" : isHovered ? "#ffffff" : "rgba(255, 255, 255, 0.75)";
+      ctx.lineWidth = isSelected ? 2.5 / globalScale : 1.2 / globalScale;
+      ctx.stroke();
 
-        // Glow effect
-        ctx.shadowColor = color;
-        ctx.shadowBlur = 15;
+      // 4. Selection/hover extra highlight ring
+      if (isSelected || isHovered) {
         ctx.beginPath();
-        ctx.arc(node.x!, node.y!, nodeSize + 2 / globalScale, 0, 2 * Math.PI);
-        ctx.strokeStyle = `${color}80`;
-        ctx.lineWidth = 1 / globalScale;
+        ctx.arc(node.x!, node.y!, nodeSize + 3 / globalScale, 0, 2 * Math.PI);
+        ctx.strokeStyle = isSelected ? "#ffffff" : color;
+        ctx.lineWidth = 2 / globalScale;
         ctx.stroke();
-        ctx.shadowBlur = 0;
       }
 
-      // Label (only when zoomed in enough or highlighted)
-      if (globalScale > 0.6 || isHighlighted) {
-        ctx.font = `${isHighlighted ? "bold " : ""}${fontSize}px Inter, sans-serif`;
+      // 5. Always-visible label badge (identifiable at default zoom)
+      const showLabel = globalScale > 0.12 || isHighlighted;
+      if (showLabel) {
+        ctx.font = `${isHighlighted ? "bold " : "600 "}${fontSize}px Inter, -apple-system, sans-serif`;
         ctx.textAlign = "center";
         ctx.textBaseline = "top";
 
-        // Show full label on hover/select, truncated otherwise
         const displayLabel = isHighlighted ? rawLabel : label;
         const textWidth = ctx.measureText(displayLabel).width;
         const textX = node.x!;
-        const textY = node.y! + nodeSize + 3;
-        const padX = 3 / globalScale;
-        const padY = 1 / globalScale;
+        const textY = node.y! + nodeSize + 4 / globalScale;
+        const padX = 4.5 / globalScale;
+        const padY = 2 / globalScale;
 
-        // Draw dark background behind label
-        ctx.fillStyle = `rgba(15, 23, 42, ${alpha * 0.75})`;
-        ctx.fillRect(
-          textX - textWidth / 2 - padX,
-          textY - padY,
-          textWidth + padX * 2,
-          fontSize + padY * 2
-        );
+        const bx = textX - textWidth / 2 - padX;
+        const by = textY - padY;
+        const bw = textWidth + padX * 2;
+        const bh = fontSize + padY * 2;
+        const r = 3 / globalScale;
 
-        ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+        // Label background pill
+        ctx.fillStyle = isHighlighted ? "rgba(15, 23, 42, 0.96)" : "rgba(10, 15, 30, 0.90)";
+        ctx.beginPath();
+        if (typeof (ctx as any).roundRect === "function") {
+          (ctx as any).roundRect(bx, by, bw, bh, r);
+        } else {
+          ctx.rect(bx, by, bw, bh);
+        }
+        ctx.fill();
+
+        // Border colored by node type
+        ctx.strokeStyle = isHighlighted ? "#ffffff" : `${color}88`;
+        ctx.lineWidth = 1 / globalScale;
+        ctx.stroke();
+
+        ctx.fillStyle = isHighlighted ? "#ffffff" : "rgba(241, 245, 249, 0.95)";
         ctx.fillText(displayLabel, textX, textY);
       }
     },
@@ -208,24 +234,32 @@ export function GraphCanvas({
         hoveredNodeId === targetId ||
         selectedNodeId === sourceId ||
         selectedNodeId === targetId;
-      const alpha = hoveredNodeId && !isHighlighted ? 0.05 : 0.4;
+      const alpha = hoveredNodeId && !isHighlighted ? 0.08 : isHighlighted ? 0.95 : 0.65;
       const color = EDGE_COLORS[link.relation] || DEFAULT_COLOR;
 
       ctx.beginPath();
       ctx.moveTo(link.source.x, link.source.y);
       ctx.lineTo(link.target.x, link.target.y);
       ctx.strokeStyle = `${color}${Math.round(alpha * 255).toString(16).padStart(2, "0")}`;
-      ctx.lineWidth = isHighlighted ? 2 / globalScale : 0.5 / globalScale;
+      ctx.lineWidth = isHighlighted ? 2.5 / globalScale : 1.2 / globalScale;
       ctx.stroke();
 
-      // Show relation label when zoomed in and highlighted
-      if (isHighlighted && globalScale > 1.2) {
+      // Show relation label when hovered/highlighted or zoomed in
+      if ((isHighlighted && globalScale > 0.8) || globalScale > 1.4) {
         const midX = (link.source.x + link.target.x) / 2;
         const midY = (link.source.y + link.target.y) / 2;
-        ctx.font = `${8 / globalScale}px Inter, sans-serif`;
+        const fontSize = Math.max(9 / globalScale, 3);
+        ctx.font = `600 ${fontSize}px Inter, sans-serif`;
         ctx.textAlign = "center";
-        ctx.fillStyle = `rgba(148, 163, 184, ${alpha + 0.3})`;
-        ctx.fillText(link.relation, midX, midY);
+        ctx.textBaseline = "middle";
+
+        const text = link.relation || "";
+        const tw = ctx.measureText(text).width;
+        ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
+        ctx.fillRect(midX - tw / 2 - 2, midY - fontSize / 2 - 1, tw + 4, fontSize + 2);
+
+        ctx.fillStyle = isHighlighted ? "#ffffff" : "rgba(226, 232, 240, 0.9)";
+        ctx.fillText(text, midX, midY);
       }
     },
     [hoveredNodeId, selectedNodeId]
@@ -255,11 +289,11 @@ export function GraphCanvas({
       onNodeClick={(node: any) => onNodeClick?.(node as GraphNode)}
       onNodeHover={(node: any) => onNodeHover?.(node as GraphNode | null)}
       onBackgroundClick={() => onBackgroundClick?.()}
-      // Physics — spread nodes ~5cm apart
-      d3AlphaDecay={0.015}
-      d3VelocityDecay={0.25}
-      warmupTicks={100}
-      cooldownTicks={300}
+      // Physics — spread nodes apart generously
+      d3AlphaDecay={0.01}
+      d3VelocityDecay={0.2}
+      warmupTicks={150}
+      cooldownTicks={500}
       // Drag behavior
       enableNodeDrag={true}
       onNodeDragEnd={(node: any) => {
