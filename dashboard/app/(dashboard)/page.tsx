@@ -104,16 +104,26 @@ export default function HomePage() {
         fetch("/api/decision/feed"),
       ]);
 
+      console.log("[ShopWise] Pulse API status:", pulseRes.status);
+      console.log("[ShopWise] Feed API status:", feedRes.status);
+
       if (pulseRes.ok) {
         const d = await pulseRes.json();
+        console.log("[ShopWise] Pulse data:", d);
         setPulse(d.summary);
         setDailyRevenue(d.dailyRevenue || []);
         setTopProducts(d.topProducts || []);
+      } else {
+        const errText = await pulseRes.text();
+        console.error("[ShopWise] Pulse API error:", pulseRes.status, errText);
       }
 
       if (feedRes.ok) {
         const d = await feedRes.json();
         setDecisions(d.decisions || []);
+      } else {
+        const errText = await feedRes.text();
+        console.error("[ShopWise] Feed API error:", feedRes.status, errText);
       }
     } catch (e) {
       console.error("Dashboard fetch error:", e);

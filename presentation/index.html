@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ShopWise — VNG2 Sơ tuyển 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    /* ═══════════════════════ RESET & BASE ═══════════════════════ */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: #0a0a0f;
+      color: #e4e4e7;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    /* ═══════════════════════ SLIDE CONTAINER ═══════════════════════ */
+    .deck { position: relative; width: 100vw; height: 100vh; }
+    .slide {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column; justify-content: center;
+      padding: 60px 80px;
+      opacity: 0; transform: translateX(60px);
+      transition: opacity 0.6s cubic-bezier(0.4,0,0.2,1), transform 0.6s cubic-bezier(0.4,0,0.2,1);
+      pointer-events: none; overflow-y: auto;
+    }
+    .slide.active { opacity: 1; transform: translateX(0); pointer-events: auto; }
+    .slide.prev { opacity: 0; transform: translateX(-60px); }
+
+    /* ═══════════════════════ BACKGROUNDS ═══════════════════════ */
+    .slide::before { content: ''; position: absolute; inset: 0; z-index: -1; }
+    .slide-1::before {
+      background: radial-gradient(ellipse 60% 50% at 15% 85%, rgba(16,185,129,0.12) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 40% at 80% 20%, rgba(99,102,241,0.10) 0%, transparent 70%),
+        linear-gradient(135deg, #0a0a0f 0%, #111118 50%, #0d0d14 100%);
+    }
+    .slide-2::before {
+      background: radial-gradient(ellipse 55% 45% at 70% 80%, rgba(245,158,11,0.10) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 50% at 20% 30%, rgba(6,182,212,0.08) 0%, transparent 70%),
+        linear-gradient(135deg, #0a0a0f 0%, #111118 50%, #0d0d14 100%);
+    }
+    .slide-3::before {
+      background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(99,102,241,0.10) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 40% at 85% 80%, rgba(236,72,153,0.08) 0%, transparent 70%),
+        linear-gradient(135deg, #0a0a0f 0%, #111118 50%, #0d0d14 100%);
+    }
+    .slide-4::before {
+      background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(16,185,129,0.15) 0%, transparent 70%),
+        radial-gradient(ellipse 45% 40% at 15% 20%, rgba(99,102,241,0.08) 0%, transparent 70%),
+        linear-gradient(135deg, #0a0a0f 0%, #111118 50%, #0d0d14 100%);
+    }
+
+    /* ═══════════════════════ TYPOGRAPHY ═══════════════════════ */
+    .tag {
+      display: inline-block; font-size: 0.72rem; font-weight: 600;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      color: #10b981; margin-bottom: 16px; opacity: 0.85;
+    }
+    .tag-team { color: #6366f1; }
+    .tag-tech { color: #f59e0b; }
+    .tag-close { color: #ec4899; }
+    h1 {
+      font-size: clamp(2.4rem, 4.5vw, 3.6rem); font-weight: 800;
+      line-height: 1.15; letter-spacing: -0.02em; margin-bottom: 20px;
+    }
+    h1 .accent { color: #10b981; }
+    h1 .accent-blue { color: #6366f1; }
+    h2 {
+      font-size: clamp(1.5rem, 2.8vw, 2.2rem); font-weight: 700;
+      line-height: 1.25; margin-bottom: 16px; letter-spacing: -0.01em;
+    }
+    .subtitle {
+      font-size: clamp(1rem, 1.6vw, 1.25rem); color: #a1a1aa;
+      line-height: 1.65; max-width: 700px; font-weight: 400;
+    }
+
+    /* ═══════════════════════ GRID ═══════════════════════ */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; margin-top: 36px; }
+    .three-col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 32px; }
+
+    /* ═══════════════════════ CARDS ═══════════════════════ */
+    .card {
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px; padding: 28px;
+      transition: border-color 0.3s, background 0.3s, transform 0.3s;
+    }
+    .card:hover { border-color: rgba(255,255,255,0.12); background: rgba(255,255,255,0.05); transform: translateY(-2px); }
+    .card-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; margin-bottom: 16px;
+    }
+    .card-icon.emerald { background: rgba(16,185,129,0.15); color: #10b981; }
+    .card-icon.indigo  { background: rgba(99,102,241,0.15); color: #6366f1; }
+    .card-icon.amber   { background: rgba(245,158,11,0.15); color: #f59e0b; }
+    .card-icon.cyan    { background: rgba(6,182,212,0.15); color: #06b6d4; }
+    .card-icon.pink    { background: rgba(236,72,153,0.15); color: #ec4899; }
+    .card-icon.orange  { background: rgba(249,115,22,0.15); color: #f97316; }
+    .card h3 { font-size: 1.05rem; font-weight: 600; margin-bottom: 8px; color: #f4f4f5; }
+    .card p { font-size: 0.85rem; color: #a1a1aa; line-height: 1.6; }
+
+    /* ═══════════════════════ KPI ROW ═══════════════════════ */
+    .kpi-row { display: flex; gap: 28px; margin-top: 36px; }
+    .kpi { text-align: center; }
+    .kpi-value {
+      font-size: 2.4rem; font-weight: 800;
+      background: linear-gradient(135deg, #10b981, #06b6d4);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .kpi-label { font-size: 0.78rem; color: #71717a; margin-top: 4px; font-weight: 500; }
+
+    /* ═══════════════════════ LOOP DIAGRAM ═══════════════════════ */
+    .loop-diagram {
+      display: flex; align-items: center; gap: 6px; margin-top: 24px;
+      padding: 20px 24px; background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.06); border-radius: 16px;
+      flex-wrap: wrap; justify-content: center;
+    }
+    .loop-step {
+      display: flex; align-items: center; gap: 8px; padding: 8px 14px;
+      border-radius: 8px; font-size: 0.75rem; font-weight: 500;
+      color: #d4d4d8; white-space: nowrap;
+    }
+    .loop-step .step-icon { font-size: 1rem; }
+    .loop-arrow { color: #10b981; font-size: 0.9rem; opacity: 0.5; }
+    .loop-return {
+      width: 100%; text-align: center; font-size: 0.72rem;
+      color: #f59e0b; font-weight: 500; margin-top: 8px;
+      padding-top: 12px; border-top: 1px dashed rgba(245,158,11,0.2);
+    }
+
+    /* ═══════════════════════ ALGO TABLE ═══════════════════════ */
+    .algo-table { width: 100%; border-collapse: collapse; margin-top: 28px; font-size: 0.85rem; }
+    .algo-table th {
+      text-align: left; font-weight: 600; color: #a1a1aa; padding: 12px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 0.75rem;
+      letter-spacing: 0.05em; text-transform: uppercase;
+    }
+    .algo-table td { padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,0.04); color: #d4d4d8; vertical-align: top; }
+    .algo-table tr:hover td { background: rgba(255,255,255,0.02); }
+    .algo-table .algo-name { font-weight: 600; color: #f4f4f5; }
+    .algo-badge { display: inline-block; font-size: 0.65rem; font-weight: 600; padding: 3px 8px; border-radius: 6px; }
+    .badge-predict  { background: rgba(6,182,212,0.15); color: #06b6d4; }
+    .badge-decide   { background: rgba(16,185,129,0.15); color: #10b981; }
+    .badge-simulate { background: rgba(236,72,153,0.15); color: #ec4899; }
+    .badge-learn    { background: rgba(245,158,11,0.15); color: #f59e0b; }
+
+    /* ═══════════════════════ FORMULA BOX ═══════════════════════ */
+    .formula-box {
+      background: rgba(99,102,241,0.06); border: 1px solid rgba(99,102,241,0.15);
+      border-radius: 12px; padding: 20px 24px; margin-top: 20px;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.82rem;
+      color: #a5b4fc; line-height: 1.8;
+    }
+    .formula-box .label {
+      font-family: 'Inter', sans-serif; font-size: 0.7rem; font-weight: 600;
+      color: #6366f1; text-transform: uppercase; letter-spacing: 0.1em;
+      margin-bottom: 8px; display: block;
+    }
+
+    /* ═══════════════════════ TECH GRID ═══════════════════════ */
+    .tech-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 28px; }
+    .tech-pill {
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px; padding: 14px 16px; font-size: 0.82rem;
+      font-weight: 500; color: #d4d4d8; transition: all 0.3s;
+    }
+    .tech-pill:hover { border-color: rgba(99,102,241,0.3); background: rgba(99,102,241,0.05); }
+    .tech-pill .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ═══════════════════════ TEAM ═══════════════════════ */
+    .team-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 24px; }
+    .member {
+      display: flex; align-items: center; gap: 14px;
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px; padding: 16px 20px;
+    }
+    .member-avatar {
+      width: 42px; height: 42px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; font-weight: 700; flex-shrink: 0;
+    }
+    .member-info h4 { font-size: 0.9rem; font-weight: 600; color: #f4f4f5; }
+    .member-info p { font-size: 0.75rem; color: #71717a; margin-top: 2px; }
+
+    /* ═══════════════════════ CTA ═══════════════════════ */
+    .cta-row { display: flex; gap: 16px; margin-top: 36px; align-items: center; }
+    .cta {
+      display: inline-flex; align-items: center; gap: 8px; padding: 14px 28px;
+      border-radius: 12px; font-size: 0.9rem; font-weight: 600;
+      text-decoration: none; transition: all 0.3s; border: none; cursor: pointer;
+    }
+    .cta-primary { background: linear-gradient(135deg, #10b981, #059669); color: #fff; }
+    .cta-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(16,185,129,0.3); }
+    .cta-outline { background: transparent; border: 1px solid rgba(255,255,255,0.15); color: #d4d4d8; }
+    .cta-outline:hover { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.05); }
+
+    /* ═══════════════════════ SLIDE FOOTER ═══════════════════════ */
+    .slide-footer {
+      position: absolute; bottom: 28px; left: 80px; right: 80px;
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 0.7rem; color: #52525b; font-weight: 500;
+    }
+    .slide-footer .brand { display: flex; align-items: center; gap: 8px; }
+    .slide-footer .brand-dot { width: 6px; height: 6px; border-radius: 50%; background: #10b981; }
+
+    /* ═══════════════════════ NAV ═══════════════════════ */
+    .nav {
+      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 8px; z-index: 100;
+    }
+    .nav-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: rgba(255,255,255,0.15); border: none;
+      cursor: pointer; transition: all 0.3s; padding: 0;
+    }
+    .nav-dot.active { background: #10b981; width: 32px; border-radius: 5px; }
+    .nav-dot:hover:not(.active) { background: rgba(255,255,255,0.3); }
+
+    /* ═══════════════════════ PROGRESS BAR ═══════════════════════ */
+    .progress-bar {
+      position: fixed; top: 0; left: 0; height: 3px;
+      background: linear-gradient(90deg, #10b981, #06b6d4, #6366f1);
+      transition: width 0.5s cubic-bezier(0.4,0,0.2,1); z-index: 100;
+    }
+
+    /* ═══════════════════════ KEY HINT ═══════════════════════ */
+    .key-hint {
+      position: fixed; top: 20px; right: 30px; font-size: 0.65rem;
+      color: #3f3f46; z-index: 100; display: flex; align-items: center; gap: 6px;
+    }
+    .key-hint kbd {
+      display: inline-block; padding: 2px 6px;
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.6rem;
+    }
+
+    /* ═══════════════════════ ANIMATIONS ═══════════════════════ */
+    .slide.active .tag, .slide.active h1, .slide.active h2,
+    .slide.active .subtitle, .slide.active .card, .slide.active .kpi,
+    .slide.active .tech-pill, .slide.active .member,
+    .slide.active .algo-table tr, .slide.active .formula-box,
+    .slide.active .loop-diagram, .slide.active .cta-row {
+      animation: fadeUp 0.5s ease both;
+    }
+    .slide.active .tag       { animation-delay: 0.05s; }
+    .slide.active h1         { animation-delay: 0.1s; }
+    .slide.active h2         { animation-delay: 0.1s; }
+    .slide.active .subtitle  { animation-delay: 0.2s; }
+    .slide.active .card:nth-child(1) { animation-delay: 0.15s; }
+    .slide.active .card:nth-child(2) { animation-delay: 0.25s; }
+    .slide.active .card:nth-child(3) { animation-delay: 0.35s; }
+    .slide.active .card:nth-child(4) { animation-delay: 0.40s; }
+    .slide.active .card:nth-child(5) { animation-delay: 0.45s; }
+    .slide.active .card:nth-child(6) { animation-delay: 0.50s; }
+    .slide.active .kpi:nth-child(1)  { animation-delay: 0.2s; }
+    .slide.active .kpi:nth-child(2)  { animation-delay: 0.3s; }
+    .slide.active .kpi:nth-child(3)  { animation-delay: 0.4s; }
+    .slide.active .kpi:nth-child(4)  { animation-delay: 0.5s; }
+    .slide.active .algo-table tr:nth-child(1) { animation-delay: 0.15s; }
+    .slide.active .algo-table tr:nth-child(2) { animation-delay: 0.2s; }
+    .slide.active .algo-table tr:nth-child(3) { animation-delay: 0.25s; }
+    .slide.active .algo-table tr:nth-child(4) { animation-delay: 0.3s; }
+    .slide.active .algo-table tr:nth-child(5) { animation-delay: 0.35s; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ═══════════════════════ RESPONSIVE ═══════════════════════ */
+    @media (max-width: 1200px) {
+      .slide { padding: 40px 50px; }
+      .tech-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 900px) {
+      .two-col, .three-col { grid-template-columns: 1fr; }
+      .tech-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="progress-bar" id="progress" style="width: 25%"></div>
+  <div class="key-hint"><kbd>←</kbd> <kbd>→</kbd> hoặc click để chuyển slide</div>
+
+  <div class="deck" id="deck">
+
+    <!-- ═══ SLIDE 1: GIỚI THIỆU & VẤN ĐỀ ═══ -->
+    <section class="slide slide-1 active" id="slide-1">
+      <div>
+        <span class="tag">CLB Mã nguồn mở HUTECH · ML/AI Hackathon 2026 · Track TMA</span>
+        <h1>
+          <span class="accent">ShopWise</span> — Trí tuệ<br>
+          hỗ trợ quyết định <span class="accent-blue">kinh doanh</span>
+        </h1>
+        <p class="subtitle">
+          Hệ thống AI khép kín 7 bài toán: từ <strong>dự báo nhu cầu</strong> →
+          <strong>tối ưu mua hàng</strong> → <strong>mô phỏng rủi ro</strong> →
+          <strong>tự học lại từ kết quả thực tế</strong>. Không chỉ là dashboard —
+          mà là <em>cỗ máy ra quyết định</em> cho doanh nghiệp bán lẻ.
+        </p>
+        <div class="kpi-row">
+          <div class="kpi"><div class="kpi-value">7</div><div class="kpi-label">Bài toán khép kín</div></div>
+          <div class="kpi"><div class="kpi-value">5</div><div class="kpi-label">Thuật toán cốt lõi</div></div>
+          <div class="kpi"><div class="kpi-value">∞</div><div class="kpi-label">Vòng lặp tự học</div></div>
+          <div class="kpi">
+            <div class="kpi-value" style="background:linear-gradient(135deg,#6366f1,#ec4899);-webkit-background-clip:text;background-clip:text;">OSS</div>
+            <div class="kpi-label">Mã nguồn mở GPL-3.0</div>
+          </div>
+        </div>
+        <div class="loop-diagram">
+          <div class="loop-step"><span class="step-icon">📊</span> Dự báo</div><span class="loop-arrow">→</span>
+          <div class="loop-step"><span class="step-icon">🌦️</span> Thời tiết</div><span class="loop-arrow">→</span>
+          <div class="loop-step"><span class="step-icon">📦</span> Tồn kho</div><span class="loop-arrow">→</span>
+          <div class="loop-step"><span class="step-icon">🛒</span> Mua hàng</div><span class="loop-arrow">→</span>
+          <div class="loop-step"><span class="step-icon">🚚</span> Giao hàng</div><span class="loop-arrow">→</span>
+          <div class="loop-step"><span class="step-icon">🎲</span> Mô phỏng</div><span class="loop-arrow">→</span>
+          <div class="loop-step"><span class="step-icon">🧠</span> Học lại</div>
+          <div class="loop-return">⟲ Dữ liệu thực tế quay về hiệu chỉnh dự báo → Cải thiện mỗi chu kỳ</div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div class="brand"><div class="brand-dot"></div> ShopWise · Mã nguồn mở</div>
+        <div>VNG2 Sơ tuyển · 09/2026</div>
+      </div>
+    </section>
+
+    <!-- ═══ SLIDE 2: TÍNH NĂNG SẢN PHẨM ═══ -->
+    <section class="slide slide-2" id="slide-2">
+      <div>
+        <span class="tag tag-team">Tính năng sản phẩm</span>
+        <h2>6 module nghiệp vụ — 1 luồng dữ liệu liền mạch</h2>
+        <div class="three-col">
+          <div class="card">
+            <div class="card-icon emerald">📡</div>
+            <h3>Decision Feed</h3>
+            <p>Quét tự động: sắp hết hàng, giá lệch thị trường, ROAS quảng cáo thấp → cảnh báo real-time.</p>
+          </div>
+          <div class="card">
+            <div class="card-icon indigo">🧠</div>
+            <h3>AI Decision Advisor</h3>
+            <p>Phân tích đa phương án: Nhập hàng / Điều giá / Phân bổ QC. Mỗi phương án có Pros, Cons, rủi ro &amp; ROI.</p>
+          </div>
+          <div class="card">
+            <div class="card-icon amber">🏭</div>
+            <h3>Supplier Matcher</h3>
+            <p>Chấm điểm đa tiêu chí (Giá 40%, Chất lượng 20%, Tốc độ 20%, Vị trí 20%). So sánh NCC theo MOQ.</p>
+          </div>
+          <div class="card">
+            <div class="card-icon pink">🎲</div>
+            <h3>Monte Carlo Simulator</h3>
+            <p>Chạy 1,000 kịch bản ngẫu nhiên. Phân tích xác suất lời/lỗ trước khi chốt → giảm rủi ro "đánh bạc".</p>
+          </div>
+          <div class="card">
+            <div class="card-icon cyan">📋</div>
+            <h3>Decision Journal</h3>
+            <p>Theo dõi <em>Predicted vs Actual</em> sau 7 ngày. Sai số tự động feedback → hệ thống tự học.</p>
+          </div>
+          <div class="card">
+            <div class="card-icon orange">🕸️</div>
+            <h3>RAG Knowledge Graph</h3>
+            <p>Mạng tri thức Product ↔ Supplier ↔ Channel ↔ Strategy. AI Chat luôn grounded — không hallucination.</p>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div class="brand"><div class="brand-dot"></div> ShopWise</div>
+        <div>2 / 4</div>
+      </div>
+    </section>
+
+    <!-- ═══ SLIDE 3: THUẬT TOÁN ═══ -->
+    <section class="slide slide-3" id="slide-3">
+      <div>
+        <span class="tag tag-tech">Chiều sâu thuật toán</span>
+        <h2>5 thuật toán cốt lõi — Từ toán tối ưu đến tự học</h2>
+        <table class="algo-table">
+          <thead><tr>
+            <th style="width:5%">#</th><th style="width:20%">Bài toán</th>
+            <th style="width:22%">Thuật toán</th><th style="width:13%">Khâu</th>
+            <th>Ý nghĩa kinh doanh</th>
+          </tr></thead>
+          <tbody>
+            <tr>
+              <td>1</td><td class="algo-name">Demand Forecasting</td>
+              <td>Linear Regression + hệ số thời tiết</td>
+              <td><span class="algo-badge badge-predict">Dự báo</span></td>
+              <td>Dự đoán doanh thu 7 ngày tới, confidence theo hệ số biến thiên (CV)</td>
+            </tr>
+            <tr>
+              <td>2</td><td class="algo-name">Inventory Policy</td>
+              <td>Newsvendor Model · CR = Cu/(Cu+Co)</td>
+              <td><span class="algo-badge badge-decide">Quyết định</span></td>
+              <td>Tính điểm đặt hàng lại tối ưu dựa trên chi phí thiếu/thừa hàng</td>
+            </tr>
+            <tr>
+              <td>3</td><td class="algo-name">Supplier Scoring</td>
+              <td>Multi-criteria · S = 0.4P + 0.2Q + 0.2D + 0.2L</td>
+              <td><span class="algo-badge badge-decide">Quyết định</span></td>
+              <td>Chọn NCC tối ưu xét tổng thể giá + chất lượng + tốc độ + vị trí</td>
+            </tr>
+            <tr>
+              <td>4</td><td class="algo-name">What-if Simulation</td>
+              <td>Monte Carlo (1,000 runs)</td>
+              <td><span class="algo-badge badge-simulate">Mô phỏng</span></td>
+              <td>Đo xác suất: "92% sẽ sinh lời, rủi ro tồn ứ chỉ 4%"</td>
+            </tr>
+            <tr>
+              <td>5</td><td class="algo-name">Feedback Calibration</td>
+              <td>Deviation tracking · k = Actual / Predicted</td>
+              <td><span class="algo-badge badge-learn">Học lại</span></td>
+              <td>Tự động điều chỉnh trọng số — hệ thống càng dùng càng chính xác</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="formula-box">
+          <span class="label">Hybrid AI = Toán tối ưu (Deterministic) + LLM (Explainability)</span>
+          Tại sao không để LLM giải bài toán chọn NCC?<br>
+          → LLM giỏi diễn giải, nhưng <strong style="color:#f87171">yếu tính toán số học</strong> và <strong style="color:#f87171">không đảm bảo ràng buộc</strong> (budget, MOQ).<br>
+          → ShopWise: <strong style="color:#10b981">thuật toán cứng → kết quả chính xác</strong>, rồi <strong style="color:#a78bfa">LLM giải thích (XAI)</strong> để con người hiểu lý do.
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div class="brand"><div class="brand-dot"></div> ShopWise</div>
+        <div>3 / 4</div>
+      </div>
+    </section>
+
+    <!-- ═══ SLIDE 4: TECH STACK + KẾT LUẬN ═══ -->
+    <section class="slide slide-4" id="slide-4">
+      <div>
+        <span class="tag tag-close">Công nghệ &amp; Kết luận</span>
+        <h2>Kiến trúc &amp; Công nghệ nền tảng</h2>
+        <div class="tech-grid">
+          <div class="tech-pill"><div class="dot" style="background:#10b981"></div> Next.js 15 (App Router)</div>
+          <div class="tech-pill"><div class="dot" style="background:#6366f1"></div> Prisma ORM + PostgreSQL</div>
+          <div class="tech-pill"><div class="dot" style="background:#06b6d4"></div> Ollama (Local LLM)</div>
+          <div class="tech-pill"><div class="dot" style="background:#f59e0b"></div> Keycloak SSO</div>
+          <div class="tech-pill"><div class="dot" style="background:#ec4899"></div> Docker Compose</div>
+          <div class="tech-pill"><div class="dot" style="background:#f97316"></div> ForceGraph2D (D3.js)</div>
+          <div class="tech-pill"><div class="dot" style="background:#a78bfa"></div> TypeScript 100%</div>
+          <div class="tech-pill"><div class="dot" style="background:#22c55e"></div> License GPL-3.0</div>
+        </div>
+        <div class="two-col" style="margin-top:36px">
+          <div>
+            <h2 style="font-size:1.3rem">Giá trị kinh doanh</h2>
+            <div style="margin-top:16px;display:flex;flex-direction:column;gap:12px">
+              <div style="display:flex;align-items:center;gap:12px">
+                <span style="color:#10b981;font-size:1.2rem">✓</span>
+                <span style="font-size:0.88rem;color:#d4d4d8">Giảm <strong style="color:#10b981">30%</strong> tỷ lệ đứt hàng (stockout)</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px">
+                <span style="color:#10b981;font-size:1.2rem">✓</span>
+                <span style="font-size:0.88rem;color:#d4d4d8">Tăng <strong style="color:#10b981">15%</strong> vòng quay vốn lưu động</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px">
+                <span style="color:#10b981;font-size:1.2rem">✓</span>
+                <span style="font-size:0.88rem;color:#d4d4d8">Quyết định dựa trên dữ liệu → Giảm rủi ro <strong style="color:#10b981">"cảm tính"</strong></span>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px">
+                <span style="color:#10b981;font-size:1.2rem">✓</span>
+                <span style="font-size:0.88rem;color:#d4d4d8">Hệ thống <strong style="color:#f59e0b">tự học</strong> — càng dùng càng chính xác</span>
+              </div>
+            </div>
+          </div>
+          <div>
+            <h2 style="font-size:1.3rem">Đội ngũ — CLB Mã nguồn mở HUTECH</h2>
+            <div class="team-grid" style="margin-top:16px">
+              <div class="member">
+                <div class="member-avatar" style="background:linear-gradient(135deg,#10b981,#059669);color:#fff">TH</div>
+                <div class="member-info"><h4>Thành viên 1</h4><p>Lead Developer &amp; System Architect</p></div>
+              </div>
+              <div class="member">
+                <div class="member-avatar" style="background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff">TV</div>
+                <div class="member-info"><h4>Thành viên 2</h4><p>AI/ML &amp; Data Engineering</p></div>
+              </div>
+              <div class="member">
+                <div class="member-avatar" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff">TV</div>
+                <div class="member-info"><h4>Thành viên 3</h4><p>Frontend &amp; UX Design</p></div>
+              </div>
+              <div class="member">
+                <div class="member-avatar" style="background:linear-gradient(135deg,#ec4899,#db2777);color:#fff">TV</div>
+                <div class="member-info"><h4>Thành viên 4</h4><p>DevOps &amp; Infrastructure</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="cta-row">
+          <a class="cta cta-primary" href="https://github.com/thanhheo7749-ui/opendx-lab" target="_blank">⭐ GitHub Repository</a>
+          <a class="cta cta-outline" href="http://localhost:3000" target="_blank">🚀 Live Demo</a>
+          <span style="font-size:0.82rem;color:#71717a;margin-left:8px">Cảm ơn Ban Giám Khảo — Sẵn sàng Q&amp;A!</span>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div class="brand"><div class="brand-dot"></div> ShopWise · Mã nguồn mở</div>
+        <div>4 / 4</div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- NAV DOTS -->
+  <nav class="nav" id="nav">
+    <button class="nav-dot active" data-slide="1"></button>
+    <button class="nav-dot" data-slide="2"></button>
+    <button class="nav-dot" data-slide="3"></button>
+    <button class="nav-dot" data-slide="4"></button>
+  </nav>
+
+  <script>
+    const TOTAL = 4;
+    let current = 1;
+    function goTo(n) {
+      if (n < 1 || n > TOTAL || n === current) return;
+      const prev = document.getElementById('slide-' + current);
+      const next = document.getElementById('slide-' + n);
+      if (n > current) { prev.classList.remove('active'); prev.classList.add('prev'); }
+      else { prev.classList.remove('active','prev'); }
+      setTimeout(() => prev.classList.remove('prev'), 600);
+      next.classList.add('active');
+      current = n;
+      document.querySelectorAll('.nav-dot').forEach(d =>
+        d.classList.toggle('active', +d.dataset.slide === current));
+      document.getElementById('progress').style.width = (current / TOTAL * 100) + '%';
+    }
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); goTo(current+1); }
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); goTo(current-1); }
+      const num = parseInt(e.key);
+      if (num >= 1 && num <= TOTAL) goTo(num);
+    });
+    document.querySelectorAll('.nav-dot').forEach(d =>
+      d.addEventListener('click', () => goTo(+d.dataset.slide)));
+    document.addEventListener('click', e => {
+      if (e.target.closest('.nav,.cta,a,button')) return;
+      if (e.clientX > window.innerWidth / 2) goTo(current+1);
+      else goTo(current-1);
+    });
+    let touchX = 0;
+    document.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; });
+    document.addEventListener('touchend', e => {
+      const diff = touchX - e.changedTouches[0].clientX;
+      if (Math.abs(diff) > 50) { diff > 0 ? goTo(current+1) : goTo(current-1); }
+    });
+  </script>
+</body>
+</html>

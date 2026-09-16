@@ -18,7 +18,7 @@ import type { DictionaryKey } from "@/lib/i18n-dictionaries";
 interface NavItem {
   labelKey: DictionaryKey;
   href: string;
-  layer: "overview" | "scan" | "decide" | "analyze";
+  layer: "overview" | "scan" | "decide" | "analyze" | "data";
   icon: React.ReactNode;
 }
 
@@ -40,6 +40,16 @@ const navItems: NavItem[] = [
     icon: (
       <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+      </svg>
+    ),
+  },
+  {
+    labelKey: "nav.dataSources" as DictionaryKey,
+    href: "/data-sources",
+    layer: "data",
+    icon: (
+      <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
       </svg>
     ),
   },
@@ -121,6 +131,7 @@ const layerColors: Record<NavItem["layer"], string> = {
   scan: "#f59e0b",      // amber
   decide: "#10b981",    // emerald
   analyze: "#8b5cf6",   // violet
+  data: "#3b82f6",      // blue
 };
 
 // Section labels
@@ -128,6 +139,7 @@ const sectionLabels: Record<string, string> = {
   scan: "Phát hiện",
   decide: "Quyết định",
   analyze: "Phân tích",
+  data: "Dữ liệu",
 };
 
 // ---------------------------------------------------------------------------
@@ -140,7 +152,7 @@ export function AppSidebar() {
 
   // Group nav items by layer (skip overview — it's standalone)
   const overviewItem = navItems.find((i) => i.layer === "overview")!;
-  const groups = ["scan", "decide", "analyze"] as const;
+  const groups = ["scan", "decide", "analyze", "data"] as const;
 
   return (
     <aside
