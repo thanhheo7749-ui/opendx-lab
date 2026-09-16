@@ -308,6 +308,10 @@ services:
       N8N_URL: http://activepieces:80
       METABASE_URL: http://metabase:3000
       OLLAMA_URL: http://ollama:11434
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.9router.com/v1}
+      LLM_DEFAULT_MODEL: ${LLM_DEFAULT_MODEL:-gpt-4o-mini}
+      LLM_FAST_MODEL: ${LLM_FAST_MODEL:-gpt-4o-mini}
       N8N_ONBOARDING_WEBHOOK_URL: http://activepieces:80/api/v1/webhooks/onboarding
       N8N_OFFBOARDING_WEBHOOK_URL: http://activepieces:80/api/v1/webhooks/offboarding
       N8N_ACTIVATION_WEBHOOK_URL: http://activepieces:80/api/v1/webhooks/activation
