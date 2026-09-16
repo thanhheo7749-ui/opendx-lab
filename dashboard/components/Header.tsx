@@ -48,6 +48,8 @@ function getPageMeta(pathname: string): PageMeta {
 function getRoleBadge(roles: string[], t: (key: DictionaryKey) => string) {
   if (roles.includes("admin")) return { label: t("role.admin"), variant: "destructive" as const };
   if (roles.includes("manager")) return { label: t("role.manager"), variant: "secondary" as const };
+  if (roles.includes("staff")) return { label: "Staff", variant: "outline" as const };
+  if (roles.includes("viewer")) return { label: "Viewer", variant: "outline" as const };
   return { label: t("role.employee"), variant: "outline" as const };
 }
 
