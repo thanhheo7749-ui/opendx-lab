@@ -4,25 +4,17 @@
 // ==============================================================================
 
 import type { Metadata } from "next";
-import localFont from "next/font/local";
+import { Be_Vietnam_Pro } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
-const comicRelief = localFont({
-  src: [
-    {
-      path: "../public/fonts/ComicRelief-Regular.ttf",
-      weight: "400",
-      style: "normal",
-    },
-    {
-      path: "../public/fonts/ComicRelief-Bold.ttf",
-      weight: "700",
-      style: "normal",
-    },
-  ],
-  variable: "--font-comic-relief",
+// Be Vietnam Pro — designed specifically for Vietnamese text
+// Clean, modern, excellent diacritics rendering
+const beVietnamPro = Be_Vietnam_Pro({
+  subsets: ["latin", "vietnamese"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-be-vietnam",
   display: "swap",
 });
 
@@ -44,7 +36,7 @@ export default async function RootLayout({
 
   return (
     <html lang={locale} suppressHydrationWarning>
-      <body className={`${comicRelief.variable} font-sans antialiased bg-background text-foreground`}>
+      <body className={`${beVietnamPro.variable} font-sans antialiased bg-background text-foreground`}>
         <Providers initialLocale={locale as Locale}>
           <TooltipProvider>
             {children}
