@@ -224,6 +224,10 @@ git push origin feature/your-feature
 # Open a Pull Request
 ```
 
+## Bug Tracker & Support
+
+Issues and feature requests are tracked publicly via [GitHub Issues](https://github.com/thanhheo7749-ui/opendx-lab/issues). Please see [CONTRIBUTING.md](CONTRIBUTING.md) for reporting guidelines.
+
 ---
 
 ## License
