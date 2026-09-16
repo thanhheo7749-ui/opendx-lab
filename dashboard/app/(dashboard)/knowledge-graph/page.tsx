@@ -61,6 +61,7 @@ export default function KnowledgeGraphPage() {
   const [uploading, setUploading] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [seeding, setSeeding] = useState(false);
+  const [showImportPanel, setShowImportPanel] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -293,16 +294,11 @@ export default function KnowledgeGraphPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
+            onClick={() => setShowImportPanel(!showImportPanel)}
             className="text-xs"
           >
-            {uploading ? (
-              <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
-            ) : (
-              <Upload className="w-4 h-4 mr-1.5" />
-            )}
-            Upload
+            <Upload className="w-4 h-4 mr-1.5" />
+            Nhập kiến thức
           </Button>
           <Button
             variant="outline"
@@ -334,6 +330,37 @@ export default function KnowledgeGraphPage() {
           </Button>
         </div>
       </div>
+
+      {/* Import Panel (expandable) */}
+      {showImportPanel && (
+        <KnowledgeImportPanel
+          onUploadFile={(file) => {
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            if (fileInputRef.current) {
+              fileInputRef.current.files = dt.files;
+              handleUpload({ target: { files: dt.files } } as React.ChangeEvent<HTMLInputElement>);
+            }
+          }}
+          uploading={uploading}
+          onSyncDB={async () => {
+            setMessage(null);
+            try {
+              const res = await fetch("/api/knowledge/sync-db", { method: "POST" });
+              const data = await res.json();
+              if (data.error) {
+                setMessage({ type: "error", text: data.error });
+              } else {
+                setMessage({ type: "success", text: data.message });
+                await fetchGraph();
+              }
+            } catch {
+              setMessage({ type: "error", text: "Đồng bộ từ DB thất bại." });
+            }
+          }}
+          onClose={() => setShowImportPanel(false)}
+        />
+      )}
 
       {/* Message banner */}
       {message && (
@@ -506,3 +533,194 @@ export default function KnowledgeGraphPage() {
     </div>
   );
 }
+
+// ══════════════════════════════════════════════════════════════════════════════
+// KNOWLEDGE IMPORT PANEL — Import documents & sync DB data into KG
+// ══════════════════════════════════════════════════════════════════════════════
+
+function KnowledgeImportPanel({
+  onUploadFile,
+  uploading,
+  onSyncDB,
+  onClose,
+}: {
+  onUploadFile: (file: File) => void;
+  uploading: boolean;
+  onSyncDB: () => Promise<void>;
+  onClose: () => void;
+}) {
+  const [dragOver, setDragOver] = useState(false);
+  const [syncingDB, setSyncingDB] = useState(false);
+  const localFileRef = useRef<HTMLInputElement>(null);
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files[0];
+    if (file) onUploadFile(file);
+  };
+
+  const handleSyncDB = async () => {
+    setSyncingDB(true);
+    await onSyncDB();
+    setSyncingDB(false);
+  };
+
+  // What types of docs to import
+  const docTypes = [
+    { icon: "📋", title: "Quy trình vận hành (SOP)", desc: "Cách nhập hàng, quy trình xuất kho, kiểm kê, xử lý đổi trả", ext: ".pdf, .docx" },
+    { icon: "💰", title: "Chính sách giá & khuyến mãi", desc: "Bảng giá, quy tắc giảm giá, chương trình loyalty, flash sale", ext: ".md, .txt" },
+    { icon: "📊", title: "Báo cáo phân tích", desc: "Phân tích doanh thu, xu hướng thị trường, đối thủ cạnh tranh", ext: ".pdf, .docx" },
+    { icon: "🎯", title: "Chiến lược kinh doanh", desc: "Kế hoạch marketing, chiến lược nhập hàng, mở rộng kênh bán", ext: ".md, .txt" },
+    { icon: "📝", title: "Ghi chú & kiến thức nội bộ", desc: "Kinh nghiệm vận hành, tips bán hàng, FAQ khách hàng", ext: ".txt, .md" },
+    { icon: "📖", title: "Hướng dẫn sử dụng", desc: "Tài liệu đào tạo nhân viên, quy định nội bộ, handbook", ext: ".pdf, .docx" },
+  ];
+
+  return (
+    <Card className="shadow-sm border-t-2 border-t-violet-500">
+      <CardContent className="p-4 space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-semibold text-sm text-foreground flex items-center gap-2">
+              <Brain className="w-4 h-4 text-violet-500" />
+              Nhập kiến thức vào Knowledge Graph
+            </h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Upload tài liệu hoặc đồng bộ dữ liệu để AI hiểu context doanh nghiệp tốt hơn
+            </p>
+          </div>
+          <button onClick={onClose} className="p-1 rounded-md hover:bg-muted">
+            <X className="w-4 h-4 text-muted-foreground" />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* Method 1: Upload files */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+              <span className="w-4 h-4 rounded-full bg-violet-500 text-white text-[9px] font-bold flex items-center justify-center">1</span>
+              Upload tài liệu
+            </h4>
+            <input
+              ref={localFileRef}
+              type="file"
+              accept=".pdf,.docx,.doc,.md,.txt"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) onUploadFile(file);
+              }}
+            />
+            <div
+              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={handleDrop}
+              onClick={() => localFileRef.current?.click()}
+              className={`border-2 border-dashed rounded-lg p-5 text-center cursor-pointer transition-all ${
+                dragOver
+                  ? "border-violet-500 bg-violet-50 dark:bg-violet-950/20"
+                  : "border-border hover:border-violet-300 hover:bg-accent/30"
+              }`}
+            >
+              {uploading ? (
+                <div className="flex flex-col items-center gap-2">
+                  <Loader2 className="w-6 h-6 text-violet-500 animate-spin" />
+                  <p className="text-xs text-muted-foreground">Đang xử lý file...</p>
+                  <p className="text-[10px] text-muted-foreground/60">Trích xuất văn bản → Chia chunk → Tạo embedding → Phát hiện entity</p>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-2">
+                  <Upload className="w-6 h-6 text-muted-foreground/40" />
+                  <p className="text-xs text-muted-foreground">
+                    Kéo thả file vào đây hoặc <span className="text-violet-600 underline">chọn file</span>
+                  </p>
+                  <p className="text-[10px] text-muted-foreground/60">.pdf, .docx, .md, .txt — tối đa 10MB</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Method 2: Sync from PostgreSQL */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+              <span className="w-4 h-4 rounded-full bg-blue-500 text-white text-[9px] font-bold flex items-center justify-center">2</span>
+              Đồng bộ từ dữ liệu giao dịch
+            </h4>
+            <div className="p-4 rounded-lg border border-border bg-muted/20 space-y-3">
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Tự động tạo nodes từ dữ liệu sản phẩm, NCC, kênh bán, và phân khúc KH đã có trong PostgreSQL.
+              </p>
+              <div className="space-y-1 text-[10px] text-muted-foreground">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
+                  Sản phẩm → PRODUCT nodes
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                  Nhà cung cấp → SUPPLIER nodes
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+                  Danh mục → CATEGORY nodes
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  Kênh bán → CHANNEL nodes (từ đơn hàng)
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSyncDB}
+                disabled={syncingDB}
+                className="w-full text-xs"
+              >
+                {syncingDB ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                    Đang đồng bộ...
+                  </>
+                ) : (
+                  <>
+                    <Database className="w-3.5 h-3.5 mr-1.5" />
+                    Đồng bộ dữ liệu → Knowledge Graph
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+
+          {/* Method 3: What to import */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+              <span className="w-4 h-4 rounded-full bg-emerald-500 text-white text-[9px] font-bold flex items-center justify-center">?</span>
+              Nên import gì?
+            </h4>
+            <div className="space-y-1.5 max-h-[180px] overflow-y-auto pr-1">
+              {docTypes.map((dt) => (
+                <div key={dt.title} className="p-2 rounded-md border border-border bg-background hover:bg-accent/30 transition-colors">
+                  <div className="flex items-start gap-2">
+                    <span className="text-sm mt-0.5">{dt.icon}</span>
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-medium text-foreground">{dt.title}</p>
+                      <p className="text-[10px] text-muted-foreground">{dt.desc}</p>
+                      <p className="text-[9px] text-muted-foreground/60 mt-0.5">{dt.ext}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Pipeline explanation */}
+        <div className="p-3 rounded-lg bg-violet-50/50 dark:bg-violet-950/10 border border-violet-100 dark:border-violet-900/30">
+          <p className="text-[10px] text-violet-700 dark:text-violet-400 leading-relaxed">
+            <strong>Pipeline xử lý:</strong> File upload → Trích xuất văn bản → Chia chunk (500 tokens) → Tạo vector embedding (Ollama) → AI phát hiện entity (sản phẩm, quy trình, chiến lược) → Tạo quan hệ giữa các entity → Hiển thị trên đồ thị
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
