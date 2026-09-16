@@ -29,6 +29,26 @@ interface CSVPreviewRow {
   [key: string]: string;
 }
 
+interface ValidatedRow {
+  rowIndex: number;
+  status: "new" | "conflict" | "invalid" | "unchanged";
+  reason?: string;
+  newData: Record<string, unknown>;
+  existingData?: Record<string, unknown>;
+  changedFields?: string[];
+}
+
+interface ValidationResult {
+  validated: ValidatedRow[];
+  summary: { total: number; new: number; conflict: number; invalid: number; unchanged: number };
+  importType: string;
+}
+
+interface ApprovedRow {
+  status: "new" | "conflict";
+  newData: Record<string, unknown>;
+}
+
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 function formatVND(n: number) {
@@ -98,8 +118,10 @@ function CSVImportTab() {
   const [preview, setPreview] = useState<CSVPreviewRow[]>([]);
   const [headers, setHeaders] = useState<string[]>([]);
   const [importing, setImporting] = useState(false);
+  const [validating, setValidating] = useState(false);
   const [result, setResult] = useState<ImportResult | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Parse CSV for preview
@@ -141,6 +163,7 @@ function CSVImportTab() {
     setCsvText(text);
     parsePreview(text);
     setResult(null);
+    setValidationResult(null);
   }, [parsePreview]);
 
   // Handle drop
@@ -149,24 +172,53 @@ function CSVImportTab() {
     setDragOver(false);
     const file = e.dataTransfer.files[0];
     if (file) handleFile(file);
+    setValidationResult(null);
   }, [handleFile]);
 
-  // Import
-  const handleImport = useCallback(async () => {
+  // Validate CSV (Step 3 → Step 4)
+  const handleValidate = useCallback(async () => {
     if (!csvText.trim()) {
-      toast("error", "Chưa có dữ liệu để import");
+      toast("error", "Chưa có dữ liệu để kiểm tra");
       return;
     }
-    setImporting(true);
+    setValidating(true);
     try {
-      const res = await fetch("/api/import/csv", {
+      const res = await fetch("/api/import/validate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ csvData: csvText, importType }),
       });
       const data = await res.json();
       if (res.ok) {
+        setValidationResult(data);
+        const { summary } = data;
+        toast(
+          summary.conflict > 0 || summary.invalid > 0 ? "info" : "success",
+          `Kiểm tra xong: ${summary.new} mới, ${summary.conflict} trùng, ${summary.invalid} lỗi`
+        );
+      } else {
+        toast("error", data.error || "Kiểm tra thất bại");
+      }
+    } catch {
+      toast("error", "Lỗi kết nối server");
+    } finally {
+      setValidating(false);
+    }
+  }, [csvText, importType]);
+
+  // Import approved rows only
+  const handleApprovedImport = useCallback(async (approvedRows: ApprovedRow[]) => {
+    setImporting(true);
+    try {
+      const res = await fetch("/api/import/approved", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ approvedRows, importType }),
+      });
+      const data = await res.json();
+      if (res.ok) {
         setResult(data);
+        setValidationResult(null);
         toast("success", `Import thành công: ${data.created} mới, ${data.updated} cập nhật`);
       } else {
         toast("error", data.error || "Import thất bại");
@@ -176,7 +228,7 @@ function CSVImportTab() {
     } finally {
       setImporting(false);
     }
-  }, [csvText, importType]);
+  }, [importType]);
 
   const totalLines = csvText.trim() ? csvText.trim().split("\n").length - 1 : 0;
 
@@ -313,7 +365,7 @@ function CSVImportTab() {
       </Card>
 
       {/* Step 3: Preview */}
-      {preview.length > 0 && (
+      {preview.length > 0 && !validationResult && (
         <Card className="shadow-sm">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
@@ -352,36 +404,47 @@ function CSVImportTab() {
               </table>
             </div>
 
-            {/* Import button */}
+            {/* Validate button */}
             <div className="flex items-center gap-3 mt-4">
               <Button
-                onClick={handleImport}
-                disabled={importing}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                onClick={handleValidate}
+                disabled={validating}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
               >
-                {importing ? (
+                {validating ? (
                   <>
                     <svg className="w-4 h-4 mr-2 animate-spin" viewBox="0 0 24 24" fill="none">
                       <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-20" />
                       <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
                     </svg>
-                    Đang import...
+                    Đang kiểm tra...
                   </>
                 ) : (
                   <>
                     <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                     </svg>
-                    Import {totalLines} dòng {typeConfig[importType].label}
+                    Kiểm tra {totalLines} dòng trước khi import
                   </>
                 )}
               </Button>
               <span className="text-xs text-muted-foreground">
-                Dữ liệu trùng SKU sẽ được cập nhật, không tạo mới
+                Hệ thống sẽ kiểm tra trùng lặp và dữ liệu không hợp lệ
               </span>
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Step 4: Validation Review — Conflict / New / Invalid comparison */}
+      {validationResult && (
+        <ValidationReviewPanel
+          result={validationResult}
+          importType={importType}
+          onImportApproved={handleApprovedImport}
+          onCancel={() => setValidationResult(null)}
+          importing={importing}
+        />
       )}
 
       {/* Result */}
@@ -809,3 +872,297 @@ function CampaignForm({ onSubmit, submitting }: FormProps) {
     </Card>
   );
 }
+
+// ══════════════════════════════════════════════════════════════════════════════
+// VALIDATION REVIEW PANEL — Shows conflicts, new, invalid rows for approval
+// ══════════════════════════════════════════════════════════════════════════════
+
+const statusLabels: Record<string, { label: string; color: string; bg: string; icon: string }> = {
+  new: { label: "Mới", color: "text-emerald-700 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-900/20", icon: "✅" },
+  conflict: { label: "Trùng — có thay đổi", color: "text-amber-700 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-900/20", icon: "⚠️" },
+  invalid: { label: "Không hợp lệ", color: "text-red-700 dark:text-red-400", bg: "bg-red-50 dark:bg-red-900/20", icon: "❌" },
+  unchanged: { label: "Trùng — không đổi", color: "text-gray-500", bg: "bg-gray-50 dark:bg-gray-800/30", icon: "➖" },
+};
+
+const fieldLabels: Record<string, string> = {
+  name: "Tên", sku: "SKU", category: "Danh mục", costPrice: "Giá gốc", sellPrice: "Giá bán",
+  province: "Tỉnh/Thành", phone: "SĐT", rating: "Đánh giá", leadTimeDays: "Thời gian giao",
+  customerName: "Khách hàng", channel: "Kênh", totalAmount: "Tổng tiền",
+};
+
+function ValidationReviewPanel({
+  result,
+  importType,
+  onImportApproved,
+  onCancel,
+  importing,
+}: {
+  result: ValidationResult;
+  importType: ImportType;
+  onImportApproved: (rows: ApprovedRow[]) => Promise<void>;
+  onCancel: () => void;
+  importing: boolean;
+}) {
+  const { validated, summary } = result;
+  const [approvedIndices, setApprovedIndices] = useState<Set<number>>(() => {
+    // Auto-approve all "new" items, and conflicts
+    const initial = new Set<number>();
+    validated.forEach((row, i) => {
+      if (row.status === "new" || row.status === "conflict") initial.add(i);
+    });
+    return initial;
+  });
+  const [filter, setFilter] = useState<string>("all");
+
+  const toggleRow = (i: number) => {
+    setApprovedIndices((prev) => {
+      const next = new Set(prev);
+      if (next.has(i)) next.delete(i); else next.add(i);
+      return next;
+    });
+  };
+
+  const toggleAll = (status: string) => {
+    setApprovedIndices((prev) => {
+      const next = new Set(prev);
+      const rowsOfStatus = validated
+        .map((r, i) => ({ r, i }))
+        .filter(({ r }) => r.status === status);
+      const allChecked = rowsOfStatus.every(({ i }) => next.has(i));
+      if (allChecked) {
+        rowsOfStatus.forEach(({ i }) => next.delete(i));
+      } else {
+        rowsOfStatus.forEach(({ i }) => next.add(i));
+      }
+      return next;
+    });
+  };
+
+  const importableRows = validated.filter((r) => r.status === "new" || r.status === "conflict");
+  const approvedCount = importableRows.filter((_, i) => {
+    const actualIndex = validated.indexOf(importableRows[i]);
+    return approvedIndices.has(actualIndex);
+  }).length;
+
+  const filteredRows = filter === "all"
+    ? validated
+    : validated.filter((r) => r.status === filter);
+
+  const handleImport = () => {
+    const rows: ApprovedRow[] = [];
+    validated.forEach((row, i) => {
+      if (approvedIndices.has(i) && (row.status === "new" || row.status === "conflict")) {
+        rows.push({ status: row.status, newData: row.newData });
+      }
+    });
+    if (rows.length === 0) {
+      return;
+    }
+    onImportApproved(rows);
+  };
+
+  // Determine which fields to show based on import type
+  const displayFields: string[] = importType === "products"
+    ? ["sku", "name", "category", "costPrice", "sellPrice"]
+    : importType === "suppliers"
+    ? ["name", "province", "phone", "rating", "leadTimeDays"]
+    : ["customerName", "phone", "channel", "totalAmount", "status"];
+
+  return (
+    <Card className="shadow-sm border-t-2 border-t-blue-500">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm font-semibold flex items-center gap-2">
+          <span className="w-5 h-5 rounded-full bg-blue-500 text-white text-[10px] font-bold flex items-center justify-center">4</span>
+          Xem xét & phê duyệt dữ liệu
+        </CardTitle>
+        <p className="text-xs text-muted-foreground mt-1">
+          Kiểm tra từng dòng, bỏ chọn các dòng không muốn import
+        </p>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Summary badges */}
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setFilter("all")}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+              filter === "all" ? "bg-foreground text-background" : "bg-muted/50 text-muted-foreground hover:bg-muted"
+            }`}
+          >
+            Tất cả ({summary.total})
+          </button>
+          {summary.new > 0 && (
+            <button
+              onClick={() => setFilter("new")}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                filter === "new" ? "bg-emerald-600 text-white" : "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100"
+              }`}
+            >
+              ✅ Mới ({summary.new})
+            </button>
+          )}
+          {summary.conflict > 0 && (
+            <button
+              onClick={() => setFilter("conflict")}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                filter === "conflict" ? "bg-amber-600 text-white" : "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 hover:bg-amber-100"
+              }`}
+            >
+              ⚠️ Trùng ({summary.conflict})
+            </button>
+          )}
+          {summary.invalid > 0 && (
+            <button
+              onClick={() => setFilter("invalid")}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                filter === "invalid" ? "bg-red-600 text-white" : "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 hover:bg-red-100"
+              }`}
+            >
+              ❌ Lỗi ({summary.invalid})
+            </button>
+          )}
+          {summary.unchanged > 0 && (
+            <button
+              onClick={() => setFilter("unchanged")}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                filter === "unchanged" ? "bg-gray-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-gray-200"
+              }`}
+            >
+              ➖ Không đổi ({summary.unchanged})
+            </button>
+          )}
+        </div>
+
+        {/* Comparison table */}
+        <div className="overflow-x-auto rounded-lg border border-border">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="bg-muted/50 border-b border-border">
+                <th className="px-2 py-2 w-8">
+                  {(filter === "new" || filter === "conflict") && (
+                    <input
+                      type="checkbox"
+                      checked={filteredRows.every((_, i) => {
+                        const actualIdx = validated.indexOf(filteredRows[i]);
+                        return approvedIndices.has(actualIdx);
+                      })}
+                      onChange={() => toggleAll(filter)}
+                      className="w-3.5 h-3.5 rounded border-border accent-emerald-600"
+                    />
+                  )}
+                </th>
+                <th className="px-2 py-2 text-left font-semibold text-muted-foreground w-8">#</th>
+                <th className="px-2 py-2 text-left font-semibold text-muted-foreground w-28">Trạng thái</th>
+                {displayFields.map((f) => (
+                  <th key={f} className="px-3 py-2 text-left font-semibold text-muted-foreground whitespace-nowrap">
+                    {fieldLabels[f] || f}
+                  </th>
+                ))}
+                <th className="px-3 py-2 text-left font-semibold text-muted-foreground">Ghi chú</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredRows.map((row) => {
+                const actualIdx = validated.indexOf(row);
+                const sl = statusLabels[row.status];
+                const isApproved = approvedIndices.has(actualIdx);
+                const canApprove = row.status === "new" || row.status === "conflict";
+
+                return (
+                  <tr
+                    key={actualIdx}
+                    className={`border-t border-border transition-colors ${sl.bg} ${
+                      canApprove && !isApproved ? "opacity-50" : ""
+                    }`}
+                  >
+                    <td className="px-2 py-2 text-center">
+                      {canApprove && (
+                        <input
+                          type="checkbox"
+                          checked={isApproved}
+                          onChange={() => toggleRow(actualIdx)}
+                          className="w-3.5 h-3.5 rounded border-border accent-emerald-600"
+                        />
+                      )}
+                    </td>
+                    <td className="px-2 py-2 text-muted-foreground font-mono">{row.rowIndex + 1}</td>
+                    <td className="px-2 py-2">
+                      <span className={`inline-flex items-center gap-1 text-[10px] font-medium ${sl.color}`}>
+                        {sl.icon} {sl.label}
+                      </span>
+                    </td>
+                    {displayFields.map((field) => {
+                      const newVal = row.newData[field];
+                      const oldVal = row.existingData?.[field];
+                      const isChanged = row.changedFields?.includes(field);
+                      const displayVal = typeof newVal === "number"
+                        ? (field.includes("Price") || field.includes("Amount") || field.includes("Order"))
+                          ? formatVND(newVal) : String(newVal)
+                        : String(newVal ?? "—");
+
+                      return (
+                        <td key={field} className="px-3 py-2">
+                          {isChanged ? (
+                            <div className="space-y-0.5">
+                              <span className="line-through text-red-400 text-[10px] block">
+                                {typeof oldVal === "number"
+                                  ? (field.includes("Price") ? formatVND(oldVal) : String(oldVal))
+                                  : String(oldVal ?? "")}
+                              </span>
+                              <span className="text-emerald-600 font-medium">{displayVal}</span>
+                            </div>
+                          ) : (
+                            <span className="text-foreground">{displayVal}</span>
+                          )}
+                        </td>
+                      );
+                    })}
+                    <td className="px-3 py-2 text-muted-foreground text-[10px] max-w-[200px] truncate">
+                      {row.reason || (row.changedFields?.length
+                        ? `Thay đổi: ${row.changedFields.map((f) => fieldLabels[f] || f).join(", ")}`
+                        : "")}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Action buttons */}
+        <div className="flex items-center gap-3 pt-2">
+          <Button
+            onClick={handleImport}
+            disabled={importing || approvedCount === 0}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white"
+          >
+            {importing ? (
+              <>
+                <svg className="w-4 h-4 mr-2 animate-spin" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-20" />
+                  <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                </svg>
+                Đang import...
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                </svg>
+                Import {approvedCount} dòng đã chọn
+              </>
+            )}
+          </Button>
+          <Button variant="outline" onClick={onCancel} disabled={importing}>
+            Quay lại
+          </Button>
+          <span className="text-xs text-muted-foreground ml-auto">
+            {approvedCount}/{importableRows.length} dòng được chọn
+            {summary.invalid > 0 && ` • ${summary.invalid} dòng lỗi sẽ bị bỏ qua`}
+            {summary.unchanged > 0 && ` • ${summary.unchanged} dòng không thay đổi`}
+          </span>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
