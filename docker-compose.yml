@@ -301,12 +301,8 @@ services:
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
       MATTERMOST_URL: http://mattermost:8065
       WIKIJS_URL: http://wikijs:3000
-      N8N_URL: http://n8n:5678
       METABASE_URL: http://metabase:3000
       OLLAMA_URL: http://ollama:11434
-      N8N_ONBOARDING_WEBHOOK_URL: http://n8n:5678/webhook/onboarding-001/webhook%2520trigger/onboarding
-      N8N_OFFBOARDING_WEBHOOK_URL: http://n8n:5678/webhook/offboarding-001/webhook%2520trigger/offboarding
-      N8N_ACTIVATION_WEBHOOK_URL: http://n8n:5678/webhook/activation-001/webhook%2520trigger/activation
       NODE_ENV: development
     command: >
       sh -c "
