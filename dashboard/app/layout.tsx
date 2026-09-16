@@ -4,14 +4,26 @@
 // ==============================================================================
 
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
-const inter = Inter({
-  subsets: ["latin", "vietnamese"],
-  variable: "--font-inter",
+const comicRelief = localFont({
+  src: [
+    {
+      path: "../public/fonts/ComicRelief-Regular.ttf",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../public/fonts/ComicRelief-Bold.ttf",
+      weight: "700",
+      style: "normal",
+    },
+  ],
+  variable: "--font-comic-relief",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -32,7 +44,7 @@ export default async function RootLayout({
 
   return (
     <html lang={locale} suppressHydrationWarning>
-      <body className={`${inter.variable} font-sans antialiased bg-background text-foreground`}>
+      <body className={`${comicRelief.variable} font-sans antialiased bg-background text-foreground`}>
         <Providers initialLocale={locale as Locale}>
           <TooltipProvider>
             {children}
