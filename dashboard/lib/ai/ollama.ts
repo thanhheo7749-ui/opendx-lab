@@ -16,7 +16,7 @@
 // If OPENAI_API_KEY is set, use 9Router/OpenAI-compatible API
 // Otherwise fall back to Ollama local API
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY || "";
-const OPENAI_BASE_URL = process.env.OPENAI_BASE_URL || "https://api.9router.com/v1";
+const OPENAI_BASE_URL = process.env.OPENAI_BASE_URL || "http://host.docker.internal:20128/v1";
 
 const OLLAMA_API_URL = process.env.OLLAMA_API_URL || "http://ollama:11434";
 
