@@ -134,10 +134,23 @@ Use double quotes for camelCase columns: "firstName", "lastName", "departmentId"
 | changePercent | FLOAT | % change vs previous period|
 | avgPrice      | FLOAT | Market average price      |
 
+## Table: sb_suppliers
+| Column      | Type      | Notes                    |
+|-------------|-----------|--------------------------|
+| id          | TEXT      | Primary key              |
+| name        | TEXT      | Supplier name            |
+| contactName | TEXT      | Contact person           |
+| phone       | TEXT      | Phone number             |
+| email       | TEXT      | Email address            |
+| address     | TEXT      | Supplier address         |
+| rating      | FLOAT     | 0-5 rating score         |
+| isActive    | BOOLEAN   | Whether supplier is active|
+
 ## Common business queries
 - Daily revenue: SELECT DATE("orderDate") as day, SUM("totalAmount") as revenue FROM sb_orders WHERE status='COMPLETED' GROUP BY day ORDER BY day DESC
 - Top products: SELECT p.name, COUNT(oi.id) as sales FROM sb_order_items oi JOIN sb_products p ON oi."productId"=p.id GROUP BY p.name ORDER BY sales DESC
 - Channel performance: SELECT channel, COUNT(*) as orders, SUM("totalAmount") as revenue FROM sb_orders GROUP BY channel
 - Ad ROAS: SELECT c.name, AVG(s.roas) as avg_roas FROM sb_ad_daily_stats s JOIN sb_ad_campaigns c ON s."campaignId"=c.id GROUP BY c.name
+- Supplier list: SELECT name, "contactName", rating FROM sb_suppliers WHERE "isActive" = true ORDER BY rating DESC
 `.trim();
 

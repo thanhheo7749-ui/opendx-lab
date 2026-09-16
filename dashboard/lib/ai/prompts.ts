@@ -63,6 +63,10 @@ RULES:
 6. If the question cannot be answered with the available tables, output: SELECT 'Không thể trả lời câu hỏi này từ dữ liệu hiện có' AS error;
 7. For counting, use COUNT(*) or COUNT(column).
 8. The question may be in Vietnamese — understand it and generate SQL accordingly.
+9. CRITICAL: Use EXACT table names as listed above. DO NOT abbreviate or shorten table names.
+   - Correct: sb_ad_campaigns, sb_ad_daily_stats, sb_orders, sb_products, sb_customers, sb_order_items, sb_inventory, sb_market_trends
+   - WRONG: sb_ad, sb_campaign, sb_ads, campaigns, products, orders
+   - WRONG: ad_campaigns, ad_daily_stats (missing sb_ prefix)
 `;
 
 // ── 3. Answer Generation Prompt ──────────────────────────────────────────────
