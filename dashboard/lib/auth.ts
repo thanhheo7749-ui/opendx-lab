@@ -1,5 +1,5 @@
 // ==============================================================================
-// OpenDX-Lab Dashboard - NextAuth.js Configuration
+// ShopWise — NextAuth.js Configuration (Keycloak OIDC)
 // SPDX-License-Identifier: GPL-3.0-or-later
 // ==============================================================================
 
@@ -7,18 +7,31 @@ import NextAuth from "next-auth";
 import Keycloak from "next-auth/providers/keycloak";
 
 // ---------------------------------------------------------------------------
-// Docker networking: The container uses `extra_hosts` to map `localhost` to
-// the Docker host gateway, so it can reach Keycloak at localhost:8080 just
-// like the browser does. This avoids the dual-hostname issuer mismatch.
+// Docker dual-hostname fix:
+// - Browser redirects to http://localhost:8080 (KEYCLOAK_ISSUER)
+// - Server-side token exchange uses http://keycloak:8080 (KEYCLOAK_ISSUER_INTERNAL)
+//
+// We configure the provider's `issuer` with the browser URL so the
+// authorization_endpoint (browser redirect) works correctly.
+// Then we override the `token` and `userinfo` endpoints to use the
+// internal Docker hostname so the server-side calls work.
 // ---------------------------------------------------------------------------
-const issuer = process.env.KEYCLOAK_ISSUER!; // http://localhost:8080/realms/opendx
+
+const browserIssuer = process.env.KEYCLOAK_ISSUER!; // http://localhost:8080/realms/opendx
+const internalIssuer = process.env.KEYCLOAK_ISSUER_INTERNAL || browserIssuer; // http://keycloak:8080/realms/opendx
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     Keycloak({
       clientId: process.env.KEYCLOAK_CLIENT_ID!,
       clientSecret: process.env.KEYCLOAK_CLIENT_SECRET!,
-      issuer,
+      issuer: browserIssuer,
+      // Override server-side endpoints to use internal Docker hostname
+      token: `${internalIssuer}/protocol/openid-connect/token`,
+      userinfo: {
+        url: `${internalIssuer}/protocol/openid-connect/userinfo`,
+      },
+      jwks_endpoint: `${internalIssuer}/protocol/openid-connect/certs`,
     }),
   ],
 
