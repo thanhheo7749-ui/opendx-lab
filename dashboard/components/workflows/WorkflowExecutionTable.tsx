@@ -1,5 +1,11 @@
 "use client";
 
+// ==============================================================================
+// OpenDX-Lab / ShopWise
+// SPDX-License-Identifier: GPL-3.0-or-later
+// ==============================================================================
+
+
 import { CheckCircle2, XCircle, Clock, AlertTriangle, Loader2 } from "lucide-react";
 
 interface WorkflowExecution {

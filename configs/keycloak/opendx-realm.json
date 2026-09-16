@@ -32,6 +32,16 @@
         "name": "employee",
         "description": "Basic access — AI Chat and view-only dashboards",
         "composite": false
+      },
+      {
+        "name": "staff",
+        "description": "Store staff - edit products, inventory updates, CSV import",
+        "composite": false
+      },
+      {
+        "name": "viewer",
+        "description": "View only - view dashboards, reports, and AI chat",
+        "composite": false
       }
     ]
   },
@@ -43,15 +53,24 @@
       "enabled": true,
       "clientAuthenticatorType": "client-secret",
       "secret": "dashboard-client-secret-change-me",
-      "redirectUris": ["http://localhost:3000/*"],
-      "webOrigins": ["http://localhost:3000"],
+      "redirectUris": [
+        "http://localhost:3000/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3000"
+      ],
       "publicClient": false,
       "protocol": "openid-connect",
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": true,
       "serviceAccountsEnabled": false,
       "fullScopeAllowed": true,
-      "defaultClientScopes": ["openid", "profile", "email", "roles"],
+      "defaultClientScopes": [
+        "openid",
+        "profile",
+        "email",
+        "roles"
+      ],
       "protocolMappers": [
         {
           "name": "realm-roles",
@@ -74,14 +93,23 @@
       "enabled": true,
       "clientAuthenticatorType": "client-secret",
       "secret": "mattermost-client-secret-change-me",
-      "redirectUris": ["http://localhost:3100/*"],
-      "webOrigins": ["http://localhost:3100"],
+      "redirectUris": [
+        "http://localhost:3100/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3100"
+      ],
       "publicClient": false,
       "protocol": "openid-connect",
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": false,
       "fullScopeAllowed": true,
-      "defaultClientScopes": ["openid", "profile", "email", "read_user"],
+      "defaultClientScopes": [
+        "openid",
+        "profile",
+        "email",
+        "read_user"
+      ],
       "protocolMappers": [
         {
           "name": "username",
@@ -141,14 +169,22 @@
       "enabled": true,
       "clientAuthenticatorType": "client-secret",
       "secret": "wikijs-client-secret-change-me",
-      "redirectUris": ["http://localhost:3200/*"],
-      "webOrigins": ["http://localhost:3200"],
+      "redirectUris": [
+        "http://localhost:3200/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3200"
+      ],
       "publicClient": false,
       "protocol": "openid-connect",
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": false,
       "fullScopeAllowed": true,
-      "defaultClientScopes": ["openid", "profile", "email"]
+      "defaultClientScopes": [
+        "openid",
+        "profile",
+        "email"
+      ]
     },
     {
       "clientId": "n8n-sso",
@@ -157,14 +193,22 @@
       "enabled": true,
       "clientAuthenticatorType": "client-secret",
       "secret": "n8n-client-secret-change-me",
-      "redirectUris": ["http://localhost:5678/*"],
-      "webOrigins": ["http://localhost:5678"],
+      "redirectUris": [
+        "http://localhost:5678/*"
+      ],
+      "webOrigins": [
+        "http://localhost:5678"
+      ],
       "publicClient": false,
       "protocol": "openid-connect",
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": false,
       "fullScopeAllowed": true,
-      "defaultClientScopes": ["openid", "profile", "email"]
+      "defaultClientScopes": [
+        "openid",
+        "profile",
+        "email"
+      ]
     },
     {
       "clientId": "n8n-service",
@@ -179,7 +223,9 @@
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": true,
       "fullScopeAllowed": false,
-      "defaultClientScopes": ["openid"]
+      "defaultClientScopes": [
+        "openid"
+      ]
     }
   ],
   "users": [
@@ -191,7 +237,9 @@
       "enabled": true,
       "emailVerified": true,
       "attributes": {
-        "numeric_id": ["1"]
+        "numeric_id": [
+          "1"
+        ]
       },
       "credentials": [
         {
@@ -200,7 +248,10 @@
           "temporary": false
         }
       ],
-      "realmRoles": ["admin", "default-roles-opendx"]
+      "realmRoles": [
+        "admin",
+        "default-roles-opendx"
+      ]
     },
     {
       "username": "hr.mai",
@@ -210,7 +261,9 @@
       "enabled": true,
       "emailVerified": true,
       "attributes": {
-        "numeric_id": ["2"]
+        "numeric_id": [
+          "2"
+        ]
       },
       "credentials": [
         {
@@ -219,7 +272,10 @@
           "temporary": false
         }
       ],
-      "realmRoles": ["manager", "default-roles-opendx"]
+      "realmRoles": [
+        "manager",
+        "default-roles-opendx"
+      ]
     },
     {
       "username": "nv.duc",
@@ -229,7 +285,9 @@
       "enabled": true,
       "emailVerified": true,
       "attributes": {
-        "numeric_id": ["3"]
+        "numeric_id": [
+          "3"
+        ]
       },
       "credentials": [
         {
@@ -238,7 +296,84 @@
           "temporary": false
         }
       ],
-      "realmRoles": ["employee", "default-roles-opendx"]
+      "realmRoles": [
+        "employee",
+        "default-roles-opendx"
+      ]
+    },
+    {
+      "username": "demo.manager",
+      "email": "demo.manager@opendx-lab.local",
+      "firstName": "Manager",
+      "lastName": "Demo",
+      "enabled": true,
+      "emailVerified": true,
+      "attributes": {
+        "numeric_id": [
+          "4"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "demo1234",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "manager",
+        "default-roles-opendx"
+      ]
+    },
+    {
+      "username": "demo.staff",
+      "email": "demo.staff@opendx-lab.local",
+      "firstName": "Staff",
+      "lastName": "Demo",
+      "enabled": true,
+      "emailVerified": true,
+      "attributes": {
+        "numeric_id": [
+          "5"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "demo1234",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "staff",
+        "employee",
+        "default-roles-opendx"
+      ]
+    },
+    {
+      "username": "demo.viewer",
+      "email": "demo.viewer@opendx-lab.local",
+      "firstName": "Viewer",
+      "lastName": "Demo",
+      "enabled": true,
+      "emailVerified": true,
+      "attributes": {
+        "numeric_id": [
+          "6"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "demo1234",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "viewer",
+        "employee",
+        "default-roles-opendx"
+      ]
     }
   ],
   "clientScopes": [

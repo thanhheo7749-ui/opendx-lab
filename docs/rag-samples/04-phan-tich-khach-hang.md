@@ -1,4 +1,5 @@
 # Phân tích khách hàng & Phân khúc — ShopWise
+> **Phân loại P.A.R.A (DX-OS):** `[R] Resource` — Tài nguyên dữ liệu & phân khúc khách hàng
 
 ## 1. Phân khúc khách hàng (RFM)
 

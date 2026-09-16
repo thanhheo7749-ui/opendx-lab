@@ -73,7 +73,9 @@ export async function triggerOnboarding(employeeData: {
   });
 
   return triggerWorkflowWebhook({
-    webhookUrl: process.env.ACTIVEPIECES_ONBOARDING_WEBHOOK_URL,
+    webhookUrl:
+      process.env.ACTIVEPIECES_ONBOARDING_WEBHOOK_URL ||
+      process.env.N8N_ONBOARDING_WEBHOOK_URL,
     payload,
   });
 }
@@ -92,7 +94,9 @@ export async function triggerOffboarding(employeeData: {
   });
 
   return triggerWorkflowWebhook({
-    webhookUrl: process.env.ACTIVEPIECES_OFFBOARDING_WEBHOOK_URL,
+    webhookUrl:
+      process.env.ACTIVEPIECES_OFFBOARDING_WEBHOOK_URL ||
+      process.env.N8N_OFFBOARDING_WEBHOOK_URL,
     payload,
   });
 }
@@ -111,7 +115,9 @@ export async function triggerActivation(employeeData: {
   });
 
   return triggerWorkflowWebhook({
-    webhookUrl: process.env.ACTIVEPIECES_ACTIVATION_WEBHOOK_URL,
+    webhookUrl:
+      process.env.ACTIVEPIECES_ACTIVATION_WEBHOOK_URL ||
+      process.env.N8N_ACTIVATION_WEBHOOK_URL,
     payload,
   });
 }

@@ -20,6 +20,7 @@ import {
   Filter,
   X,
   Database,
+  Download,
 } from "lucide-react";
 import { GraphCanvas, type GraphNode, type GraphLink, type GraphData } from "@/components/knowledge/GraphCanvas";
 import { NodeDetailPanel } from "@/components/knowledge/NodeDetailPanel";
@@ -328,6 +329,19 @@ export default function KnowledgeGraphPage() {
             )}
             Seed Data
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              window.open("/api/lod/export?download=true", "_blank");
+              toast.success("Đang tải đồ thị tri thức chuẩn Linked Open Data (JSON-LD) OLP 2025!");
+            }}
+            className="text-xs bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800 hover:bg-emerald-500/20"
+            title="Kế thừa chủ đề OLP 2025: Xuất đồ thị tri thức chuẩn W3C JSON-LD / Schema.org"
+          >
+            <Download className="w-4 h-4 mr-1.5" />
+            Xuất LOD (JSON-LD)
+          </Button>
         </div>
       </div>
 
@@ -566,14 +580,14 @@ function KnowledgeImportPanel({
     setSyncingDB(false);
   };
 
-  // What types of docs to import
+  // What types of docs to import (theo cấu trúc P.A.R.A - DX-OS Mục 1.1)
   const docTypes = [
-    { icon: "📋", title: "Quy trình vận hành (SOP)", desc: "Cách nhập hàng, quy trình xuất kho, kiểm kê, xử lý đổi trả", ext: ".pdf, .docx" },
-    { icon: "💰", title: "Chính sách giá & khuyến mãi", desc: "Bảng giá, quy tắc giảm giá, chương trình loyalty, flash sale", ext: ".md, .txt" },
-    { icon: "📊", title: "Báo cáo phân tích", desc: "Phân tích doanh thu, xu hướng thị trường, đối thủ cạnh tranh", ext: ".pdf, .docx" },
-    { icon: "🎯", title: "Chiến lược kinh doanh", desc: "Kế hoạch marketing, chiến lược nhập hàng, mở rộng kênh bán", ext: ".md, .txt" },
-    { icon: "📝", title: "Ghi chú & kiến thức nội bộ", desc: "Kinh nghiệm vận hành, tips bán hàng, FAQ khách hàng", ext: ".txt, .md" },
-    { icon: "📖", title: "Hướng dẫn sử dụng", desc: "Tài liệu đào tạo nhân viên, quy định nội bộ, handbook", ext: ".pdf, .docx" },
+    { icon: "📋", title: "Quy trình vận hành (SOP)", desc: "Cách nhập hàng, quy trình xuất kho, kiểm kê, xử lý đổi trả", ext: ".pdf, .docx", para: "Area" },
+    { icon: "💰", title: "Chính sách giá & khuyến mãi", desc: "Bảng giá, quy tắc giảm giá, chương trình loyalty, flash sale", ext: ".md, .txt", para: "Area" },
+    { icon: "📊", title: "Báo cáo phân tích", desc: "Phân tích doanh thu, xu hướng thị trường, đối thủ cạnh tranh", ext: ".pdf, .docx", para: "Archive" },
+    { icon: "🎯", title: "Chiến lược kinh doanh", desc: "Kế hoạch marketing, chiến lược nhập hàng, mở rộng kênh bán", ext: ".md, .txt", para: "Project" },
+    { icon: "📝", title: "Ghi chú & kiến thức nội bộ", desc: "Kinh nghiệm vận hành, tips bán hàng, FAQ khách hàng", ext: ".txt, .md", para: "Resource" },
+    { icon: "📖", title: "Hướng dẫn sử dụng", desc: "Tài liệu đào tạo nhân viên, quy định nội bộ, handbook", ext: ".pdf, .docx", para: "Resource" },
   ];
 
   return (
@@ -583,10 +597,10 @@ function KnowledgeImportPanel({
           <div>
             <h3 className="font-semibold text-sm text-foreground flex items-center gap-2">
               <Brain className="w-4 h-4 text-violet-500" />
-              Nhập kiến thức vào Knowledge Graph
+              Nhập kiến thức vào Knowledge Graph (Chuẩn P.A.R.A)
             </h3>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Upload tài liệu hoặc đồng bộ dữ liệu để AI hiểu context doanh nghiệp tốt hơn
+              Upload tài liệu theo cấu trúc P.A.R.A (DX-OS) hoặc đồng bộ dữ liệu PostgreSQL để AI hiểu context doanh nghiệp tốt hơn
             </p>
           </div>
           <button onClick={onClose} className="p-1 rounded-md hover:bg-muted">
@@ -702,7 +716,12 @@ function KnowledgeImportPanel({
                   <div className="flex items-start gap-2">
                     <span className="text-sm mt-0.5">{dt.icon}</span>
                     <div className="min-w-0">
-                      <p className="text-[11px] font-medium text-foreground">{dt.title}</p>
+                      <p className="text-[11px] font-medium text-foreground flex items-center gap-1.5">
+                        {dt.title}
+                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 font-mono">
+                          P.A.R.A: {dt.para}
+                        </span>
+                      </p>
                       <p className="text-[10px] text-muted-foreground">{dt.desc}</p>
                       <p className="text-[9px] text-muted-foreground/60 mt-0.5">{dt.ext}</p>
                     </div>

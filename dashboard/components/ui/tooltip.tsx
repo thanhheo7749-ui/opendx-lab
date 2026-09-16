@@ -1,3 +1,8 @@
+// ==============================================================================
+// OpenDX-Lab / ShopWise
+// SPDX-License-Identifier: GPL-3.0-or-later
+// ==============================================================================
+
 "use client"
 
 import { Tooltip as TooltipPrimitive } from "@base-ui/react/tooltip"
