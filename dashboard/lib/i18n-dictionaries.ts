@@ -20,6 +20,8 @@ const vi = {
   "nav.supplier": "Nhà cung cấp",
   "nav.journal": "Nhật ký QĐ",
   "nav.dataSources": "Nhập dữ liệu",
+  "nav.products": "Sản phẩm",
+  "nav.inventory": "Kho hàng",
 
   // -- Header --
   "header.profile": "Hồ sơ",
@@ -176,6 +178,8 @@ const en: Record<keyof typeof vi, string> = {
   "nav.supplier": "Suppliers",
   "nav.journal": "Decision Log",
   "nav.dataSources": "Data Import",
+  "nav.products": "Products",
+  "nav.inventory": "Inventory",
 
   // -- Header --
   "header.profile": "Profile",
