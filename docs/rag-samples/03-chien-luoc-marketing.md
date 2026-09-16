@@ -1,4 +1,5 @@
 # Chiến lược Marketing & Quảng cáo — ShopWise
+> **Phân loại P.A.R.A (DX-OS):** `[P] Project` — Dự án tiếp thị và mở rộng kênh bán
 
 ## 1. Phân bổ ngân sách
 

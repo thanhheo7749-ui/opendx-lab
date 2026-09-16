@@ -25,7 +25,8 @@ export async function POST() {
       type: string,
       name: string,
       description: string,
-      source: string
+      source: string,
+      paraCategory: string = "Resource"
     ): Promise<string> {
       const existing = await prisma.kgNode.findFirst({
         where: { name, type },
@@ -36,14 +37,14 @@ export async function POST() {
         // Update description if changed
         await prisma.kgNode.update({
           where: { id: existing.id },
-          data: { description, source },
+          data: { description, source, metadata: { paraCategory } },
         });
         nodesSkipped++;
         return existing.id;
       }
 
       const created = await prisma.kgNode.create({
-        data: { type, name, description, source, metadata: {} },
+        data: { type, name, description, source, metadata: { paraCategory } },
       });
       nodesCreated++;
       return created.id;
@@ -69,7 +70,7 @@ export async function POST() {
 
     // ── 1. Sync Products → PRODUCT nodes ─────────────────────────────────
     const products = await prisma.sbProduct.findMany({
-      where: { isDeleted: false },
+      where: { isActive: true },
       select: { id: true, name: true, sku: true, category: true, costPrice: true, sellPrice: true },
     });
 
@@ -83,12 +84,12 @@ export async function POST() {
 
       const desc = `SKU: ${p.sku}. Giá gốc: ${p.costPrice.toLocaleString("vi-VN")}đ, Giá bán: ${p.sellPrice.toLocaleString("vi-VN")}đ. Margin: ${margin}%. Danh mục: ${p.category}.`;
 
-      const nodeId = await upsertNode("PRODUCT", `${p.name} (${p.sku})`, desc, "db-sync");
+      const nodeId = await upsertNode("PRODUCT", `${p.name} (${p.sku})`, desc, "db-sync", "Resource");
       productMap.set(p.id, nodeId);
 
       // Ensure category node exists
       if (p.category && !categoryMap.has(p.category)) {
-        const catId = await upsertNode("CATEGORY", p.category, `Danh mục sản phẩm: ${p.category}`, "db-sync");
+        const catId = await upsertNode("CATEGORY", p.category, `Danh mục sản phẩm: ${p.category}`, "db-sync", "Area");
         categoryMap.set(p.category, catId);
       }
 
@@ -100,7 +101,7 @@ export async function POST() {
 
     // ── 2. Sync Suppliers → SUPPLIER nodes ───────────────────────────────
     const suppliers = await prisma.sbSupplier.findMany({
-      where: { isDeleted: false },
+      where: { isActive: true },
       select: { id: true, name: true, province: true, phone: true, rating: true, leadTimeDays: true },
     });
 
@@ -108,7 +109,7 @@ export async function POST() {
 
     for (const s of suppliers) {
       const desc = `NCC tại ${s.province}. SĐT: ${s.phone || "N/A"}. Rating: ${s.rating}/5. Thời gian giao: ${s.leadTimeDays} ngày.`;
-      const nodeId = await upsertNode("SUPPLIER", s.name, desc, "db-sync");
+      const nodeId = await upsertNode("SUPPLIER", s.name, desc, "db-sync", "Resource");
       supplierMap.set(s.id, nodeId);
     }
 

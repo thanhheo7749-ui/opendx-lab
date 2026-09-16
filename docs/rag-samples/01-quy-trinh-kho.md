@@ -1,4 +1,5 @@
 # Quy trình vận hành kho hàng — ShopWise
+> **Phân loại P.A.R.A (DX-OS):** `[A] Area` — Lĩnh vực vận hành kho cốt lõi
 
 ## 1. Nhập hàng
 

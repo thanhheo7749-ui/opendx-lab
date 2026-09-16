@@ -1,5 +1,11 @@
 "use client";
 
+// ==============================================================================
+// OpenDX-Lab / ShopWise
+// SPDX-License-Identifier: GPL-3.0-or-later
+// ==============================================================================
+
+
 import { useEffect, useState, useCallback } from "react";
 import { onToast, type ToastType } from "@/lib/toast";
 

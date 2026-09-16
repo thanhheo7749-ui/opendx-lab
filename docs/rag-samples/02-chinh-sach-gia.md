@@ -1,4 +1,5 @@
 # Chính sách giá & Khuyến mãi — ShopWise
+> **Phân loại P.A.R.A (DX-OS):** `[A] Area` — Lĩnh vực tài chính và chính sách giá
 
 ## 1. Nguyên tắc định giá
 

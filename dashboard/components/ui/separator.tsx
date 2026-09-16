@@ -1,3 +1,8 @@
+// ==============================================================================
+// OpenDX-Lab / ShopWise
+// SPDX-License-Identifier: GPL-3.0-or-later
+// ==============================================================================
+
 "use client"
 
 import { Separator as SeparatorPrimitive } from "@base-ui/react/separator"

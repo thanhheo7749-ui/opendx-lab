@@ -1,3 +1,8 @@
+// ==============================================================================
+// OpenDX-Lab / ShopWise
+// SPDX-License-Identifier: GPL-3.0-or-later
+// ==============================================================================
+
 const jwt = require('jsonwebtoken');
 const http = require('http');
 
